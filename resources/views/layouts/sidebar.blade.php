@@ -31,6 +31,7 @@
                         <span>Faktur Penjualan</span>
                     </a>
                 </li>
+                @if(Auth::user()->role !== 'faktur')
                 <li>
                     <a href="{{ route('purchases.index', ['division' => 'percetakan']) }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->fullUrlIs(route('purchases.index', ['division' => 'percetakan'])) ? 'text-white bg-gray-800 border-l-4 border-primary-500' : 'text-gray-400' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
@@ -81,6 +82,7 @@
                         <span>Suppliers</span>
                     </a>
                 </li>
+                @endif
             @endif
 
             @if(session('division') == 'konfeksi')
@@ -100,6 +102,7 @@
                         <span>Penjualan Barang</span>
                     </a>
                 </li>
+                @if(Auth::user()->role !== 'faktur')
                 <li>
                     <a href="{{ route('purchases.index', ['division' => 'konfeksi']) }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->fullUrlIs(route('purchases.index', ['division' => 'konfeksi'])) ? 'text-white bg-gray-800 border-l-4 border-primary-500' : 'text-gray-400' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
@@ -145,6 +148,7 @@
                         <span>Suppliers</span>
                     </a>
                 </li>
+                @endif
             @endif
 
             <!-- Keuangan Pusat (Shared?) -->
@@ -154,6 +158,7 @@
             -->
             <!-- Keuangan Pusat -->
             <!-- TRANSAKSI Section -->
+            @if(Auth::user()->role !== 'faktur')
             <li class="px-6 py-2 mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Transaksi
             </li>
@@ -202,7 +207,7 @@
                     <span>Kasbon Karyawan</span>
                 </a>
             </li>
-        </ul>
+            @endif
         </ul>
     </nav>
 
