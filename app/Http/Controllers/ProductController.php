@@ -152,4 +152,36 @@ class ProductController extends Controller
 
         return back()->with('success', "Import selesai: {$imported} barang berhasil diimport, {$skipped} baris dilewati.");
     }
+
+    // Stock Report Dashboard
+    public function stockReport(Request $request)
+    {
+        $division = session('division');
+        $query = Product::query();
+
+        if ($division) {
+            $query->where('division', $division);
+        }
+
+        if ($request->has('search') && $request->search != '') {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('code', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // Metrics
+        $totalProducts = (clone $query)->count();
+        $outOfStockCount = (clone $query)->where('stock', '<=', 0)->count();
+        $lowStockCount = (clone $query)->where('stock', '>', 0)->where('stock', '<=', 5)->count();
+
+        // Widget lists
+        $outOfStockItems = (clone $query)->where('stock', '<=', 0)->get();
+        $lowStockItems = (clone $query)->where('stock', '>', 0)->where('stock', '<=', 5)->orderBy('stock', 'asc')->get();
+
+        // Main table
+        $products = $query->orderBy('stock', 'asc')->paginate(20);
+
+        return view('reports.stock', compact('products', 'outOfStockCount', 'lowStockCount', 'totalProducts', 'outOfStockItems', 'lowStockItems'));
+    }
 }

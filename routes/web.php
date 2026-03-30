@@ -34,6 +34,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::resource('suppliers', SupplierController::class);
 
+    // Stock Report (Dashboard)
+    Route::get('/reports/stock', [ProductController::class, 'stockReport'])->name('reports.stock');
+
     // API for Product Lookup
     Route::get('/api/products/{code}', [ProductController::class, 'getByCode'])->name('products.lookup');
     Route::post('/products/import-csv', [ProductController::class, 'importCsv'])->name('products.import-csv');
