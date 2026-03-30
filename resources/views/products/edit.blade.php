@@ -34,6 +34,18 @@
                             </div>
                         </div>
 
+                        <div class="flex gap-4 mb-6">
+                            <div class="w-1/2">
+                                <label class="block text-gray-700 text-sm font-bold mb-2">Stok Saat Ini</label>
+                                <input type="number" name="stock" value="{{ $product->stock }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" min="0">
+                            </div>
+                            <div class="w-1/2">
+                                <label class="block text-gray-700 text-sm font-bold mb-2">Kode Stok Bersama (Opsional)</label>
+                                <input type="text" name="shared_stock_code" value="{{ $product->shared_stock_code }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Abaikan untuk stok terpisah">
+                                <p class="text-xs text-gray-500 mt-1">Samakan kode ini antar barang jika fisiknya sama persis.</p>
+                            </div>
+                        </div>
+
                         <div class="flex items-center justify-between">
                             <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
                                 Update Barang

@@ -117,6 +117,7 @@
             row.id = `row-${rowCount}`;
             row.innerHTML = `
                 <td class="p-1 border">
+                    <input type="text" name="items[${rowCount}][product_code]" class="w-full border rounded px-2 py-1 mb-1 text-sm uppercase" placeholder="Kode Produk (Opsional untuk tmbh stok)">
                     <input type="text" name="items[${rowCount}][item_name]" class="w-full border rounded px-2 py-1" placeholder="Nama barang..." required>
                 </td>
                 <td class="p-1 border">

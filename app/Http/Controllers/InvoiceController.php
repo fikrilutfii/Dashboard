@@ -99,6 +99,11 @@ class InvoiceController extends Controller
                     'unit_price' => $unitPrice,
                     'subtotal' => $subtotal,
                 ]);
+
+                // Deduct stock for sales
+                if ($product) {
+                    $product->syncStock(-$item['quantity']);
+                }
             }
 
             $invoice->update(['total_amount' => $totalAmount]);
@@ -153,6 +158,14 @@ class InvoiceController extends Controller
                  'due_date' => $validated['due_date'],
              ]);
 
+             // Revert stock for old items before replacing
+             foreach ($invoice->items as $oldItem) {
+                 $oldProduct = Product::where('code', $oldItem->product_code)->first();
+                 if ($oldProduct) {
+                     $oldProduct->syncStock($oldItem->quantity);
+                 }
+             }
+
              // Replace tokens
              $invoice->items()->delete();
              
@@ -173,6 +186,11 @@ class InvoiceController extends Controller
                      'unit_price' => $unitPrice,
                      'subtotal' => $subtotal,
                  ]);
+
+                 // Deduct stock for new items
+                 if ($product) {
+                     $product->syncStock(-$item['quantity']);
+                 }
              }
  
              $invoice->update(['total_amount' => $totalAmount]);
@@ -240,6 +258,14 @@ class InvoiceController extends Controller
     {
         if ($invoice->status == 'lunas') {
             return redirect()->back()->with('error', 'Cannot delete paid invoice.');
+        }
+
+        // Revert stock before deleting
+        foreach ($invoice->items as $item) {
+            $product = Product::where('code', $item->product_code)->first();
+            if ($product) {
+                $product->syncStock($item->quantity);
+            }
         }
 
         $invoice->delete();

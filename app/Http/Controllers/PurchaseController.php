@@ -60,6 +60,7 @@ class PurchaseController extends Controller
             'division' => 'required|in:percetakan,konfeksi',
             'payment_status' => 'required|in:cash,credit', // Logic decision
             'items' => 'required|array|min:1',
+            'items.*.product_code' => 'nullable|string',
             'items.*.item_name' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
@@ -92,6 +93,13 @@ class PurchaseController extends Controller
                     'unit_price' => $item['unit_price'],
                     'subtotal' => $subtotal,
                 ]);
+
+                if (!empty($item['product_code'])) {
+                    $product = \App\Models\Product::where('code', $item['product_code'])->first();
+                    if ($product) {
+                        $product->syncStock($item['quantity']);
+                    }
+                }
             }
 
             $purchase->update(['total_amount' => $totalAmount]);

@@ -39,7 +39,16 @@ class ProductController extends Controller
             'name' => 'required|string',
             'unit' => 'required|string',
             'price' => 'required|numeric|min:0',
+            'stock' => 'nullable|integer|min:0',
+            'shared_stock_code' => 'nullable|string',
         ]);
+
+        if (!empty($validated['shared_stock_code'])) {
+            $existing = Product::where('shared_stock_code', $validated['shared_stock_code'])->first();
+            if ($existing) {
+                $validated['stock'] = $existing->stock;
+            }
+        }
 
         $validated['division'] = session('division', 'percetakan');
 
@@ -60,9 +69,16 @@ class ProductController extends Controller
             'name' => 'required|string',
             'unit' => 'required|string',
             'price' => 'required|numeric|min:0',
+            'stock' => 'nullable|integer|min:0',
+            'shared_stock_code' => 'nullable|string',
         ]);
 
         $product->update($validated);
+
+        if (!empty($product->shared_stock_code) && isset($validated['stock'])) {
+            Product::where('shared_stock_code', $product->shared_stock_code)
+                   ->update(['stock' => $validated['stock']]);
+        }
 
         return redirect()->route('products.index')->with('success', 'Product updated successfully.');
     }

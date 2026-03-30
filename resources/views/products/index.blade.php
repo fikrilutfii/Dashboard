@@ -38,6 +38,7 @@
                                 <th class="border border-gray-300 p-2">Nama Barang</th>
                                 <th class="border border-gray-300 p-2">Satuan</th>
                                 <th class="border border-gray-300 p-2 text-right">Harga</th>
+                                <th class="border border-gray-300 p-2 text-center">Stok</th>
                                 <th class="border border-gray-300 p-2 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -49,6 +50,12 @@
                                     <td class="border border-gray-300 p-2">{{ $product->unit }}</td>
                                     <td class="border border-gray-300 p-2 text-right">{{ number_format($product->price, 0, ',', '.') }}</td>
                                     <td class="border border-gray-300 p-2 text-center">
+                                        <span class="font-bold {{ $product->stock <= 5 ? 'text-red-500' : 'text-green-600' }}">{{ number_format($product->stock, 0, ',', '.') }}</span>
+                                        @if($product->shared_stock_code)
+                                            <br><span class="text-xs text-blue-500 bg-blue-50 px-1 rounded border border-blue-200" title="Shared Stock Code">🔗 {{ $product->shared_stock_code }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="border border-gray-300 p-2 text-center">
                                         <a href="{{ route('products.edit', $product) }}" class="text-primary-600 hover:text-primary-900">Edit</a> |
                                         <form action="{{ route('products.destroy', $product) }}" method="POST" class="inline" onsubmit="return confirm('Hapus barang ini?');">
                                             @csrf
@@ -59,7 +66,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="border border-gray-300 p-2 text-center">Belum ada data barang.</td>
+                                    <td colspan="6" class="border border-gray-300 p-2 text-center">Belum ada data barang.</td>
                                 </tr>
                             @endforelse
                         </tbody>
