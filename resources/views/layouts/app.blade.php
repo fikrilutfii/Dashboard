@@ -57,6 +57,7 @@
             }
         </script>
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
@@ -145,5 +146,61 @@
                 </main>
             </div>
         </div>
+
+        <script>
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            @if(session('success'))
+                Toast.fire({
+                    icon: 'success',
+                    title: '{{ session('success') }}'
+                });
+            @endif
+
+            @if(session('error'))
+                Toast.fire({
+                    icon: 'error',
+                    title: '{{ session('error') }}'
+                });
+            @endif
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const deleteForms = document.querySelectorAll('.delete-confirm');
+                deleteForms.forEach(form => {
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        Swal.fire({
+                            title: 'Apakah Anda yakin?',
+                            text: "Data yang dihapus tidak dapat dikembalikan!",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#ef4444',
+                            cancelButtonColor: '#3b82f6',
+                            confirmButtonText: 'Ya, Hapus!',
+                            cancelButtonText: 'Batal',
+                            customClass: {
+                                popup: 'rounded-2xl',
+                                confirmButton: 'rounded-lg',
+                                cancelButton: 'rounded-lg'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                form.submit();
+                            }
+                        });
+                    });
+                });
+            });
+        </script>
     </body>
 </html>

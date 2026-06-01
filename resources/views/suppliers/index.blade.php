@@ -29,9 +29,13 @@
                                     <td class="px-5 py-3 border-b">{{ $supplier->name }}</td>
                                     <td class="px-5 py-3 border-b">{{ $supplier->phone }}</td>
                                     <td class="px-5 py-3 border-b">{{ $supplier->address }}</td>
-                                    <td class="px-5 py-3 border-b text-right">
-                                        <a href="{{ route('suppliers.edit', $supplier) }}" class="text-primary-600 hover:text-primary-900 mr-2">Edit</a>
-                                        <!-- Delete form if needed -->
+                                    <td class="px-5 py-3 border-b text-right flex justify-end items-center">
+                                        <a href="{{ route('suppliers.edit', $supplier) }}" class="text-primary-600 hover:text-primary-900 mr-4">Edit</a>
+                                        <form action="{{ route('suppliers.destroy', $supplier) }}" method="POST" class="inline-block delete-confirm">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-500 hover:text-red-700">Hapus</button>
+                                        </form>
                                     </td>
                                 </tr>
                             @endforeach

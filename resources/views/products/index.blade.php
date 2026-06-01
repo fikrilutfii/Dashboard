@@ -10,12 +10,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
 
-                    @if(session('success'))
-                        <div class="mb-4 p-3 bg-green-50 text-green-800 rounded border border-green-200 text-sm">✅ {{ session('success') }}</div>
-                    @endif
-                    @if(session('error'))
-                        <div class="mb-4 p-3 bg-red-50 text-red-800 rounded border border-red-200 text-sm">❌ {{ session('error') }}</div>
-                    @endif
+
 
                     <div class="flex justify-between mb-4 flex-wrap gap-2">
                         <form action="{{ route('products.index') }}" method="GET" class="flex gap-2">
@@ -57,7 +52,7 @@
                                     </td>
                                     <td class="border border-gray-300 p-2 text-center">
                                         <a href="{{ route('products.edit', $product) }}" class="text-primary-600 hover:text-primary-900">Edit</a> |
-                                        <form action="{{ route('products.destroy', $product) }}" method="POST" class="inline" onsubmit="return confirm('Hapus barang ini?');">
+                                        <form action="{{ route('products.destroy', $product) }}" method="POST" class="inline delete-confirm">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-500 hover:underline">Hapus</button>

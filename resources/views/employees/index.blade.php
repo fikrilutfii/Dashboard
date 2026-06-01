@@ -40,9 +40,14 @@
                                     <td class="px-5 py-3 border-b">{{ $employee->role }}</td>
                                     <td class="px-5 py-3 border-b text-right font-mono text-sm">Rp {{ number_format($employee->salary_base, 0, ',', '.') }}</td>
                                     <td class="px-5 py-3 border-b text-right font-mono text-xs text-zinc-500">Rp {{ number_format($employee->overtime_rate, 0, ',', '.') }}</td>
-                                    <td class="px-5 py-3 border-b text-right flex justify-end gap-2">
+                                    <td class="px-5 py-3 border-b text-right flex justify-end gap-2 items-center">
                                         <a href="{{ route('kasbons.create', ['employee_id' => $employee->id]) }}" class="text-orange-600 hover:text-orange-900 text-xs border border-orange-600 px-2 py-1 rounded">Kasbon</a>
                                         <a href="{{ route('employees.edit', $employee) }}" class="text-blue-600 hover:text-blue-900 text-xs border border-blue-600 px-2 py-1 rounded">Edit</a>
+                                        <form action="{{ route('employees.destroy', $employee) }}" method="POST" class="inline-block delete-confirm">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-900 text-xs border border-red-600 px-2 py-1 rounded">Hapus</button>
+                                        </form>
                                     </td>
                                 </tr>
                             @endforeach
