@@ -3,20 +3,24 @@
         Dashboard
     </x-slot>
 
-    <div class="space-y-8">
+    <div class="space-y-8 page-enter">
         <!-- Welcome / Status -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-zinc-100/50">
-            <div>
-                <h3 class="text-xl font-bold text-zinc-800 tracking-tight">Selamat Datang, {{ Auth::user()->name }} 👋</h3>
-                <p class="text-zinc-500 text-sm mt-1">Anda sedang mengelola divisi: 
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase tracking-wide ml-1">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] border border-white/60 shadow-premium relative overflow-hidden">
+            <!-- Decorative Accent -->
+            <div class="absolute right-0 top-0 w-32 h-32 bg-primary-500/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+            
+            <div class="relative z-10">
+                <h3 class="text-2xl font-black text-zinc-900 tracking-tight">Selamat Datang, {{ Auth::user()->name }} 👋</h3>
+                <p class="text-zinc-500 text-sm mt-2 flex items-center">
+                    Anda sedang mengelola divisi: 
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black bg-primary-50 text-primary-600 border border-primary-100 uppercase tracking-widest ml-2">
                         {{ $division }}
                     </span>
                 </p>
             </div>
-            <div class="text-right hidden sm:block">
-                <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Tanggal Hari Ini</p>
-                <p class="text-lg font-bold text-zinc-700">{{ now()->format('d F Y') }}</p>
+            <div class="text-right hidden sm:block relative z-10">
+                <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Tanggal Hari Ini</p>
+                <p class="text-xl font-black text-primary-600 mt-1">{{ now()->format('d F Y') }}</p>
             </div>
         </div>
 
@@ -73,10 +77,10 @@
         </div>
 
         <!-- Action Section -->
-        <div class="bg-white rounded-2xl shadow-sm border border-zinc-100/50 p-6">
-            <h3 class="text-lg font-bold text-zinc-800 mb-6 flex items-center gap-2">
-                <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <div class="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-premium border border-white/60 p-8">
+            <h3 class="text-xl font-black text-zinc-900 mb-8 flex items-center gap-3">
+                <span class="p-2.5 premium-gradient text-white rounded-2xl shadow-lg shadow-primary-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                     </svg>
                 </span>

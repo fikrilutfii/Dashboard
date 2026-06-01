@@ -3,17 +3,29 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 
 class CompanyReceivable extends Model
 {
     use HasFactory;
 
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class);
+    }
+
+    public function kasbon(): BelongsTo
+    {
+        return $this->belongsTo(Kasbon::class);
+    }
+
     protected $fillable = [
         'name',
         'description',
         'total_amount',
         'remaining_amount',
+        'monthly_amount',
         'due_date',
         'status',
         'type',
@@ -25,6 +37,7 @@ class CompanyReceivable extends Model
         'due_date' => 'date',
         'total_amount' => 'decimal:2',
         'remaining_amount' => 'decimal:2',
+        'monthly_amount' => 'decimal:2',
     ];
 
     public function isLunas(): bool

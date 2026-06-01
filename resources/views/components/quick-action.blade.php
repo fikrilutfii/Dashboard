@@ -1,27 +1,27 @@
 @props(['title', 'icon', 'url', 'color' => 'indigo', 'desc' => ''])
 
 <a href="{{ $url }}" 
-   class="group relative flex items-center p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm hover:shadow-md hover:border-{{ $color }}-200 transition-all duration-300"
+   class="group relative flex items-center p-6 bg-white/80 backdrop-blur-xl rounded-[1.5rem] border border-white/60 shadow-premium hover:shadow-premium-hover hover:-translate-y-1 transition-all duration-500"
 >
     <!-- Icon Container -->
-    <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-xl bg-{{ $color }}-50 text-{{ $color }}-600 group-hover:scale-110 group-hover:bg-{{ $color }}-100 transition-transform duration-300">
+    <div class="flex-shrink-0 w-14 h-14 flex items-center justify-center rounded-2xl bg-{{ $color }}-500 text-white shadow-lg shadow-{{ $color }}-500/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
         {!! $icon !!}
     </div>
 
     <!-- Text Content -->
-    <div class="ml-4">
-        <h4 class="text-sm font-semibold text-zinc-800 group-hover:text-{{ $color }}-700 transition-colors">
+    <div class="ml-5">
+        <h4 class="text-md font-black text-zinc-900 group-hover:text-primary-600 transition-colors leading-none mb-1">
             {{ $title }}
         </h4>
         @if($desc)
-            <p class="text-xs text-zinc-400 mt-0.5 group-hover:text-zinc-500">{{ $desc }}</p>
+            <p class="text-[11px] font-bold text-zinc-400 uppercase tracking-wide group-hover:text-zinc-500">{{ $desc }}</p>
         @endif
     </div>
 
     <!-- Subtle Arrow -->
-    <div class="absolute right-4 text-zinc-300 group-hover:text-{{ $color }}-400 group-hover:translate-x-1 transition-all duration-300">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-            <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
+    <div class="absolute right-6 text-zinc-200 group-hover:text-primary-400 group-hover:translate-x-2 transition-all duration-500">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+            <path d="M5 12h14M12 5l7 7-7 7" />
         </svg>
     </div>
 </a>

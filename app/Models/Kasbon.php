@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Kasbon extends Model
 {
@@ -44,5 +45,43 @@ class Kasbon extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function receivable(): HasOne
+    {
+        return $this->hasOne(CompanyReceivable::class);
+    }
+
+    public function syncToReceivable()
+    {
+        if ($this->status === 'lunas' || $this->status === 'deducted') {
+            if ($this->receivable) {
+                $this->receivable->update([
+                    'status' => 'lunas',
+                    'remaining_amount' => 0,
+                ]);
+            }
+            return;
+        }
+
+        $receivableData = [
+            'kasbon_id'        => $this->id,
+            'name'             => $this->employee->name ?? 'Karyawan',
+            'description'      => 'Piutang Kasbon Karyawan: ' . ($this->description ?? 'Tanpa keterangan'),
+            'total_amount'     => $this->amount,
+            'remaining_amount' => $this->remaining_amount,
+            'monthly_amount'   => $this->installment_amount,
+            'due_date'         => $this->date,
+            'status'           => ($this->remaining_amount < $this->amount) ? 'sebagian' : 'belum_lunas',
+            'type'             => $this->installment_amount > 0 ? 'installment' : 'cash',
+            'division'         => $this->employee->division,
+            'entity'           => $this->employee->division,
+        ];
+
+        if ($this->receivable) {
+            $this->receivable->update($receivableData);
+        } else {
+            $this->receivable()->create($receivableData);
+        }
     }
 }

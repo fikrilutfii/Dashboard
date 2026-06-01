@@ -16,7 +16,6 @@ class ProductSeeder extends Seeder
             $this->command->error("File CSV not found at: $csvFile");
             return;
         }
-
         $this->command->info("Reading CSV file...");
 
         $fileStream = fopen($csvFile, 'r');

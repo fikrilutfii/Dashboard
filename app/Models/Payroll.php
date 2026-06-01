@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payroll extends Model
@@ -20,6 +21,7 @@ class Payroll extends Model
         'basic_salary',
         'bonus',
         'kasbon_deduction',
+        'saved_salary',
         'overtime_hours',
         'overtime_rate',
         'overtime_pay',
@@ -35,6 +37,7 @@ class Payroll extends Model
         'basic_salary'      => 'decimal:2',
         'bonus'             => 'decimal:2',
         'kasbon_deduction'  => 'decimal:2',
+        'saved_salary'      => 'decimal:2',
         'overtime_hours'    => 'decimal:2',
         'overtime_rate'     => 'decimal:2',
         'overtime_pay'      => 'decimal:2',
@@ -54,5 +57,42 @@ class Payroll extends Model
     public function getStatusLabelAttribute(): string
     {
         return $this->isLunas() ? 'Lunas' : 'Belum Lunas';
+    }
+
+    public function debt(): HasOne
+    {
+        return $this->hasOne(CompanyDebt::class);
+    }
+
+    public function syncToDebt()
+    {
+        if ($this->isLunas()) {
+            if ($this->debt) {
+                $this->debt->update([
+                    'status' => 'lunas',
+                    'remaining_amount' => 0,
+                ]);
+            }
+            return;
+        }
+
+        $debtData = [
+            'payroll_id'       => $this->id,
+            'name'             => 'Gaji ' . ($this->employee->name ?? 'Karyawan'),
+            'description'      => 'Kewajiban Gaji Periode ' . $this->period_start->format('d/m') . ' - ' . $this->period_end->format('d/m/Y'),
+            'amount'           => $this->total_salary,
+            'remaining_amount' => $this->total_salary,
+            'due_date'         => $this->period_end,
+            'status'           => 'belum_lunas',
+            'type'             => 'cash',
+            'division'         => $this->employee->division,
+            'entity'           => $this->employee->division,
+        ];
+
+        if ($this->debt) {
+            $this->debt->update($debtData);
+        } else {
+            $this->debt()->create($debtData);
+        }
     }
 }

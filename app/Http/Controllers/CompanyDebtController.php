@@ -33,8 +33,13 @@ class CompanyDebtController extends Controller
         $totalLunas = CompanyDebt::when($division, fn($q) => $q->where('division', $division))
             ->where('status', 'lunas')
             ->sum('amount');
+            
+        $totalAngsuranBulanIni = CompanyDebt::when($division, fn($q) => $q->where('division', $division))
+            ->where('status', '!=', 'lunas')
+            ->where('monthly_amount', '>', 0)
+            ->sum('monthly_amount');
 
-        return view('company_debts.index', compact('debts', 'totalBelumLunas', 'totalLunas'));
+        return view('company_debts.index', compact('debts', 'totalBelumLunas', 'totalLunas', 'totalAngsuranBulanIni'));
     }
 
     public function create()
@@ -157,6 +162,13 @@ class CompanyDebtController extends Controller
                 'division'       => $companyDebt->division,
                 'entity'         => $companyDebt->entity ?? $companyDebt->division,
             ]);
+
+            // Reverse Sync to Source
+            if ($companyDebt->purchase_id) {
+                $companyDebt->purchase->update(['status' => 'lunas']);
+            } elseif ($companyDebt->payroll_id) {
+                $companyDebt->payroll->update(['status' => 'lunas']);
+            }
         });
 
         return back()->with('success', 'Pembayaran ditandai Lunas dan tercatat di kas.');
@@ -189,6 +201,17 @@ class CompanyDebtController extends Controller
                 'division'       => $companyDebt->division,
                 'entity'         => $companyDebt->entity ?? $companyDebt->division,
             ]);
+
+            // Reverse Sync to Source
+            if ($companyDebt->purchase_id) {
+                if ($status === 'lunas') {
+                    $companyDebt->purchase->update(['status' => 'lunas']);
+                }
+            } elseif ($companyDebt->payroll_id) {
+                if ($status === 'lunas') {
+                    $companyDebt->payroll->update(['status' => 'lunas']);
+                }
+            }
         });
 
         return back()->with('success', 'Angsuran pembayaran berhasil dicatat.');

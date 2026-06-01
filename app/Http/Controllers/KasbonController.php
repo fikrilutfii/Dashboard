@@ -48,7 +48,7 @@ class KasbonController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        Kasbon::create([
+        $kasbon = Kasbon::create([
             'employee_id' => $validated['employee_id'],
             'type' => $validated['type'],
             'amount' => $validated['amount'],
@@ -58,6 +58,9 @@ class KasbonController extends Controller
             'description' => $validated['description'],
             'status' => 'aktif',
         ]);
+
+        $kasbon->load('employee');
+        $kasbon->syncToReceivable();
 
         return redirect()->route('kasbons.index')->with('success', 'Pinjaman berhasil dicatat.');
     }
@@ -88,6 +91,9 @@ class KasbonController extends Controller
                 $kasbon->update(['status' => 'lunas']);
             }
 
+            $kasbon->load('employee');
+            $kasbon->syncToReceivable();
+
             // Record Transaction (Money In)
             \App\Models\Transaction::create([
                 'type' => 'credit',
@@ -109,6 +115,7 @@ class KasbonController extends Controller
         if($kasbon->status !== 'aktif') {
              return back()->with('error', 'Hanya kasbon status Aktif yang bisa dihapus.');
         }
+        $kasbon->receivable()->delete();
         $kasbon->delete();
         return back()->with('success', 'Kasbon dihapus.');
     }

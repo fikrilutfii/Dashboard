@@ -61,60 +61,71 @@ class InvoiceController extends Controller
             'due_date' => 'nullable|date|after_or_equal:invoice_date',
             'items' => 'required|array|min:1',
             'items.*.product_code' => 'required|exists:products,code',
+            'items.*.product_name' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0', // Ensure price is validated
         ]);
 
-        DB::transaction(function () use ($validated) {
+        $invoice = null;
+        \Illuminate\Support\Facades\Log::info('Invoice Store: Before transaction');
+        DB::transaction(function () use ($validated, &$invoice, $request) {
+            \Illuminate\Support\Facades\Log::info('Invoice Store: Starting transaction');
             $invoice = Invoice::create([
                 'invoice_number' => $validated['invoice_number'],
-                'division' => $validated['division'],
-                'customer_id' => $validated['customer_id'],
-                'invoice_date' => $validated['invoice_date'],
-                'due_date' => $validated['due_date'],
-                'status' => 'belum_lunas',
-                'total_amount' => 0, 
+                'division'       => $validated['division'],
+                'customer_id'    => $validated['customer_id'],
+                'invoice_date'   => $validated['invoice_date'],
+                'due_date'       => $validated['due_date'],
+                'status'         => 'belum_lunas',
+                'total_amount'   => 0,
+                'payment_method' => $request->payment_method ?? 'cash',
+                'tenure'         => $request->tenure,
             ]);
+            \Illuminate\Support\Facades\Log::info('Invoice Store: Invoice created ID: ' . $invoice->id);
 
             $totalAmount = 0;
 
             foreach ($validated['items'] as $item) {
-                // Fetch product for name/code, but trust manual price if needed or validate
+                \Illuminate\Support\Facades\Log::info('Invoice Store: Processing item: ' . $item['product_code']);
                 $product = Product::where('code', $item['product_code'])->first();
-                
-                // Allow manual override of price or use product price? 
-                // Previous code used product price. 
-                // Requirement says "Input Faktur". Often price can vary. 
-                // Let's use the input price associated with the validated data.
                 $unitPrice = $item['unit_price']; 
-                
                 $subtotal = $item['quantity'] * $unitPrice;
                 $totalAmount += $subtotal;
 
                 InvoiceItem::create([
-                    'invoice_id' => $invoice->id,
+                    'invoice_id'   => $invoice->id,
                     'product_code' => $product->code,
-                    'item_name' => $product->name,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $unitPrice,
-                    'subtotal' => $subtotal,
+                    'item_name'    => $item['product_name'] ?? $product->name,
+                    'quantity'     => $item['quantity'],
+                    'unit_price'   => $unitPrice,
+                    'subtotal'     => $subtotal,
                 ]);
 
-                // Deduct stock for sales
                 if ($product) {
-                    $product->syncStock(-$item['quantity']);
+                    \Illuminate\Support\Facades\Log::info('Invoice Store: Syncing stock for product: ' . $product->code);
+                    $product->syncStock(-$item['quantity'], 'out', 'Penjualan Invoice #' . $invoice->invoice_number, \App\Models\Invoice::class, $invoice->id);
+                    \Illuminate\Support\Facades\Log::info('Invoice Store: Stock synced');
                 }
             }
 
+            \Illuminate\Support\Facades\Log::info('Invoice Store: Updating total amount');
             $invoice->update(['total_amount' => $totalAmount]);
+            
+            \Illuminate\Support\Facades\Log::info('Invoice Store: Loading customer');
+            $invoice->load('customer');
+            
+            \Illuminate\Support\Facades\Log::info('Invoice Store: Syncing to receivable');
+            $invoice->syncToReceivable();
+            \Illuminate\Support\Facades\Log::info('Invoice Store: Synced to receivable');
 
             InvoiceLog::create([
-                'invoice_id' => $invoice->id,
-                'user_id' => Auth::id(),
-                'action' => 'Created',
-                'description' => 'Invoice created with total: ' . number_format($totalAmount, 0, ',', '.'),
+                'invoice_id'  => $invoice->id,
+                'user_id'     => Auth::id(),
+                'action'      => 'Created',
+                'description' => 'Invoice created with total: ' . number_format($totalAmount, 0, ',', '.') . ' (' . strtoupper($invoice->payment_method) . ')',
             ]);
         });
+        \Illuminate\Support\Facades\Log::info('Invoice Store: Transaction completed');
 
         return redirect()->route('invoices.index')->with('success', 'Invoice created successfully.');
     }
@@ -148,59 +159,63 @@ class InvoiceController extends Controller
              'due_date' => 'nullable|date|after_or_equal:invoice_date',
              'items' => 'required|array|min:1',
              'items.*.product_code' => 'required|exists:products,code',
+             'items.*.product_name' => 'required|string',
              'items.*.quantity' => 'required|integer|min:1',
+             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
-        DB::transaction(function () use ($validated, $invoice) {
-             $invoice->update([
-                 'customer_id' => $validated['customer_id'],
-                 'invoice_date' => $validated['invoice_date'],
-                 'due_date' => $validated['due_date'],
-             ]);
+        DB::transaction(function () use ($validated, $invoice, $request) {
+            $invoice->update([
+                'customer_id'    => $validated['customer_id'],
+                'invoice_date'   => $validated['invoice_date'],
+                'due_date'       => $validated['due_date'],
+                'payment_method' => $request->payment_method ?? $invoice->payment_method,
+                'tenure'         => $request->tenure ?? $invoice->tenure,
+            ]);
 
-             // Revert stock for old items before replacing
-             foreach ($invoice->items as $oldItem) {
-                 $oldProduct = Product::where('code', $oldItem->product_code)->first();
-                 if ($oldProduct) {
-                     $oldProduct->syncStock($oldItem->quantity);
-                 }
-             }
+            // Revert stock for old items before replacing
+            foreach ($invoice->items as $oldItem) {
+                $oldProduct = Product::where('code', $oldItem->product_code)->first();
+                if ($oldProduct) {
+                    $oldProduct->syncStock($oldItem->quantity, 'correction', 'Revert sebelum update Invoice #' . $invoice->invoice_number, \App\Models\Invoice::class, $invoice->id);
+                }
+            }
 
-             // Replace tokens
-             $invoice->items()->delete();
-             
-             $totalAmount = 0;
-             foreach ($validated['items'] as $item) {
-                 $product = Product::where('code', $item['product_code'])->first();
-                 
-                 $unitPrice = $product->price;
-                 $subtotal = $item['quantity'] * $unitPrice;
-                 $totalAmount += $subtotal;
- 
-                 InvoiceItem::create([
-                     'invoice_id' => $invoice->id,
-                     'product_code' => $product->code,
-                     'item_name' => $product->name,
-                     'specification' => null,
-                     'quantity' => $item['quantity'],
-                     'unit_price' => $unitPrice,
-                     'subtotal' => $subtotal,
-                 ]);
+            // Replace items
+            $invoice->items()->delete();
+            
+            $totalAmount = 0;
+            foreach ($validated['items'] as $item) {
+                $product = Product::where('code', $item['product_code'])->first();
+                
+                $subtotal = $item['quantity'] * $item['unit_price'];
+                $totalAmount += $subtotal;
 
-                 // Deduct stock for new items
-                 if ($product) {
-                     $product->syncStock(-$item['quantity']);
-                 }
-             }
- 
-             $invoice->update(['total_amount' => $totalAmount]);
+                InvoiceItem::create([
+                    'invoice_id'   => $invoice->id,
+                    'product_code' => $product->code,
+                    'item_name'    => $item['product_name'] ?? $product->name,
+                    'quantity'     => $item['quantity'],
+                    'unit_price'   => $item['unit_price'],
+                    'subtotal'     => $subtotal,
+                ]);
 
-             InvoiceLog::create([
-                 'invoice_id' => $invoice->id,
-                 'user_id' => Auth::id(),
-                 'action' => 'Updated',
-                 'description' => 'Invoice updated. New total: ' . number_format($totalAmount, 0, ',', '.'),
-             ]);
+                // Deduct stock for new items
+                if ($product) {
+                    $product->syncStock(-$item['quantity'], 'out', 'Penjualan (Update) Invoice #' . $invoice->invoice_number, \App\Models\Invoice::class, $invoice->id);
+                }
+            }
+
+            $invoice->update(['total_amount' => $totalAmount]);
+            $invoice->load('customer');
+            $invoice->syncToReceivable();
+
+            InvoiceLog::create([
+                'invoice_id'  => $invoice->id,
+                'user_id'     => Auth::id(),
+                'action'      => 'Updated',
+                'description' => 'Invoice updated. New total: ' . number_format($totalAmount, 0, ',', '.') . ' (' . strtoupper($invoice->payment_method) . ')',
+            ]);
         });
 
         return redirect()->route('invoices.index')->with('success', 'Invoice updated successfully.');
@@ -219,36 +234,15 @@ class InvoiceController extends Controller
         DB::transaction(function() use ($invoice, $status) {
             $invoice->update(['status' => $status]);
 
-            if ($status == 'lunas') {
-                $invoice->update(['paid_amount' => $invoice->total_amount]); // Assume full payment for toggle
-                
-                // Record Transaction
-                \App\Models\Transaction::create([
-                    'type' => 'credit',
-                    'amount' => $invoice->total_amount,
-                    'category' => 'invoice_payment',
-                    'reference_type' => Invoice::class,
-                    'reference_id' => $invoice->id,
-                    'description' => 'Payment for Invoice ' . $invoice->invoice_number,
-                    'date' => now(),
-                    'division' => $invoice->division,
-                ]);
-            } else {
-                $invoice->update(['paid_amount' => 0]);
-                // Optional: Delete/Reverse transaction if set back to unpaid?
-                // For now, let's keep it simple or maybe reverse it with a debit? 
-                // Simplicity: Delete the transaction linked to this invoice to correct the balance.
-                \App\Models\Transaction::where('reference_type', Invoice::class)
-                    ->where('reference_id', $invoice->id)
-                    ->delete();
-            }
-
             InvoiceLog::create([
                 'invoice_id' => $invoice->id,
                 'user_id' => Auth::id(),
                 'action' => 'Status Changed',
                 'description' => 'Status changed to ' . ($status == 'lunas' ? 'Lunas' : 'Belum Lunas'),
             ]);
+
+            $invoice->load('customer');
+            $invoice->syncToReceivable();
         });
 
         return back()->with('success', 'Invoice status updated.');
@@ -264,10 +258,11 @@ class InvoiceController extends Controller
         foreach ($invoice->items as $item) {
             $product = Product::where('code', $item->product_code)->first();
             if ($product) {
-                $product->syncStock($item->quantity);
+                $product->syncStock($item->quantity, 'correction', 'Revert dari penghapusan Invoice #' . $invoice->invoice_number, \App\Models\Invoice::class, $invoice->id);
             }
         }
 
+        $invoice->receivable()->delete();
         $invoice->delete();
         return redirect()->route('invoices.index')->with('success', 'Invoice deleted successfully.');
     }
@@ -276,6 +271,12 @@ class InvoiceController extends Controller
     {
         $invoice->load(['items', 'customer']);
         return view('invoices.print', compact('invoice'));
+    }
+
+    public function printCombined(Invoice $invoice)
+    {
+        $invoice->load(['items', 'customer']);
+        return view('invoices.print_combined', compact('invoice'));
     }
 
     public function printReport(Request $request)

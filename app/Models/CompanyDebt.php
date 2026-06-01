@@ -3,11 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 
 class CompanyDebt extends Model
 {
     use HasFactory;
+
+    public function purchase(): BelongsTo
+    {
+        return $this->belongsTo(Purchase::class);
+    }
+
+    public function payroll(): BelongsTo
+    {
+        return $this->belongsTo(Payroll::class);
+    }
 
     protected $fillable = [
         'name',

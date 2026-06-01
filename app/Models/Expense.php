@@ -21,10 +21,15 @@ class Expense extends Model
         'quantity',
         'unit_price',
         'amount',
+        'payment_method',
+        'payment_status',
+        'tenure',
+        'due_date',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'due_date' => 'date',
         'amount' => 'decimal:2',
         'unit_price' => 'decimal:2',
     ];

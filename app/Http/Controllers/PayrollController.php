@@ -92,15 +92,32 @@ class PayrollController extends Controller
                 $overtimeHours = (float)($data['overtime_hours'] ?? 0);
                 $bonus         = (float)($data['bonus']       ?? 0);
                 $deduction     = (float)($data['deduction']   ?? 0);
+                $addKasbon     = (float)($data['add_kasbon']  ?? 0);
+                $saveSalary    = (float)($data['save_salary'] ?? 0);
 
-                if ($workingDays <= 0 && $bonus <= 0 && $overtimeHours <= 0) continue;
+                if ($workingDays <= 0 && $bonus <= 0 && $overtimeHours <= 0 && $deduction <= 0 && $addKasbon <= 0 && $saveSalary <= 0) continue;
 
                 $employee     = Employee::findOrFail($data['employee_id']);
                 $dailyRate    = $employee->salary_base;
                 $overtimeRate = $employee->overtime_rate;
                 $basicSalary  = $dailyRate * $workingDays;
                 $overtimePay  = $overtimeRate * $overtimeHours;
-                $totalSalary  = $basicSalary + $overtimePay + $bonus - $deduction;
+                $totalSalary  = $basicSalary + $overtimePay + $bonus - $deduction - $saveSalary;
+
+                if ($addKasbon > 0) {
+                    $newKasbon = \App\Models\Kasbon::create([
+                        'employee_id' => $employee->id,
+                        'type' => 'staff_kasbon',
+                        'amount' => $addKasbon,
+                        'remaining_amount' => $addKasbon,
+                        'installment_amount' => 0,
+                        'date' => now(),
+                        'description' => 'Tambah Kasbon via Rekap Gaji Mingguan',
+                        'status' => 'aktif',
+                    ]);
+                    $newKasbon->load('employee');
+                    $newKasbon->syncToReceivable();
+                }
 
                 // Deduct Kasbon (FIFO)
                 if ($deduction > 0) {
@@ -136,21 +153,28 @@ class PayrollController extends Controller
                     'basic_salary'      => $basicSalary,
                     'bonus'             => $bonus,
                     'kasbon_deduction'  => $deduction,
+                    'saved_salary'      => $saveSalary,
                     'total_salary'      => $totalSalary,
                     'status'            => 'belum_lunas',
                 ]);
 
-                // Auto-create Finance Entry (Pengeluaran → Penggajian)
-                Transaction::create([
-                    'type'           => 'debit',
-                    'amount'         => $totalSalary,
-                    'category'       => 'penggajian',
-                    'reference_type' => Payroll::class,
-                    'reference_id'   => $payroll->id,
-                    'description'    => 'Pembayaran Gaji ' . $employee->name . ' (' . $workingDays . ' hari, ' . $request->period_start . ' – ' . $request->period_end . ')',
-                    'date'           => now(),
-                    'division'       => $employee->division,
-                ]);
+                $payroll->load('employee');
+                $payroll->syncToDebt();
+
+                if ($saveSalary > 0) {
+                    \App\Models\CompanyDebt::create([
+                        'payroll_id'       => $payroll->id,
+                        'name'             => 'Tabungan Gaji ' . $employee->name,
+                        'description'      => 'Gaji Disimpan Periode ' . $request->period_start . ' - ' . $request->period_end,
+                        'amount'           => $saveSalary,
+                        'remaining_amount' => $saveSalary,
+                        'due_date'         => $request->period_end,
+                        'status'           => 'belum_lunas',
+                        'type'             => 'tabungan',
+                        'division'         => $employee->division,
+                        'entity'           => $employee->division,
+                    ]);
+                }
             }
         });
 
@@ -210,16 +234,8 @@ class PayrollController extends Controller
                 'status'             => 'belum_lunas',
             ]);
 
-            Transaction::create([
-                'type'           => 'debit',
-                'amount'         => $totalSalary,
-                'category'       => 'penggajian',
-                'reference_type' => Payroll::class,
-                'reference_id'   => $payroll->id,
-                'description'    => 'Pembayaran Gaji ' . $employee->name,
-                'date'           => now(),
-                'division'       => $employee->division,
-            ]);
+            $payroll->load('employee');
+            $payroll->syncToDebt();
         });
 
         return redirect()->route('payrolls.index')->with('success', 'Data penggajian berhasil disimpan.');
@@ -261,10 +277,8 @@ class PayrollController extends Controller
             'status'            => $validated['status'],
         ]);
 
-        // Sync transaction amount
-        Transaction::where('reference_type', Payroll::class)
-            ->where('reference_id', $payroll->id)
-            ->update(['amount' => $totalSalary]);
+        $payroll->load('employee');
+        $payroll->syncToDebt();
 
         return redirect()->route('payrolls.index')->with('success', 'Data penggajian berhasil diperbarui.');
     }
@@ -277,6 +291,7 @@ class PayrollController extends Controller
             ->where('reference_id', $payroll->id)
             ->delete();
 
+        $payroll->debt()->delete();
         $payroll->delete();
         return back()->with('success', 'Data penggajian dihapus.');
     }
@@ -285,11 +300,20 @@ class PayrollController extends Controller
     public function markLunas(Payroll $payroll)
     {
         $payroll->update(['status' => 'lunas']);
+        $payroll->load('employee');
+        $payroll->syncToDebt();
 
-        // Update transaction record to reflect payment
-        Transaction::where('reference_type', Payroll::class)
-            ->where('reference_id', $payroll->id)
-            ->update(['description' => 'Pembayaran Gaji ' . $payroll->employee->name . ' [LUNAS] ' . now()->format('d/m/Y')]);
+        // Also record the transaction as it is now officially paid
+        Transaction::create([
+            'type'           => 'debit',
+            'amount'         => $payroll->total_salary,
+            'category'       => 'penggajian',
+            'reference_type' => Payroll::class,
+            'reference_id'   => $payroll->id,
+            'description'    => 'Pelunasan Gaji ' . $payroll->employee->name . ' periode ' . $payroll->period_end->format('d/m/Y'),
+            'date'           => now(),
+            'division'       => $payroll->employee->division,
+        ]);
 
         return back()->with('success', 'Gaji ' . $payroll->employee->name . ' ditandai Lunas.');
     }

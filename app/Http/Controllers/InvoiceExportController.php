@@ -23,46 +23,54 @@ class InvoiceExportController extends Controller
             $spreadsheet = IOFactory::load($templatePath);
             $sheet = $spreadsheet->getActiveSheet();
 
-            // Header Data
-            // Date: J3
-            $sheet->setCellValue('J3', $invoice->date->format('d M Y')); // Or use Excel date format
-            
-            // Customer: I5
-            $sheet->setCellValue('I5', $invoice->customer ? $invoice->customer->name : 'N/A');
+            // Header Kiri (Faktur)
+            $sheet->setCellValue('K1', $invoice->invoice_date->format('d F Y'));
+            $sheet->setCellValue('K2', $invoice->customer ? $invoice->customer->name : 'N/A');
+            $sheet->setCellValue('K3', $invoice->customer ? $invoice->customer->address : '');
+            $sheet->setCellValue('H4', $invoice->invoice_number);
 
-            // Invoice No: Assuming C8 (overwriting formula for now) or find a better place
-            // $sheet->setCellValue('C8', $invoice->invoice_number); 
+            // Header Kanan (Surat Jalan)
+            $sheet->setCellValue('AB1', $invoice->invoice_date->format('d F Y'));
+            $sheet->setCellValue('AB2', $invoice->customer ? $invoice->customer->name : 'N/A');
+            $sheet->setCellValue('AB3', $invoice->customer ? $invoice->customer->address : '');
+            $sheet->setCellValue('Y4', $invoice->invoice_number);
 
-            // Items - Start Row 14
-            $startRow = 14;
+            // Items - Start Row 15
+            $startRow = 15;
             $currentRow = $startRow;
             $items = $invoice->items;
 
-            foreach ($items as $index => $item) {
-                // Check if we exceed a reasonable limit (e.g. 15 items)
-                if ($currentRow > 28) {
-                    break; // Or handle pagination/insert rows (complex)
-                }
+            $subtotal = 0;
 
-                $sheet->setCellValue('A' . $currentRow, $index + 1);
-                $sheet->setCellValue('B' . $currentRow, $item->product_name); // Assuming product_name is stored or relation
-                $sheet->setCellValue('F' . $currentRow, $item->quantity);
-                $sheet->setCellValue('H' . $currentRow, $item->unit ?? 'pcs'); 
-                $sheet->setCellValue('K' . $currentRow, $item->price);
+            foreach ($items as $index => $item) {
+                if ($currentRow > 24) {
+                    break;
+                }
                 
+                $itemSubtotal = $item->quantity * $item->unit_price;
+                $subtotal += $itemSubtotal;
+
+                // Sisi Kiri (Faktur)
+                $sheet->setCellValue('A' . $currentRow, $index + 1);
+                $sheet->setCellValue('B' . $currentRow, $item->product_code);
+                $sheet->setCellValue('C' . $currentRow, $item->item_name);
+                $sheet->setCellValue('F' . $currentRow, $item->quantity);
+                $sheet->setCellValue('H' . $currentRow, 'PCS'); 
+                $sheet->setCellValue('K' . $currentRow, $item->unit_price);
+                $sheet->setCellValue('P' . $currentRow, $itemSubtotal);
+                
+                // Sisi Kanan (Surat Jalan)
+                $sheet->setCellValue('R' . $currentRow, $index + 1);
+                $sheet->setCellValue('T' . $currentRow, $item->product_code);
+                $sheet->setCellValue('U' . $currentRow, $item->item_name);
+                $sheet->setCellValue('AA' . $currentRow, $item->quantity);
+                $sheet->setCellValue('AB' . $currentRow, 'PCS');
+
                 $currentRow++;
             }
 
             // Totals
-            // Assuming K28, K29, K30 based on labels I28, I29, I30
-            // Calculate totals
-            $subtotal = $items->sum(function($item) { return $item->quantity * $item->price; });
-            $discount = 0; // Or from invoice if exists
-            $total = $subtotal - $discount;
-
-            $sheet->setCellValue('K28', $subtotal);
-            $sheet->setCellValue('K29', $discount);
-            $sheet->setCellValue('K30', $total);
+            $sheet->setCellValue('P30', $subtotal);
 
             // Output
             $writer = new Xlsx($spreadsheet);

@@ -1,5 +1,5 @@
 <aside 
-    class="fixed inset-y-0 left-0 bg-zinc-900 text-zinc-300 transition-all duration-300 transform z-30 overflow-y-auto lg:static lg:inset-auto border-r border-zinc-800"
+    class="fixed inset-y-0 left-0 bg-zinc-950 text-zinc-400 transition-all duration-500 transform z-30 overflow-y-auto lg:static lg:inset-auto border-r border-white/5 scrollbar-hide shadow-2xl shadow-black/50"
     :class="{
         '-translate-x-full': !sidebarOpen, 
         'translate-x-0': sidebarOpen, 
@@ -9,22 +9,22 @@
     }"
 >
     <!-- Logo -->
-    <div class="h-20 flex items-center justify-center sticky top-0 z-10 bg-zinc-900/95 backdrop-blur-sm"
+    <div class="h-24 flex items-center justify-center sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-md border-b border-white/5"
         :class="sidebarExpanded ? 'px-8' : 'px-4'">
         <div class="flex items-center gap-3 overflow-hidden">
             <!-- Icon Logo -->
-            <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-indigo-500/20">
+            <div class="flex-shrink-0 w-12 h-12 premium-gradient rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary-500/30 transform transition-transform duration-300 hover:rotate-6">
                 A
             </div>
             <!-- Text Logo -->
             <div x-show="sidebarExpanded"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 transform -translate-x-2"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform -translate-x-4"
                 x-transition:enter-end="opacity-100 transform translate-x-0"
                 class="flex flex-col"
             >
-                <h1 class="text-lg font-bold tracking-tight text-white leading-none">ABADI</h1>
-                <span class="text-xs font-medium text-zinc-500 tracking-widest uppercase">Sentosa</span>
+                <h1 class="text-xl font-black tracking-tighter text-white leading-none">ABADI</h1>
+                <span class="text-[10px] font-bold text-primary-400 tracking-[0.3em] uppercase mt-1">Sentosa</span>
             </div>
         </div>
     </div>
@@ -63,18 +63,6 @@
                  <div x-show="!sidebarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap shadow-xl border border-zinc-700">Faktur Penjualan</div>
             </a>
 
-            <a href="{{ route('expenses.index') }}" 
-               class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group relative
-               {{ request()->routeIs('expenses.*') ? 'bg-indigo-600/10 text-indigo-400' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white' }}
-               "
-               :class="sidebarExpanded ? '' : 'justify-center'"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 flex-shrink-0 transition-colors {{ request()->routeIs('expenses.*') ? 'text-indigo-400' : 'text-zinc-500 group-hover:text-zinc-300' }}">
-                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                </svg>
-                <span class="ml-3 font-medium whitespace-nowrap" x-show="sidebarExpanded">Pengeluaran</span>
-                <div x-show="!sidebarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap shadow-xl border border-zinc-700">Pengeluaran</div>
-            </a>
 
              <a href="{{ route('payrolls.index') }}" 
                class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group relative
@@ -108,19 +96,7 @@
                  <div x-show="!sidebarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap shadow-xl border border-zinc-700">Faktur Penjualan</div>
             </a>
             
-             <a href="{{ route('expenses.index') }}" 
-               class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group relative
-               {{ request()->routeIs('expenses.*') ? 'bg-indigo-600/10 text-indigo-400' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white' }}
-               "
-               :class="sidebarExpanded ? '' : 'justify-center'"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 flex-shrink-0 transition-colors {{ request()->routeIs('expenses.*') ? 'text-indigo-400' : 'text-zinc-500 group-hover:text-zinc-300' }}">
-                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                </svg>
-                <span class="ml-3 font-medium whitespace-nowrap" x-show="sidebarExpanded">Pengeluaran</span>
-                <div x-show="!sidebarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap shadow-xl border border-zinc-700">Pengeluaran</div>
-            </a>
-
+ 
             
 
              <a href="{{ route('payrolls.index') }}" 
@@ -173,15 +149,15 @@
         </a>
 
         <!-- Transaksi Collapsible -->
-        <div x-data="{ transaksiOpen: {{ request()->routeIs(['finance.pemasukan', 'company-debts.*', 'company-receivables.*']) ? 'true' : 'false' }} }" class="mt-2 text-sm">
+        <div x-data="{ transaksiOpen: {{ request()->routeIs(['finance.transactions', 'company-debts.*', 'company-receivables.*']) ? 'true' : 'false' }} }" class="mt-2 text-sm">
             <button @click="transaksiOpen = !transaksiOpen" 
                 class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group
-                {{ request()->routeIs(['finance.pemasukan', 'company-debts.*', 'company-receivables.*']) ? 'bg-zinc-800/50 text-white' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white' }}
+                {{ request()->routeIs(['finance.transactions', 'company-debts.*', 'company-receivables.*']) ? 'bg-zinc-800/50 text-white' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white' }}
                 "
                 :class="sidebarExpanded ? '' : 'justify-center'"
             >
                 <div class="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 flex-shrink-0 transition-colors {{ request()->routeIs(['finance.pemasukan', 'company-debts.*', 'company-receivables.*']) ? 'text-indigo-400' : 'text-zinc-500 group-hover:text-zinc-300' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 flex-shrink-0 transition-colors {{ request()->routeIs(['finance.transactions', 'company-debts.*', 'company-receivables.*']) ? 'text-indigo-400' : 'text-zinc-500 group-hover:text-zinc-300' }}">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span class="ml-3 font-medium whitespace-nowrap" x-show="sidebarExpanded">Transaksi</span>
@@ -197,9 +173,9 @@
                  x-transition:enter-end="transform opacity-100 translate-y-0"
                  class="mt-1 ml-9 border-l-2 border-zinc-800 space-y-1"
             >
-                <a href="{{ route('finance.pemasukan') }}" 
-                   class="block px-4 py-2 hover:text-white rounded-lg {{ request()->routeIs('finance.pemasukan') ? 'text-white font-semibold' : 'text-zinc-500' }}">
-                    Pemasukan
+                <a href="{{ route('finance.transactions') }}" 
+                   class="block px-4 py-2 hover:text-white rounded-lg {{ request()->routeIs('finance.transactions') ? 'text-white font-semibold' : 'text-zinc-500' }}">
+                    Transaksi
                 </a>
                 <a href="{{ route('company-debts.index') }}" 
                    class="block px-4 py-2 hover:text-white rounded-lg {{ request()->routeIs('company-debts.*') ? 'text-white font-semibold' : 'text-zinc-500' }}">

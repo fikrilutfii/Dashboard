@@ -7,8 +7,10 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
-        <form action="{{ route('finance.storePemasukan') }}" method="POST">
+        <form action="{{ route('finance.storeTransaction') }}" method="POST">
             @csrf
+            <input type="hidden" name="type" value="credit">
+            <input type="hidden" name="payment_method" value="cash">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Jumlah (Rp)</label>

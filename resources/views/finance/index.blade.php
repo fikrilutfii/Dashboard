@@ -29,37 +29,37 @@
         </div>
     </x-slot>
 
-    <div class="py-8 bg-gray-50 min-h-screen">
+    <div class="py-10 bg-gray-50/50 min-h-screen page-enter">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            <!-- SECTION A: Ringkasan Saldo (Latar Putih, Border Tipis, Shadow Ringan) -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 italic">Total Pemasukan</p>
-                    <h3 class="text-2xl font-black text-emerald-600">Rp {{ number_format($ringkasan['total_pemasukan'], 0, ',', '.') }}</h3>
-                    <div class="mt-2 flex items-center gap-1 border-t pt-2 border-gray-50">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        <span class="text-[9px] text-gray-400 font-medium italic">Dana masuk periode terpilih</span>
+            <!-- SECTION A: Ringkasan Saldo -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] border border-white/60 shadow-premium group hover:shadow-premium-hover transition-all duration-500">
+                    <p class="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-3 italic">Total Pemasukan</p>
+                    <h3 class="text-3xl font-black text-emerald-600 tracking-tight">Rp {{ number_format($ringkasan['total_pemasukan'], 0, ',', '.') }}</h3>
+                    <div class="mt-4 flex items-center gap-2 border-t pt-4 border-zinc-100">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Dana Masuk Terkini</span>
                     </div>
                 </div>
 
-                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 italic">Total Pengeluaran</p>
-                    <h3 class="text-2xl font-black text-rose-600">Rp {{ number_format($ringkasan['total_pembayaran'], 0, ',', '.') }}</h3>
-                    <div class="mt-2 flex items-center gap-1 border-t pt-2 border-gray-50">
-                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                        <span class="text-[9px] text-gray-400 font-medium italic">Dana keluar periode terpilih</span>
+                <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] border border-white/60 shadow-premium group hover:shadow-premium-hover transition-all duration-500">
+                    <p class="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-3 italic">Total Pengeluaran</p>
+                    <h3 class="text-3xl font-black text-rose-600 tracking-tight">Rp {{ number_format($ringkasan['total_pembayaran'], 0, ',', '.') }}</h3>
+                    <div class="mt-4 flex items-center gap-2 border-t pt-4 border-zinc-100">
+                        <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                        <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Dana Keluar Terkini</span>
                     </div>
                 </div>
 
-                <div class="bg-white p-5 rounded-xl border border-indigo-200 shadow-sm bg-indigo-50/20">
-                    <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1 italic">Pengeluaran Bersih</p>
-                    <h3 class="text-2xl font-black {{ $ringkasan['arus_kas_bersih'] >= 0 ? 'text-indigo-600' : 'text-red-600' }}">
+                <div class="premium-gradient p-8 rounded-[2rem] shadow-lg shadow-primary-500/30 group hover:shadow-primary-500/40 transition-all duration-500 text-white">
+                    <p class="text-[11px] font-black text-primary-200 uppercase tracking-[0.2em] mb-3 italic">Arus Kas Bersih</p>
+                    <h3 class="text-3xl font-black tracking-tight">
                         Rp {{ number_format($ringkasan['arus_kas_bersih'], 0, ',', '.') }}
                     </h3>
-                    <div class="mt-2 flex items-center gap-1 border-t pt-2 border-indigo-50">
-                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                        <span class="text-[9px] text-indigo-400/70 font-medium italic tracking-tight">Sisa dana operasional periode</span>
+                    <div class="mt-4 flex items-center gap-2 border-t pt-4 border-white/10">
+                        <span class="w-2 h-2 rounded-full bg-white animate-bounce"></span>
+                        <span class="text-[10px] text-primary-100 font-bold uppercase tracking-wider">Sisa Operasional</span>
                     </div>
                 </div>
             </div>
@@ -178,52 +178,52 @@
             </div>
 
             <!-- SECTION D: Tabel Transaksi -->
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="bg-gray-50/50 px-6 py-4 border-b flex justify-between items-center">
-                    <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Rincian Transaksi</h4>
+            <div class="bg-white/80 backdrop-blur-xl rounded-[2rem] border border-white/60 shadow-premium overflow-hidden">
+                <div class="bg-gray-50/50 px-8 py-6 border-b border-zinc-100 flex justify-between items-center">
+                    <h4 class="text-sm font-black text-zinc-900 uppercase tracking-widest">Rincian Transaksi</h4>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full">
-                        <thead class="bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        <thead class="bg-gray-50/50 text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">
                             <tr>
-                                <th class="px-6 py-4 text-left">Tanggal</th>
-                                <th class="px-6 py-4 text-left">Keterangan</th>
-                                <th class="px-6 py-4 text-left">Kategori</th>
-                                <th class="px-6 py-4 text-left">Entitas</th>
-                                <th class="px-6 py-4 text-right text-emerald-600">Masuk (+)</th>
-                                <th class="px-6 py-4 text-right text-rose-600">Keluar (-)</th>
+                                <th class="px-8 py-5 text-left">Tanggal</th>
+                                <th class="px-8 py-5 text-left">Keterangan</th>
+                                <th class="px-8 py-5 text-left">Kategori</th>
+                                <th class="px-8 py-5 text-left">Entitas</th>
+                                <th class="px-8 py-5 text-right text-emerald-600">Masuk (+)</th>
+                                <th class="px-8 py-5 text-right text-rose-600">Keluar (-)</th>
                             </tr>
                         </thead>
 
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-zinc-100">
                             @forelse($transaksi as $t)
-                                <tr class="hover:bg-indigo-50/30 transition-all group">
-                                    <td class="px-6 py-4 text-[11px] font-bold text-gray-400 whitespace-nowrap">{{ $t->date->format('d/m/Y') }}</td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-bold text-gray-800 group-hover:text-indigo-600 transition-colors">{{ $t->description }}</div>
-                                        <div class="text-[9px] text-gray-400 font-black uppercase tracking-widest">{{ $t->division }}</div>
+                                <tr class="hover:bg-primary-50/50 transition-all duration-300 group">
+                                    <td class="px-8 py-5 text-[11px] font-bold text-zinc-400 whitespace-nowrap">{{ $t->date->format('d/m/Y') }}</td>
+                                    <td class="px-8 py-5">
+                                        <div class="text-sm font-bold text-zinc-800 group-hover:text-primary-600 transition-colors">{{ $t->description }}</div>
+                                        <div class="text-[9px] text-primary-400 font-black uppercase tracking-widest mt-1">{{ $t->division }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                                    <td class="px-8 py-5 whitespace-nowrap">
+                                        <span class="text-[10px] font-black text-zinc-500 bg-zinc-100 border border-zinc-200 px-3 py-1 rounded-full uppercase tracking-widest">
                                             {{ str_replace('_', ' ', $t->category) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="text-[10px] font-bold {{ $t->entity == 'pribadi' ? 'text-rose-500 bg-rose-50 border-rose-100' : ($t->entity == 'konfeksi' ? 'text-emerald-500 bg-emerald-50 border-emerald-100' : 'text-blue-500 bg-blue-50 border-blue-100') }} border px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                                    <td class="px-8 py-5 whitespace-nowrap">
+                                        <span class="text-[10px] font-black {{ $t->entity == 'pribadi' ? 'text-rose-500 bg-rose-50 border-rose-100' : ($t->entity == 'konfeksi' ? 'text-emerald-500 bg-emerald-50 border-emerald-100' : 'text-primary-500 bg-primary-50 border-primary-100') }} border px-3 py-1 rounded-full uppercase tracking-widest">
                                             {{ $t->entity ?? $t->division }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-right font-black text-emerald-600">
-                                        @if($t->type == 'credit') {{ number_format($t->amount, 0, ',', '.') }} @endif
+                                    <td class="px-8 py-5 text-sm text-right font-black text-emerald-600">
+                                        @if($t->type == 'credit') Rp {{ number_format($t->amount, 0, ',', '.') }} @endif
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-right font-black text-rose-600">
-                                        @if($t->type == 'debit') {{ number_format($t->amount, 0, ',', '.') }} @endif
+                                    <td class="px-8 py-5 text-sm text-right font-black text-rose-600">
+                                        @if($t->type == 'debit') Rp {{ number_format($t->amount, 0, ',', '.') }} @endif
                                     </td>
                                 </tr>
 
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic text-sm">Belum ada data transaksi untuk periode ini.</td>
+                                    <td colspan="6" class="px-8 py-20 text-center text-zinc-400 italic text-sm">Belum ada data transaksi untuk periode ini.</td>
                                 </tr>
                             @endforelse
                         </tbody>

@@ -97,12 +97,15 @@ class PurchaseController extends Controller
                 if (!empty($item['product_code'])) {
                     $product = \App\Models\Product::where('code', $item['product_code'])->first();
                     if ($product) {
-                        $product->syncStock($item['quantity']);
+                        $product->syncStock($item['quantity'], 'in', 'Pembelian Bahan #' . $purchase->purchase_number, \App\Models\Purchase::class, $purchase->id);
                     }
                 }
             }
 
             $purchase->update(['total_amount' => $totalAmount]);
+
+            $purchase->load('supplier');
+            $purchase->syncToDebt();
 
             // If Cash, Record Transaction immediately (Debit)
             if ($status === 'lunas') {
@@ -139,6 +142,8 @@ class PurchaseController extends Controller
 
         DB::transaction(function () use ($purchase) {
             $purchase->update(['status' => 'lunas']);
+            $purchase->load('supplier');
+            $purchase->syncToDebt();
 
             // Record Transaction (Debit)
             Transaction::create([

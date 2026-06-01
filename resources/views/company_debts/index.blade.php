@@ -3,14 +3,18 @@
 
     <div class="space-y-6">
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-white rounded-2xl p-6 border border-zinc-100 shadow-sm">
-                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Sisa Pembayaran (Belum Lunas)</p>
-                <h3 class="text-2xl font-bold text-red-500 mt-2">Rp {{ number_format($totalBelumLunas, 0, ',', '.') }}</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl p-6 border border-zinc-100 shadow-premium">
+                <p class="text-xs font-black text-zinc-400 uppercase tracking-[0.2em]">Sisa Pembayaran</p>
+                <h3 class="text-2xl font-black text-rose-500 mt-2 tracking-tight">Rp {{ number_format($totalBelumLunas, 0, ',', '.') }}</h3>
             </div>
-            <div class="bg-white rounded-2xl p-6 border border-zinc-100 shadow-sm">
-                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Sudah Dibayar</p>
-                <h3 class="text-2xl font-bold text-emerald-600 mt-2">Rp {{ number_format($totalLunas, 0, ',', '.') }}</h3>
+            <div class="bg-white rounded-2xl p-6 border border-zinc-100 shadow-premium border-l-4 border-l-indigo-500">
+                <p class="text-xs font-black text-indigo-400 uppercase tracking-[0.2em]">Angsuran Bulan Ini</p>
+                <h3 class="text-2xl font-black text-indigo-600 mt-2 tracking-tight">Rp {{ number_format($totalAngsuranBulanIni, 0, ',', '.') }}</h3>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-zinc-100 shadow-premium">
+                <p class="text-xs font-black text-zinc-400 uppercase tracking-[0.2em]">Total Terbayar</p>
+                <h3 class="text-2xl font-black text-emerald-600 mt-2 tracking-tight">Rp {{ number_format($totalLunas, 0, ',', '.') }}</h3>
             </div>
         </div>
 
@@ -74,7 +78,14 @@
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <p class="font-bold text-zinc-800">Rp {{ number_format($debt->remaining_amount, 0, ',', '.') }}</p>
-                                <p class="text-[10px] text-zinc-400 mt-1">Sisa dari Rp {{ number_format($debt->amount, 0, ',', '.') }}</p>
+                                <div class="flex items-center justify-end gap-2 mt-1">
+                                     <p class="text-[10px] text-zinc-400 font-medium">Sisa dari Rp {{ number_format($debt->amount, 0, ',', '.') }}</p>
+                                     @if($debt->monthly_amount > 0 && $debt->status != 'lunas')
+                                         <span class="text-[9px] font-black px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded-md border border-indigo-100 uppercase tracking-tighter">
+                                             ± {{ ceil($debt->remaining_amount / $debt->monthly_amount) }} bln lagi
+                                         </span>
+                                     @endif
+                                </div>
                                 <div class="w-24 bg-gray-100 rounded-full h-1 mt-2 ml-auto overflow-hidden">
                                     <div class="bg-indigo-500 h-1 rounded-full transition-all duration-500" style="width: {{ $debt->payment_percentage }}%"></div>
                                 </div>

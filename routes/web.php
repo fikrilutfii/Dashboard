@@ -34,14 +34,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::resource('suppliers', SupplierController::class);
 
-    // Stock Report (Dashboard)
+    // Stock Report (Dashboard) & Adjustment
     Route::get('/reports/stock', [ProductController::class, 'stockReport'])->name('reports.stock');
+    Route::post('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('products.adjust-stock');
 
     // API for Product Lookup
     Route::get('/api/products/{code}', [ProductController::class, 'getByCode'])->name('products.lookup');
     Route::post('/products/import-csv', [ProductController::class, 'importCsv'])->name('products.import-csv');
 
     Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+    Route::get('invoices/{invoice}/print-combined', [InvoiceController::class, 'printCombined'])->name('invoices.print-combined');
     Route::get('invoices/report/print', [InvoiceController::class, 'printReport'])->name('invoices.printReport');
     Route::put('invoices/{invoice}/status', [InvoiceController::class, 'updateStatus'])->name('invoices.update-status');
 
@@ -55,8 +57,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/finance', [App\Http\Controllers\FinanceReportController::class, 'index'])->name('finance.index');
     Route::get('/finance/export/pdf', [App\Http\Controllers\FinanceReportController::class, 'exportPDF'])->name('finance.export.pdf');
     Route::get('/finance/export/excel', [App\Http\Controllers\FinanceReportController::class, 'exportExcel'])->name('finance.export.excel');
-    Route::get('/finance/pemasukan', [FinanceController::class, 'pemasukan'])->name('finance.pemasukan');
-    Route::post('/finance/pemasukan', [FinanceController::class, 'storePemasukan'])->name('finance.storePemasukan');
+    Route::get('/finance/transactions', [FinanceController::class, 'transactions'])->name('finance.transactions');
+    Route::post('/finance/transactions', [FinanceController::class, 'storeTransaction'])->name('finance.storeTransaction');
     Route::post('/finance/loan', [FinanceController::class, 'storeLoan'])->name('finance.storeLoan');
 
     // Hutang & Piutang Perusahaan

@@ -15,7 +15,10 @@
                         <a href="{{ route('invoices.index') }}" class="text-blue-500 hover:underline">&laquo; Kembali</a>
                         <div class="flex gap-2">
                              <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="bg-gray-800 text-white px-4 py-2 rounded">
-                                Print Invoice
+                                Print SJ
+                            </a>
+                            <a href="{{ route('invoices.print-combined', $invoice) }}" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded">
+                                Print Gabungan
                             </a>
                             @if($invoice->status != 'lunas')
                                 <a href="{{ route('invoices.edit', $invoice) }}" class="bg-yellow-500 text-white px-4 py-2 rounded">

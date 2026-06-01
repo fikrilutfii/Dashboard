@@ -48,7 +48,9 @@
                                 <th class="text-right px-5 py-3 text-xs font-semibold text-zinc-500 uppercase">Subtotal</th>
                                 <th class="text-center px-5 py-3 text-xs font-semibold text-zinc-500 uppercase">Lembur (Jam)</th>
                                 <th class="text-right px-5 py-3 text-xs font-semibold text-zinc-500 uppercase">Bonus</th>
+                                <th class="text-right px-5 py-3 text-xs font-semibold text-zinc-500 uppercase">Tambah Kasbon</th>
                                 <th class="text-right px-5 py-3 text-xs font-semibold text-zinc-500 uppercase">Pot. Kasbon</th>
+                                <th class="text-right px-5 py-3 text-xs font-semibold text-zinc-500 uppercase">Simpan Gaji</th>
                                 <th class="text-right px-5 py-3 text-xs font-semibold text-zinc-500 uppercase">Total Diterima</th>
                             </tr>
                         </thead>
@@ -84,10 +86,16 @@
                                     <input type="number" name="payrolls[{{ $index }}][bonus]" id="bonus_{{ $index }}" class="w-24 border border-zinc-200 rounded-lg text-right text-sm py-1 focus:border-indigo-400" value="0" min="0" onchange="calcRow({{ $index }})">
                                 </td>
                                 <td class="px-5 py-3 text-right">
+                                    <input type="number" name="payrolls[{{ $index }}][add_kasbon]" id="add_kasbon_{{ $index }}" class="w-24 border border-zinc-200 rounded-lg text-right text-sm py-1 focus:border-indigo-400" value="0" min="0" onchange="calcRow({{ $index }})">
+                                </td>
+                                <td class="px-5 py-3 text-right">
                                     <input type="number" name="payrolls[{{ $index }}][deduction]" id="ded_{{ $index }}" class="w-24 border border-zinc-200 rounded-lg text-right text-sm py-1 text-red-600 focus:border-red-400" value="{{ $emp->recommended_kasbon_deduction }}" min="0" onchange="calcRow({{ $index }})">
                                     @if($emp->current_kasbon > 0)
                                         <div class="text-xs text-red-400 mt-0.5">Kasbon: Rp {{ number_format($emp->current_kasbon, 0, ',', '.') }}</div>
                                     @endif
+                                </td>
+                                <td class="px-5 py-3 text-right">
+                                    <input type="number" name="payrolls[{{ $index }}][save_salary]" id="save_sal_{{ $index }}" class="w-24 border border-zinc-200 rounded-lg text-right text-sm py-1 focus:border-indigo-400" value="0" min="0" onchange="calcRow({{ $index }})">
                                 </td>
                                 <td class="px-5 py-3 text-right font-bold text-zinc-800">
                                     <span id="total_{{ $index }}">{{ number_format($emp->subtotal_salary + 0 - $emp->recommended_kasbon_deduction, 0, ',', '.') }}</span>
@@ -97,7 +105,7 @@
                         </tbody>
                         <tfoot class="bg-zinc-50 border-t border-zinc-200">
                             <tr>
-                                <td colspan="6" class="px-5 py-3 text-right font-bold text-zinc-700">Grand Total:</td>
+                                <td colspan="8" class="px-5 py-3 text-right font-bold text-zinc-700">Grand Total:</td>
                                 <td class="px-5 py-3 text-right font-bold text-indigo-700 text-base" id="grand_total">
                                     Rp {{ number_format($employees->sum('subtotal_salary'), 0, ',', '.') }}
                                 </td>
@@ -120,11 +128,13 @@
         const otHours = parseFloat(document.getElementById(`ot_hours_${i}`).value) || 0;
         const otRate  = parseFloat(document.getElementById(`ot_rate_${i}`).value)  || 0;
         const bonus   = parseFloat(document.getElementById(`bonus_${i}`).value)  || 0;
+        const addKasbon = parseFloat(document.getElementById(`add_kasbon_${i}`).value) || 0;
         const ded     = parseFloat(document.getElementById(`ded_${i}`).value)    || 0;
+        const saveSal = parseFloat(document.getElementById(`save_sal_${i}`).value) || 0;
         
         const sub     = daily * days;
         const otPay   = otHours * otRate;
-        const total   = sub + otPay + bonus - ded;
+        const total   = sub + otPay + bonus + addKasbon - ded - saveSal;
         
         document.getElementById(`subtotal_${i}`).textContent = formatRp(sub);
         document.getElementById(`total_${i}`).textContent    = formatRp(total);

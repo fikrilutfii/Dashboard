@@ -1,28 +1,27 @@
 @props(['title', 'value', 'color' => 'indigo', 'icon' => null, 'trend' => null])
 
-<div class="relative bg-white overflow-hidden rounded-2xl p-6 border border-zinc-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
-    <!-- Background Blob (Subtle) -->
-    <div class="absolute -right-6 -top-6 w-24 h-24 bg-{{ $color }}-50 rounded-full blur-2xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
+<div class="relative overflow-hidden rounded-[2rem] p-7 border border-white/60 shadow-premium hover:shadow-premium-hover hover:-translate-y-2 transition-all duration-500 group bg-white/80 backdrop-blur-xl">
+    <!-- Accent Background -->
+    <div class="absolute -right-8 -top-8 w-32 h-32 bg-{{ $color }}-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
     
-    <div class="relative z-10 flex items-start justify-between">
-        <div>
-            <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">{{ $title }}</p>
-            <h3 class="text-2xl font-bold text-zinc-800 mt-2 tracking-tight">{{ $value }}</h3>
-            
+    <div class="relative z-10 flex flex-col h-full">
+        <div class="flex items-center justify-between mb-5">
+            @if($icon)
+                <div class="p-4 bg-{{ $color }}-500 rounded-2xl text-white shadow-lg shadow-{{ $color }}-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                    {!! $icon !!}
+                </div>
+            @endif
+
             @if($trend)
-                <div class="mt-2 flex items-center text-xs font-medium {{ $trend >= 0 ? 'text-green-500' : 'text-red-500' }}">
-                     <span class="bg-{{ $trend >= 0 ? 'green' : 'red' }}-50 px-1.5 py-0.5 rounded mr-1">
-                        {{ $trend >= 0 ? '+' : '' }}{{ $trend }}%
-                     </span>
-                     <span>vs bulan lalu</span>
+                <div class="flex items-center text-[11px] font-bold {{ $trend >= 0 ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50' }} px-2.5 py-1 rounded-full border border-current/10">
+                    {{ $trend >= 0 ? '↑' : '↓' }} {{ abs($trend) }}%
                 </div>
             @endif
         </div>
-        
-        @if($icon)
-            <div class="p-3 bg-{{ $color }}-50 rounded-xl text-{{ $color }}-600 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                {!! $icon !!}
-            </div>
-        @endif
+
+        <div>
+            <p class="text-[11px] font-bold text-zinc-400 uppercase tracking-widest leading-none mb-2">{{ $title }}</p>
+            <h3 class="text-2xl font-black text-zinc-900 tracking-tight leading-none">{{ $value }}</h3>
+        </div>
     </div>
 </div>

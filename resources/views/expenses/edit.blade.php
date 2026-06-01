@@ -16,7 +16,7 @@
 
         <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden w-full">
             <div class="p-6">
-                <form action="{{ route('expenses.update', $expense) }}" method="POST" class="space-y-6">
+                <form action="{{ route('expenses.update', $expense) }}" method="POST" class="space-y-6" x-data="{ method: '{{ old('payment_method', $expense->payment_method ?? 'cash') }}' }">
                     @csrf
                     @method('PUT')
 
@@ -27,13 +27,43 @@
                             <input type="date" name="date" value="{{ old('date', $expense->date->format('Y-m-d')) }}" class="w-full border border-zinc-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-zinc-700 mb-1">Entitas / Divisi</label>
-                            <select name="entity" class="w-full border border-zinc-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:border-indigo-400">
-                                <option value="" {{ old('entity', $expense->entity) == '' ? 'selected' : '' }}>-- Tidak Spesifik --</option>
-                                <option value="Percetakan" {{ old('entity', $expense->entity) == 'Percetakan' ? 'selected' : '' }}>Percetakan</option>
-                                <option value="Konveksi" {{ old('entity', $expense->entity) == 'Konveksi' ? 'selected' : '' }}>Konveksi</option>
-                            </select>
-                            <p class="text-xs text-zinc-500 mt-1.5">Kosongkan jika bukan beban untuk satu divisi spesifik</p>
+                            <label class="block text-sm font-semibold text-zinc-700 mb-1">Opsi Bayar <span class="text-red-500">*</span></label>
+                            <div class="flex p-1 bg-zinc-100 rounded-xl">
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="payment_method" value="cash" x-model="method" class="hidden">
+                                    <div class="py-1.5 text-center rounded-lg text-xs font-bold transition-all"
+                                         :class="method === 'cash' ? 'bg-white text-primary-600 shadow-sm' : 'text-zinc-400'">
+                                        CASH
+                                    </div>
+                                </label>
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="payment_method" value="credit" x-model="method" class="hidden">
+                                    <div class="py-1.5 text-center rounded-lg text-xs font-bold transition-all"
+                                         :class="method === 'credit' ? 'bg-white text-primary-600 shadow-sm' : 'text-zinc-400'">
+                                        CREDIT
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Installment Settings -->
+                    <div x-show="method === 'credit'" x-transition class="bg-primary-50/50 p-6 rounded-[1.5rem] border border-primary-100 space-y-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-primary-600">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="text-sm font-black text-primary-900 uppercase tracking-widest">Pengaturan Cicilan</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-zinc-700 mb-1">Jatuh Tempo Pertama</label>
+                                <input type="date" name="due_date" value="{{ old('due_date', $expense->due_date ? $expense->due_date->format('Y-m-d') : date('Y-m-d', strtotime('+1 month'))) }}" class="w-full border border-zinc-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:border-primary-400">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-zinc-700 mb-1">Lama Cicilan (Bulan)</label>
+                                <input type="number" name="tenure" value="{{ old('tenure', $expense->tenure ?? 12) }}" min="1" class="w-full border border-zinc-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:border-primary-400" placeholder="Contoh: 12">
+                            </div>
                         </div>
                     </div>
 

@@ -49,6 +49,7 @@
                                     <th class="border p-2 text-left">No Invoice</th>
                                     <th class="border p-2 text-left">Tanggal</th>
                                     <th class="border p-2 text-left">Customer</th>
+                                    <th class="border p-2 text-center">Metode</th>
                                     <th class="border p-2 text-right">Total</th>
                                     <th class="border p-2 text-center">Status</th>
                                     <th class="border p-2 text-center">Aksi</th>
@@ -60,6 +61,13 @@
                                         <td class="border p-2 font-mono font-bold">{{ $invoice->invoice_number }}</td>
                                         <td class="border p-2">{{ $invoice->invoice_date->format('d/m/Y') }}</td>
                                         <td class="border p-2">{{ $invoice->customer->name }}</td>
+                                        <td class="border p-2 text-center">
+                                            @if($invoice->payment_method === 'credit')
+                                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-600 border border-amber-100 uppercase tracking-tight">Credit</span>
+                                            @else
+                                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-tight">Cash</span>
+                                            @endif
+                                        </td>
                                         <td class="border p-2 text-right font-mono">{{ number_format($invoice->total_amount, 0, ',', '.') }}</td>
                                         <td class="border p-2 text-center">
                                             @if($invoice->status == 'lunas')
@@ -78,7 +86,8 @@
                                                     <button type="submit" class="text-red-600 hover:underline bg-transparent border-0 cursor-pointer p-0">Hapus</button>
                                                 </form>
                                             @endif
-                                            | <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="text-gray-600 hover:text-gray-900 hover:underline">Print</a>
+                                            | <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="text-gray-600 hover:text-gray-900 hover:underline">Print SJ</a>
+                                            | <a href="{{ route('invoices.print-combined', $invoice) }}" target="_blank" class="text-blue-600 hover:text-blue-900 hover:underline">Print Gabung</a>
                                             | <a href="{{ route('invoices.export', $invoice) }}" class="text-green-600 hover:text-green-900 hover:underline font-semibold">Excel</a>
                                         </td>
                                     </tr>

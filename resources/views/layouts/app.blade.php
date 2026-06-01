@@ -22,19 +22,19 @@
                         },
                         colors: {
                             primary: {
-                                50: '#eef2ff',
-                                100: '#e0e7ff',
-                                200: '#c7d2fe',
-                                300: '#a5b4fc',
-                                400: '#818cf8',
-                                500: '#6366f1',
-                                600: '#4f46e5',
-                                700: '#4338ca',
-                                800: '#3730a3',
-                                900: '#312e81',
-                                950: '#1e1b4b',
+                                50: '#f5f7ff',
+                                100: '#ebf0fe',
+                                200: '#ced9fd',
+                                300: '#a1b6fb',
+                                400: '#6c89f7',
+                                500: '#415bf3',
+                                600: '#2c3edb',
+                                700: '#2330b3',
+                                800: '#212a91',
+                                900: '#1e2675',
+                                950: '#121644',
                             },
-                             zinc: {
+                            zinc: {
                                 50: '#fafafa',
                                 100: '#f4f4f5',
                                 200: '#e4e4e7',
@@ -47,16 +47,62 @@
                                 900: '#18181b',
                                 950: '#09090b',
                             }
+                        },
+                        boxShadow: {
+                            'premium': '0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -5px rgba(0, 0, 0, 0.03)',
+                            'premium-hover': '0 20px 40px -5px rgba(0, 0, 0, 0.08), 0 10px 20px -5px rgba(0, 0, 0, 0.05)',
                         }
                     }
                 }
             }
         </script>
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
-        {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
         
         <style>
-             [x-cloak] { display: none !important; }
+            @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+            
+            body {
+                font-family: 'Outfit', sans-serif !important;
+            }
+
+            [x-cloak] { display: none !important; }
+
+            .glass {
+                background: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+            }
+
+            .glass-dark {
+                background: rgba(24, 24, 27, 0.8);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .premium-gradient {
+                background: linear-gradient(135deg, #415bf3 0%, #7084f8 100%);
+            }
+
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+
+            /* Smooth Transitions */
+            .page-enter {
+                animation: slide-up 0.4s ease-out forwards;
+            }
+
+            @keyframes slide-up {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
         </style>
     </head>
     <body class="font-sans antialiased text-gray-900 bg-gray-100">

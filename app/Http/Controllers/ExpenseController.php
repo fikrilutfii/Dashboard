@@ -59,6 +59,10 @@ class ExpenseController extends Controller
 
         $validated = $request->validate($rules);
         $validated['division'] = session('division', 'Percetakan');
+        $validated['payment_method'] = $request->payment_method ?? 'cash';
+        $validated['due_date'] = $request->due_date;
+        $validated['tenure'] = $request->tenure;
+        $validated['payment_status'] = $validated['payment_method'] === 'cash' ? 'paid' : 'unpaid';
 
         if ($type === 'bahan') {
             $validated['quantity'] = $request->quantity ?? 1;
@@ -66,23 +70,44 @@ class ExpenseController extends Controller
             $validated['description'] = $request->description;
         }
 
-        DB::transaction(function () use ($validated) {
+        DB::transaction(function () use ($validated, $request) {
             $expense = Expense::create($validated);
 
             $desc = $expense->type === 'bahan' 
                 ? "Belanja Bahan: {$expense->item_name} dari {$expense->supplier_name}"
                 : "Pengeluaran ({$expense->category}): {$expense->description}";
 
-            Transaction::create([
-                'type' => 'debit',
-                'amount' => $expense->amount,
-                'description' => $desc,
-                'reference_id' => $expense->id,
-                'reference_type' => Expense::class,
-                'date' => $expense->date,
-                'division' => $expense->division,
-                'entity' => $expense->entity,
-            ]);
+            if ($expense->payment_method === 'cash') {
+                Transaction::create([
+                    'type' => 'debit',
+                    'amount' => $expense->amount,
+                    'description' => $desc,
+                    'reference_id' => $expense->id,
+                    'reference_type' => Expense::class,
+                    'date' => $expense->date,
+                    'division' => $expense->division,
+                    'entity' => $expense->entity,
+                ]);
+            } else {
+                // If CREDIT, create a CompanyDebt instead of a Transaction
+                $monthlyAmount = $request->monthly_amount;
+                if (!$monthlyAmount && $expense->tenure > 0) {
+                    $monthlyAmount = $expense->amount / $expense->tenure;
+                }
+
+                \App\Models\CompanyDebt::create([
+                    'name' => $expense->type === 'bahan' ? $expense->supplier_name : $expense->category,
+                    'description' => "(Dari Pengeluaran) " . $desc,
+                    'amount' => $expense->amount,
+                    'remaining_amount' => $expense->amount,
+                    'monthly_amount' => $monthlyAmount,
+                    'due_date' => $expense->due_date,
+                    'status' => 'belum_lunas',
+                    'type' => $expense->tenure > 1 ? 'credit' : 'cash', // 'credit' here usually means installment in your system
+                    'division' => $expense->division,
+                    'entity' => $expense->entity,
+                ]);
+            }
         });
 
         return redirect()->route('expenses.index')->with('success', 'Pengeluaran berhasil ditambahkan.');

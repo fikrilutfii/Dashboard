@@ -58,6 +58,7 @@
                             <th class="text-left px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Tanggal</th>
                             <th class="text-left px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Jenis & Detail</th>
                             <th class="text-left px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Kategori/Entitas</th>
+                            <th class="text-center px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Metode</th>
                             <th class="text-right px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Nominal</th>
                             <th class="text-center px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider w-24">Aksi</th>
                         </tr>
@@ -84,6 +85,13 @@
                             </td>
                             <td class="px-6 py-4">
                                 <span class="px-2 py-1 bg-zinc-100 text-zinc-600 rounded text-xs font-medium">{{ $expense->entity ?? $expense->division }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                @if($expense->payment_method === 'credit')
+                                    <span class="px-2 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded text-[10px] font-bold uppercase tracking-wider">CREDIT</span>
+                                @else
+                                    <span class="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded text-[10px] font-bold uppercase tracking-wider">CASH</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <p class="font-bold text-red-600">Rp {{ number_format($expense->amount, 0, ',', '.') }}</p>

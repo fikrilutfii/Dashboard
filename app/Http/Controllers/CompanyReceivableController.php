@@ -39,8 +39,13 @@ class CompanyReceivableController extends Controller
         $totalLunas = CompanyReceivable::when($division, fn($q) => $q->where('division', $division))
             ->where('status', 'lunas')
             ->sum('total_amount');
+            
+        $totalAngsuranBulanIni = CompanyReceivable::when($division, fn($q) => $q->where('division', $division))
+            ->whereIn('status', ['belum_lunas', 'sebagian'])
+            ->where('monthly_amount', '>', 0)
+            ->sum('monthly_amount');
 
-        return view('company_receivables.index', compact('receivables', 'totalBelumLunas', 'totalLunas'));
+        return view('company_receivables.index', compact('receivables', 'totalBelumLunas', 'totalLunas', 'totalAngsuranBulanIni'));
     }
 
     public function create()
@@ -147,6 +152,19 @@ class CompanyReceivableController extends Controller
                 'division'       => $companyReceivable->division,
                 'entity'         => $companyReceivable->entity ?? $companyReceivable->division,
             ]);
+
+            // Reverse Sync to Source
+            if ($companyReceivable->invoice_id) {
+                $companyReceivable->invoice->update([
+                    'paid_amount' => $companyReceivable->invoice->total_amount,
+                    'status' => 'lunas',
+                ]);
+            } elseif ($companyReceivable->kasbon_id) {
+                $companyReceivable->kasbon->update([
+                    'remaining_amount' => 0,
+                    'status' => 'lunas',
+                ]);
+            }
         });
 
         return back()->with('success', 'Tagihan ditandai Lunas dan tercatat di kas.');
@@ -179,6 +197,20 @@ class CompanyReceivableController extends Controller
                 'division'       => $companyReceivable->division,
                 'entity'         => $companyReceivable->entity ?? $companyReceivable->division,
             ]);
+
+            // Reverse Sync to Source
+            if ($companyReceivable->invoice_id) {
+                $newInvoicePaid = ($companyReceivable->invoice->paid_amount ?? 0) + $validated['payment_amount'];
+                $companyReceivable->invoice->update([
+                    'paid_amount' => $newInvoicePaid,
+                    'status' => $newInvoicePaid >= $companyReceivable->invoice->total_amount ? 'lunas' : 'belum_lunas',
+                ]);
+            } elseif ($companyReceivable->kasbon_id) {
+                $companyReceivable->kasbon->decrement('remaining_amount', $validated['payment_amount']);
+                if ($companyReceivable->kasbon->fresh()->remaining_amount <= 0) {
+                    $companyReceivable->kasbon->update(['status' => 'lunas']);
+                }
+            }
         });
 
         return back()->with('success', 'Pembayaran tagihan berhasil dicatat di kas.');

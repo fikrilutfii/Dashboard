@@ -3,10 +3,14 @@
 
     <div class="space-y-6">
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white rounded-2xl p-6 border border-zinc-100 shadow-sm">
-                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Sisa Tagihan (Belum Diterima)</p>
+                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Sisa Tagihan (Piutang)</p>
                 <h3 class="text-2xl font-bold text-amber-600 mt-2">Rp {{ number_format($totalBelumLunas, 0, ',', '.') }}</h3>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-zinc-100 shadow-sm bg-indigo-50/30 border-indigo-100">
+                <p class="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Tagihan Bulan Ini (Angsuran)</p>
+                <h3 class="text-2xl font-bold text-indigo-600 mt-2">Rp {{ number_format($totalAngsuranBulanIni, 0, ',', '.') }}</h3>
             </div>
             <div class="bg-white rounded-2xl p-6 border border-zinc-100 shadow-sm">
                 <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Sudah Diterima</p>
@@ -75,7 +79,14 @@
                             </td>
                             <td class="px-6 py-4 text-right font-semibold text-zinc-700">Rp {{ number_format($receivable->total_amount, 0, ',', '.') }}</td>
                             <td class="px-6 py-4 text-right font-bold {{ $receivable->remaining_amount > 0 ? 'text-red-600' : 'text-emerald-600' }}">
-                                Rp {{ number_format($receivable->remaining_amount, 0, ',', '.') }}
+                                <div class="flex flex-col items-end">
+                                    <span>Rp {{ number_format($receivable->remaining_amount, 0, ',', '.') }}</span>
+                                    @if($receivable->type === 'installment' && $receivable->monthly_amount > 0 && $receivable->status !== 'lunas')
+                                        <span class="text-[10px] text-indigo-500 font-medium bg-indigo-50 px-1.5 py-0.5 rounded mt-1">
+                                            Cicilan: Rp {{ number_format($receivable->monthly_amount, 0, ',', '.') }}/bln
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-6 py-4 text-center">
                                 @if($receivable->status == 'paid')

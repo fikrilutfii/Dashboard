@@ -174,14 +174,47 @@ class ProductController extends Controller
         $totalProducts = (clone $query)->count();
         $outOfStockCount = (clone $query)->where('stock', '<=', 0)->count();
         $lowStockCount = (clone $query)->where('stock', '>', 0)->where('stock', '<=', 5)->count();
+        $totalAssetValue = (clone $query)->selectRaw('SUM(stock * price) as total')->value('total') ?? 0;
 
         // Widget lists
         $outOfStockItems = (clone $query)->where('stock', '<=', 0)->get();
         $lowStockItems = (clone $query)->where('stock', '>', 0)->where('stock', '<=', 5)->orderBy('stock', 'asc')->get();
 
+        // Stock Logs (Recent Movements)
+        $recentLogs = \App\Models\StockLog::with(['product', 'user'])
+            ->whereHas('product', function($q) use ($division) {
+                if ($division) {
+                    $q->where('division', $division);
+                }
+            })
+            ->latest()
+            ->take(10)
+            ->get();
+
         // Main table
         $products = $query->orderBy('stock', 'asc')->paginate(20);
 
-        return view('reports.stock', compact('products', 'outOfStockCount', 'lowStockCount', 'totalProducts', 'outOfStockItems', 'lowStockItems'));
+        return view('reports.stock', compact('products', 'outOfStockCount', 'lowStockCount', 'totalProducts', 'totalAssetValue', 'outOfStockItems', 'lowStockItems', 'recentLogs'));
+    }
+
+    // Manual Stock Adjustment
+    public function adjustStock(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'adjustment_type' => 'required|in:add,subtract',
+            'quantity' => 'required|integer|min:1',
+            'reason' => 'required|string|max:255',
+        ]);
+
+        $quantity = $validated['adjustment_type'] === 'add' ? $validated['quantity'] : -$validated['quantity'];
+
+        // Prevent negative stock if subtracting
+        if ($quantity < 0 && $product->stock < abs($quantity)) {
+            return back()->with('error', 'Stok tidak cukup untuk dikurangi.');
+        }
+
+        $product->syncStock($quantity, 'adjustment', $validated['reason'], null, null);
+
+        return back()->with('success', 'Stok berhasil disesuaikan.');
     }
 }

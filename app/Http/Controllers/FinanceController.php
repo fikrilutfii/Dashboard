@@ -22,16 +22,17 @@ class FinanceController extends Controller
         return redirect()->route('finance.index');
     }
 
-    public function pemasukan(Request $request)
+    public function transactions(Request $request)
     {
-        $query = Transaction::where('type', 'credit')
-            ->where(function($q) {
-                $q->where('category', 'Pemasukan Manual')
-                  ->orWhere('category', 'LIKE', '%Pemasukan%');
-            });
+        $division = session('division');
+        $query = Transaction::query();
 
-        if ($request->division) {
-            $query->where('division', $request->division);
+        if ($division) {
+            $query->where('division', $division);
+        }
+
+        if ($request->type) {
+            $query->where('type', $request->type);
         }
 
         if ($request->start_date) {
@@ -44,33 +45,115 @@ class FinanceController extends Controller
 
         $transaksi = $query->orderBy('date', 'desc')->paginate(15);
         
-        $totalPemasukan = $query->sum('amount');
+        $totalPemasukan = (clone $query)->where('type', 'credit')->sum('amount');
+        $totalPengeluaran = (clone $query)->where('type', 'debit')->sum('amount');
 
-        return view('finance.pemasukan', compact('transaksi', 'totalPemasukan'));
+        return view('finance.transactions', compact('transaksi', 'totalPemasukan', 'totalPengeluaran'));
     }
 
-    public function storePemasukan(Request $request)
+    public function storeTransaction(Request $request)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:0',
-            'category' => 'nullable|string',
-            'description' => 'required|string',
-            'date' => 'required|date',
-            'division' => 'required|string',
-            'entity' => 'nullable|string|in:percetakan,konfeksi,pribadi',
+            'type'           => 'required|in:credit,debit', // credit=pemasukan, debit=pengeluaran
+            'payment_method' => 'required|in:cash,credit', // credit=tempo/berjangka
+            'amount'         => 'required|numeric|min:0',
+            'category'       => 'nullable|string',
+            'description'    => 'required|string',
+            'date'           => 'required|date',
+            'division'       => 'required|string',
+            'entity'         => 'nullable|string|in:percetakan,konfeksi,pribadi',
+            'tenure'         => 'nullable|integer|min:1',
+            'due_date'       => 'nullable|date',
+            'is_loan'        => 'nullable|boolean',
         ]);
 
-        Transaction::create([
-            'type' => 'credit',
-            'amount' => $request->amount,
-            'category' => $request->category ?? 'Pemasukan Manual',
-            'description' => $request->description,
-            'date' => $request->date,
-            'division' => $request->division,
-            'entity' => $request->entity ?? $request->division,
-        ]);
+        $division = $request->division;
+        $entity = $request->entity ?? $division;
 
-        return redirect()->route('finance.pemasukan')->with('success', 'Pemasukan berhasil dicatat.');
+        DB::transaction(function () use ($request, $division, $entity) {
+            if ($request->payment_method === 'cash') {
+                // Record Direct Transaction
+                Transaction::create([
+                    'type'        => $request->type,
+                    'amount'      => $request->amount,
+                    'category'    => $request->category ?? ($request->type === 'credit' ? 'Pemasukan Manual' : 'Pengeluaran Manual'),
+                    'description' => $request->description,
+                    'date'        => $request->date,
+                    'division'    => $division,
+                    'entity'      => $entity,
+                ]);
+
+                // If marked as LOAN/HUTANG/PIUTANG
+                if ($request->is_loan) {
+                    if ($request->type === 'credit') {
+                        // Uang Masuk dari Pinjaman -> Masuk ke PEMBAYARAN (Hutang)
+                        \App\Models\CompanyDebt::create([
+                            'name'             => 'Pinjaman: ' . $request->description,
+                            'description'      => 'Pinjaman Tunai Masuk',
+                            'amount'           => $request->amount,
+                            'remaining_amount' => $request->amount,
+                            'monthly_amount'   => $request->tenure > 0 ? $request->amount / $request->tenure : $request->amount,
+                            'due_date'         => $request->due_date,
+                            'status'           => 'belum_lunas',
+                            'type'             => $request->tenure > 1 ? 'credit' : 'cash',
+                            'division'         => $division,
+                            'entity'           => $entity,
+                        ]);
+                    } else {
+                        // Uang Keluar dipinjamkan -> Masuk ke TAGIHAN (Piutang)
+                        \App\Models\CompanyReceivable::create([
+                            'name'             => 'Piutang: ' . $request->description,
+                            'description'      => 'Dana Dipinjamkan Keluar',
+                            'total_amount'     => $request->amount,
+                            'remaining_amount' => $request->amount,
+                            'monthly_amount'   => $request->tenure > 0 ? $request->amount / $request->tenure : $request->amount,
+                            'due_date'         => $request->due_date,
+                            'status'           => 'belum_lunas',
+                            'type'             => 'installment',
+                            'division'         => $division,
+                            'entity'           => $entity,
+                        ]);
+                    }
+                }
+            } else {
+                // Handle Tempo/Non-Cash
+                // User wants Pemasukan (Tempo) -> Pembayaran (Debt)
+                // And Pengeluaran (Tempo) -> Tagihan (Receivable)
+                if ($request->type === 'credit') {
+                    // Pemasukan Tempo -> Hutang (Pembayaran Cicilan)
+                    $monthlyAmount = $request->tenure > 0 ? $request->amount / $request->tenure : 0;
+                    \App\Models\CompanyDebt::create([
+                        'name'             => 'Hutang: ' . $request->description,
+                        'description'      => $request->category ?? 'Pemasukan Kredit (Hutang)',
+                        'amount'           => $request->amount,
+                        'remaining_amount' => $request->amount,
+                        'monthly_amount'   => $monthlyAmount,
+                        'due_date'         => $request->due_date,
+                        'status'           => 'belum_lunas',
+                        'type'             => 'credit',
+                        'division'         => $division,
+                        'entity'           => $entity,
+                    ]);
+                } else {
+                    // Pengeluaran Tempo -> Tagihan (Tagihan Perusahaan)
+                    $monthlyAmount = $request->tenure > 0 ? $request->amount / $request->tenure : 0;
+                    \App\Models\CompanyReceivable::create([
+                        'name'             => 'Tagihan: ' . $request->description,
+                        'description'      => $request->category ?? 'Pengeluaran Kredit (Piutang)',
+                        'total_amount'     => $request->amount,
+                        'remaining_amount' => $request->amount,
+                        'monthly_amount'   => $monthlyAmount,
+                        'due_date'         => $request->due_date,
+                        'status'           => 'belum_lunas',
+                        'type'             => 'installment',
+                        'division'         => $division,
+                        'entity'           => $entity,
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->route('finance.transactions')->with('success', 'Transaksi berhasil dicatat.');
     }
 
     public function storeLoan(Request $request)
