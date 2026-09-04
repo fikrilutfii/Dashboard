@@ -16,8 +16,8 @@
                             <!-- Left Column -->
                             <div class="space-y-4">
                                 <div>
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">No. Purchase / Nota</label>
-                                    <input type="text" name="purchase_number" class="w-full border rounded px-3 py-2" placeholder="Contoh: PO-001" required>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2">No. Purchase / Nota <span class="text-gray-500 font-normal">(Opsional)</span></label>
+                                    <input type="text" name="purchase_number" class="w-full border rounded px-3 py-2" placeholder="Contoh: PO-001 (Otomatis jika kosong)">
                                 </div>
                                 
                                 <div>
@@ -93,7 +93,10 @@
                             <button type="button" onclick="addItem()" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded text-sm">+ Tambah Item</button>
                         </div>
 
-                        <div class="flex justify-end border-t pt-4">
+                        <div class="flex items-center justify-end gap-3 border-t pt-4">
+                            <a href="{{ route('purchases.index', ['division' => session('division', 'percetakan')]) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline">
+                                Batal / Lihat Riwayat
+                            </a>
                             <button type="submit" class="bg-green-600 text-white font-bold py-2 px-6 rounded hover:bg-green-700">Simpan Pembelian</button>
                         </div>
                     </form>
@@ -121,10 +124,10 @@
                     <input type="text" name="items[${rowCount}][item_name]" class="w-full border rounded px-2 py-1" placeholder="Nama barang..." required>
                 </td>
                 <td class="p-1 border">
-                    <input type="number" name="items[${rowCount}][quantity]" id="qty-${rowCount}" value="1" min="1" class="w-full border rounded px-2 py-1 text-center" onchange="calcRow(${rowCount})" required>
+                    <input type="text" inputmode="decimal" name="items[${rowCount}][quantity]" id="qty-${rowCount}" value="1" pattern="[0-9]+([.,][0-9]{1,3})?" title="Gunakan angka positif hingga 3 desimal, misalnya 1,5 atau 1.5" class="w-full border rounded px-2 py-1 text-center" oninput="calcRow(${rowCount})" required>
                 </td>
                 <td class="p-1 border">
-                    <input type="number" name="items[${rowCount}][unit_price]" id="price-${rowCount}" class="w-full border rounded px-2 py-1 text-right" placeholder="0" onchange="calcRow(${rowCount})" required>
+                    <input type="text" inputmode="decimal" name="items[${rowCount}][unit_price]" id="price-${rowCount}" pattern="[0-9]+([.,][0-9]{1,2})?" title="Gunakan harga hingga 2 desimal, misalnya 507,20 atau 507.20" class="w-full border rounded px-2 py-1 text-right" placeholder="0" oninput="calcRow(${rowCount})" required>
                 </td>
                 <td class="p-1 border text-right font-mono" id="sub-${rowCount}">0</td>
                 <td class="p-1 border text-center">
@@ -136,8 +139,8 @@
         }
 
         function calcRow(id) {
-            const qty = parseFloat(document.getElementById(`qty-${id}`).value) || 0;
-            const price = parseFloat(document.getElementById(`price-${id}`).value) || 0;
+            const qty = parseFloat(document.getElementById(`qty-${id}`).value.replace(',', '.')) || 0;
+            const price = parseFloat(document.getElementById(`price-${id}`).value.replace(',', '.')) || 0;
             const sub = qty * price;
             document.getElementById(`sub-${id}`).innerText = new Intl.NumberFormat('id-ID').format(sub);
             calcTotal();
@@ -145,8 +148,11 @@
 
         function calcTotal() {
             let total = 0;
-            document.querySelectorAll('[id^="sub-"]').forEach(el => {
-                total += parseFloat(el.innerText.replace(/\./g, '')) || 0;
+            document.querySelectorAll('[id^="qty-"]').forEach(input => {
+                const id = input.id.replace('qty-', '');
+                const qty = parseFloat(input.value.replace(',', '.')) || 0;
+                const price = parseFloat(document.getElementById(`price-${id}`).value.replace(',', '.')) || 0;
+                total += qty * price;
             });
             document.getElementById('grandTotal').innerText = new Intl.NumberFormat('id-ID').format(total);
         }

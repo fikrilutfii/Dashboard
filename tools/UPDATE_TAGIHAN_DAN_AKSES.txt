@@ -1,0 +1,12 @@
+UPDATE TAGIHAN DAN MANAJEMEN AKSES
+
+1. Ekstrak ZIP pada folder utama aplikasi hosting dan timpa file lama.
+2. Buka sekali:
+   https://alamat-domain-anda/update_billing_and_access.php
+3. Hapus file update_billing_and_access.php setelah muncul pesan berhasil.
+4. Login menggunakan akun tracker. Menu Manajemen Akses akan terlihat.
+
+Aturan tagihan:
+- Tagihan bulan ini dihitung dari tanggal jatuh tempo, bukan tanggal faktur dibuat.
+- Faktur dengan jatuh tempo bulan depan tidak masuk ke tagihan bulan ini.
+- Faktur belum lunas langsung masuk Laporan Tagihan Klien tanpa perlu dicetak terlebih dahulu.

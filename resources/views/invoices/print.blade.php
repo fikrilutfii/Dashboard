@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice {{ $invoice->invoice_number }}</title>
+    <title>Invoice {{ $invoice->faktur_number }}</title>
     <style>
         body { font-family: Arial, sans-serif; font-size: 10pt; margin: 0; padding: 0; color: #000; }
         
@@ -42,9 +42,11 @@
         }
 
         .header-right-section { 
-            width: 40%;
             text-align: right;
             font-size: 9pt;
+            position: absolute;
+            top: 20px;
+            right: 0;
         }
         .header-right-section .date { margin-bottom: 2px; }
         .customer-box { margin-top: 2px; line-height: 1.2; }
@@ -153,12 +155,22 @@
 <body onload="window.print()">
     <div class="container">
         
-        <!-- Top Header: Logo Left, Date/Customer Right -->
-        <div class="top-header">
-            <div class="header-left-section">
-                <!-- Logo & Company Name -->
-                <img src="{{ asset('images/logo.jpg') }}" class="logo-img" alt="logo">
-                <div class="company-name">ABADI SENTOSA</div>
+        <!-- Top Header: Centered Kop Surat, Date/Customer Absolute Right -->
+        <div class="top-header" style="display: block; position: relative;">
+            <div style="display: flex; items-center; justify-content: center; gap: 15px; margin-bottom: 15px; width: 100%;">
+                <img src="{{ asset('images/logo.jpg') }}" style="height: 65px; width: auto;" alt="Logo AS">
+                <div style="text-align: center;">
+                    <h1 style="color: #dc2626; font-family: Arial, sans-serif; font-size: 32px; font-weight: 900; margin: 0; letter-spacing: 2px; text-transform: uppercase;">
+                        ABADI SENTOSA
+                    </h1>
+                    <div style="font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; color: #1e3a8a; margin-top: 3px; letter-spacing: 0.5px;">
+                        KONTRAKTOR <span style="color: #dc2626;">&bull;</span> PERDAGANGAN UMUM <span style="color: #dc2626;">&bull;</span> PERCETAKAN <span style="color: #dc2626;">&bull;</span> JASA
+                    </div>
+                    <div style="font-family: Arial, sans-serif; font-size: 10px; color: #374151; margin-top: 3px;">
+                        Jl. H. Sapari silih asih No. 5 Bandung 085860180550<br>
+                        e-mail : ferry4850@gmail.com
+                    </div>
+                </div>
             </div>
             
             <div class="header-right-section">
@@ -175,11 +187,11 @@
         <div class="sub-header">
             <div class="faktur-no-section">
                 <span class="faktur-label">FAKTUR NO. :</span>
-                <span class="faktur-value invoice-number">{{ $invoice->invoice_number }}</span>
+                <span class="faktur-value invoice-number">{{ $invoice->faktur_number }}</span>
             </div>
             <div class="op-no-section">
                 <!-- Corrected from DP No to OP No -->
-                OP No. ________________
+                OP No. {{ $invoice->invoice_number ?? '________________' }}
             </div>
         </div>
 

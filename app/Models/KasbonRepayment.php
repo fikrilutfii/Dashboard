@@ -18,6 +18,10 @@ class KasbonRepayment extends Model
         'description',
     ];
 
+    protected $casts = [
+        'date' => 'date',
+    ];
+
     public function kasbon(): BelongsTo
     {
         return $this->belongsTo(Kasbon::class);

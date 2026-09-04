@@ -9,48 +9,72 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <form action="{{ route('invoices.store') }}" method="POST" id="invoiceForm">
+                    <form action="{{ route('invoices.store') }}" method="POST" id="invoiceForm" x-data="{ method: '{{ old('payment_method', 'cash') }}' }">
                         @csrf
                         
                         <!-- Top Section: Customer & Dates -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div class="space-y-4">
+                        <div class="space-y-4 mb-6 max-w-2xl">
+                            <!-- Row 1: No. Faktur & OP No. -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">No. {{ session('division') == 'konfeksi' ? 'Transaksi' : 'Faktur' }} (Manual)</label>
-                                    <input type="text" name="invoice_number" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required placeholder="Contoh: INV/2026/001">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2">No. {{ session('division') == 'konfeksi' ? 'Transaksi' : 'Faktur' }}</label>
+                                    <input type="text" 
+                                           class="shadow border rounded w-full py-2 px-3 text-gray-500 bg-gray-100 leading-tight focus:outline-none" 
+                                           value="Auto (akan digenerate saat simpan)"
+                                           readonly
+                                           disabled>
+                                    <small class="text-xs text-gray-500 mt-1 block">
+                                        Nomor faktur otomatis diberikan sistem secara berurutan per divisi.
+                                    </small>
                                 </div>
-                                
                                 <div>
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">Divisi</label>
-                                    <input type="text" value="{{ ucfirst(session('division', 'Percetakan')) }}" class="shadow border rounded w-full py-2 px-3 text-gray-500 bg-gray-100 leading-tight focus:outline-none" readonly>
-                                    <input type="hidden" name="division" value="{{ session('division', 'percetakan') }}">
-                                </div>
-
-                                <div>
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">Customer</label>
-                                    <div class="flex gap-2">
-                                        <select name="customer_id" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                                            <option value="">-- Pilih Customer --</option>
-                                            @foreach($customers as $customer)
-                                                <option value="{{ $customer->id }}">{{ $customer->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <a href="{{ route('customers.create') }}" class="bg-green-500 text-white px-3 py-2 rounded font-bold hover:bg-green-600">+</a>
-                                    </div>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2">OP No. <span class="text-gray-500 font-normal">(Opsional)</span></label>
+                                    <input type="text" 
+                                           name="invoice_number"
+                                           class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                           placeholder="Contoh: 2603-000112"
+                                           value="{{ old('invoice_number') }}">
+                                    <small class="text-xs text-gray-500 mt-1 block">
+                                        Nomor order/PO dari customer.
+                                    </small>
                                 </div>
                             </div>
-                            
-                            <div class="grid grid-cols-2 gap-4">
+
+                            <!-- Row 2: Tanggal & Jatuh Tempo -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-gray-700 text-sm font-bold mb-2">Tanggal {{ session('division') == 'konfeksi' ? 'Transaksi' : 'Invoice' }}</label>
-                                    <input type="date" name="invoice_date" value="{{ date('Y-m-d') }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                                    <input type="date" name="invoice_date" value="{{ old('invoice_date', date('Y-m-d')) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                                 </div>
-                                @if(session('division') != 'konfeksi')
                                 <div>
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">Jatuh Tempo (Opsional)</label>
-                                    <input type="date" name="due_date" value="{{ date('Y-m-d') }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    @if(session('division') != 'konfeksi')
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">Jatuh Tempo Pembayaran (Opsional)</label>
+                                        <input type="date" name="due_date" value="{{ old('due_date', date('Y-m-d', strtotime('+1 month'))) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    @else
+                                        &nbsp;
+                                    @endif
                                 </div>
-                                @endif
+                            </div>
+
+                            <!-- Row 3: Divisi -->
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">Divisi</label>
+                                <input type="text" value="{{ ucfirst(session('division', 'Percetakan')) }}" class="shadow border rounded w-full py-2 px-3 text-gray-500 bg-gray-100 leading-tight focus:outline-none" readonly>
+                                <input type="hidden" name="division" value="{{ session('division', 'percetakan') }}">
+                            </div>
+
+                            <!-- Row 4: Customer -->
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">Customer</label>
+                                <div class="flex gap-2">
+                                    <select name="customer_id" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                                        <option value="">-- Pilih Customer --</option>
+                                        @foreach($customers as $customer)
+                                            <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <a href="{{ route('customers.create') }}" class="bg-green-500 text-white px-3 py-2 rounded font-bold hover:bg-green-600">+</a>
+                                </div>
                             </div>
                         </div>
 
@@ -86,7 +110,7 @@
                         </button>
 
                         <!-- Payment Method Section -->
-                        <div x-data="{ method: 'cash' }" class="mb-8">
+                        <div class="mb-8">
                             <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm">
                                 <label class="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4 text-center sm:text-left">Metode Pembayaran</label>
                                 <div class="grid grid-cols-2 gap-4 max-w-md mx-auto sm:mx-0">
@@ -118,10 +142,7 @@
                                         <label class="block text-gray-700 text-sm font-bold mb-2 uppercase tracking-tighter">Tenor / Lama Cicilan (Bulan)</label>
                                         <input type="number" name="tenure" value="12" min="1" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white" placeholder="Contoh: 12">
                                     </div>
-                                    <div>
-                                        <label class="block text-gray-700 text-sm font-bold mb-2 uppercase tracking-tighter">Jatuh Tempo Pertama</label>
-                                        <input type="date" name="due_date" value="{{ date('Y-m-d', strtotime('+1 month')) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                                    </div>
+                                    <p class="text-sm text-gray-500 self-end">Atur tanggal jatuh tempo pada kolom di atas.</p>
                                 </div>
                             </div>
                         </div>
@@ -157,10 +178,10 @@
                     <input type="text" name="items[${rowCount}][product_name]" id="name-${rowCount}" class="w-full border rounded px-2 py-1" required>
                 </td>
                 <td class="p-1 border">
-                    <input type="number" name="items[${rowCount}][quantity]" id="qty-${rowCount}" class="w-full border rounded px-2 py-1 text-center" value="1" min="1" onchange="calculateRow(${rowCount})" required>
+                    <input type="text" inputmode="decimal" name="items[${rowCount}][quantity]" id="qty-${rowCount}" class="w-full border rounded px-2 py-1 text-center" value="1" pattern="[0-9]+([.,][0-9]{1,3})?" title="Gunakan Qty hingga 3 desimal, misalnya 1,5 atau 1.5" oninput="calculateRow(${rowCount})" required>
                 </td>
                 <td class="p-1 border">
-                    <input type="number" name="items[${rowCount}][unit_price]" id="price-${rowCount}" class="w-full border rounded px-2 py-1 text-right" onchange="calculateRow(${rowCount})" required>
+                    <input type="text" inputmode="decimal" name="items[${rowCount}][unit_price]" id="price-${rowCount}" class="w-full border rounded px-2 py-1 text-right" pattern="[0-9]+([.,][0-9]{1,2})?" title="Gunakan harga hingga 2 desimal, misalnya 507,20 atau 507.20" oninput="calculateRow(${rowCount})" required>
                 </td>
                 <td class="p-1 border text-right font-mono" id="subtotal-${rowCount}">0</td>
                 <td class="p-1 border text-center">
@@ -178,7 +199,7 @@
             document.getElementById(`loading-${id}`).classList.remove('hidden');
             
             try {
-                const response = await fetch(`/api/products/${code}`);
+                const response = await fetch(`{{ url('/api/products') }}/${code}`);
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
@@ -201,8 +222,8 @@
         }
 
         function calculateRow(id) {
-            const qty = parseFloat(document.getElementById(`qty-${id}`).value) || 0;
-            const price = parseFloat(document.getElementById(`price-${id}`).value) || 0;
+            const qty = parseFloat(document.getElementById(`qty-${id}`).value.replace(',', '.')) || 0;
+            const price = parseFloat(document.getElementById(`price-${id}`).value.replace(',', '.')) || 0;
             const subtotal = qty * price;
             
             document.getElementById(`subtotal-${id}`).innerText = new Intl.NumberFormat('id-ID').format(subtotal);
@@ -211,9 +232,11 @@
 
         function calculateGrandTotal() {
             let total = 0;
-            const subs = document.querySelectorAll('[id^="subtotal-"]');
-            subs.forEach(el => {
-                total += parseFloat(el.innerText.replace(/\./g, '').replace(/,/g, '.')) || 0;
+            document.querySelectorAll('[id^="qty-"]').forEach(input => {
+                const id = input.id.replace('qty-', '');
+                const qty = parseFloat(input.value.replace(',', '.')) || 0;
+                const price = parseFloat(document.getElementById(`price-${id}`).value.replace(',', '.')) || 0;
+                total += qty * price;
             });
             document.getElementById('grandTotal').innerText = new Intl.NumberFormat('id-ID').format(total);
         }

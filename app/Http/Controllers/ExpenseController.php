@@ -169,6 +169,10 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense)
     {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->back()->with('error', 'Hanya admin yang dapat menghapus pengeluaran.');
+        }
+
         DB::transaction(function () use ($expense) {
             Transaction::where('reference_type', Expense::class)
                 ->where('reference_id', $expense->id)

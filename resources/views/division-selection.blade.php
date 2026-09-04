@@ -24,7 +24,36 @@
             $allowed = auth()->user()->allowed_division;
             $canPercetakan = $allowed === 'all' || $allowed === 'percetakan';
             $canKonfeksi = $allowed === 'all' || $allowed === 'konfeksi';
+            $canPeternakan = $allowed === 'all' || $allowed === 'peternakan';
         @endphp
+
+        <!-- Divisi Peternakan Ayam -->
+        <div class="relative group">
+            @if(!$canPeternakan)
+                <div onclick="showAccessDenied('Peternakan Ayam')" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm rounded-2xl cursor-pointer border-2 border-dashed border-gray-300">
+                    <div class="bg-red-500 text-white p-3 rounded-full shadow-lg mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <span class="text-sm font-black text-red-600 uppercase tracking-widest">Anda Tidak Memiliki Akses</span>
+                </div>
+            @endif
+            
+            <form method="POST" action="{{ route('division.set') }}">
+                @csrf
+                <input type="hidden" name="division" value="peternakan">
+                <button type="submit" @disabled(!$canPeternakan) class="w-full text-left p-6 border-2 {{ $canPeternakan ? 'border-amber-100 hover:border-amber-600 hover:bg-amber-50 hover:shadow-xl' : 'border-gray-100 opacity-40' }} rounded-2xl transition-all duration-500 flex items-center">
+                    <div class="p-4 rounded-xl {{ $canPeternakan ? 'bg-amber-100 text-amber-600 group-hover:bg-amber-600 group-hover:text-white' : 'bg-gray-100 text-gray-400' }} transition-all duration-300 flex items-center justify-center w-14 h-14">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-1-4h.01M9 16h.01M9 12h.01M9 8h.01M15 16h.01M15 12h.01M15 8h.01"/></svg>
+                    </div>
+                    <div class="ml-5">
+                        <h3 class="text-xl font-bold text-gray-900">Peternakan Ayam</h3>
+                        <p class="text-sm text-gray-500">Panen, Operasional Kandang, Transportasi & Piutang</p>
+                    </div>
+                </button>
+            </form>
+        </div>
 
         <!-- Divisi Percetakan -->
         <div class="relative group">
@@ -56,31 +85,29 @@
             </form>
         </div>
 
-        <!-- Divisi Konfeksi -->
+        <!-- Divisi Konfeksi (Segera Hadir) -->
         <div class="relative group">
-            @if(!$canKonfeksi)
-                <div onclick="showAccessDenied('Konfeksi')" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm rounded-2xl cursor-pointer border-2 border-dashed border-gray-300">
-                    <div class="bg-red-500 text-white p-3 rounded-full shadow-lg mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <span class="text-sm font-black text-red-600 uppercase tracking-widest">Anda Tidak Memiliki Akses</span>
+            <div onclick="showAccessDenied('Konfeksi')" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm rounded-2xl cursor-pointer border-2 border-dashed border-gray-300">
+                <div class="bg-white p-3 rounded-full shadow-md mb-2">
+                    <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
                 </div>
-            @endif
-
-            <form method="POST" action="{{ route('division.set') }}">
+                <span class="text-sm font-bold text-gray-800 bg-white px-3 py-1 rounded-full shadow-sm">Belum Tersedia</span>
+            </div>
+            
+            <form action="{{ route('division.set') }}" method="POST">
                 @csrf
                 <input type="hidden" name="division" value="konfeksi">
-                <button type="submit" @disabled(!$canKonfeksi) class="w-full text-left p-6 border-2 {{ $canKonfeksi ? 'border-orange-100 hover:border-orange-600 hover:bg-orange-50 hover:shadow-xl' : 'border-gray-100 opacity-40' }} rounded-2xl transition-all duration-500 flex items-center">
-                    <div class="p-4 rounded-xl {{ $canKonfeksi ? 'bg-orange-100 text-orange-600 group-hover:bg-orange-600 group-hover:text-white' : 'bg-gray-100 text-gray-400' }} transition-all duration-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
+                <button type="button" class="w-full text-left p-6 border-2 border-gray-100 opacity-40 rounded-2xl flex items-center">
+                    <div class="p-4 rounded-xl bg-gray-100 text-gray-400">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
                         </svg>
                     </div>
                     <div class="ml-5">
                         <h3 class="text-xl font-bold text-gray-900">Konfeksi</h3>
-                        <p class="text-sm text-gray-500">Sewing, Seragam, Jahit Pakaian</p>
+                        <p class="text-sm text-gray-500 mt-1">Manajemen konfeksi & produksi</p>
                     </div>
                 </button>
             </form>

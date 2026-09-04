@@ -65,6 +65,10 @@ class SupplierController extends Controller
 
     public function destroy(Supplier $supplier)
     {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->back()->with('error', 'Hanya admin yang dapat menghapus supplier.');
+        }
+
         $supplier->delete();
         return redirect()->route('suppliers.index')->with('success', 'Supplier berkasil dihapus.');
     }

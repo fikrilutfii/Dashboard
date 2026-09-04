@@ -25,6 +25,13 @@ class CompanyDebtController extends Controller
             $query->where('type', $request->type);
         }
 
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+
         $debts = $query->latest()->paginate(15);
 
         $totalBelumLunas = CompanyDebt::when($division, fn($q) => $q->where('division', $division))
@@ -129,6 +136,10 @@ class CompanyDebtController extends Controller
 
     public function destroy(CompanyDebt $companyDebt)
     {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->back()->with('error', 'Hanya admin yang dapat menghapus pembayaran.');
+        }
+
         DB::transaction(function () use ($companyDebt) {
             // Delete associated transactions
             \App\Models\Transaction::where('reference_type', CompanyDebt::class)

@@ -88,6 +88,10 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer)
     {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->back()->with('error', 'Hanya admin yang dapat menghapus customer.');
+        }
+
         $customer->delete();
         return redirect()->route('customers.index')->with('success', 'Customer deleted successfully.');
     }

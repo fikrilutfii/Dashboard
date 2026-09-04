@@ -26,13 +26,27 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $oldUsername = $user->username;
+        $user->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $usernameChanged = $user->isDirty('username');
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
+
+        if ($usernameChanged) {
+            \App\Models\ActivityLog::create([
+                'user_id' => $user->id,
+                'activity' => 'change_username',
+                'description' => "Mengubah username dari '{$oldUsername}' menjadi '{$user->username}'.",
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }

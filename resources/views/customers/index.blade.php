@@ -39,7 +39,9 @@
                             @foreach ($customers as $customer)
                                 <tr>
                                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                        <p class="text-gray-900 whitespace-no-wrap">{{ $customer->name }}</p>
+                                        <a href="{{ route('customers.show', $customer) }}" class="text-indigo-600 hover:text-indigo-900 font-bold">
+                                            {{ $customer->name }}
+                                        </a>
                                     </td>
                                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                         <p class="text-gray-900 whitespace-no-wrap">{{ $customer->email }}</p>
@@ -49,11 +51,13 @@
                                     </td>
                                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                         <a href="{{ route('customers.edit', $customer) }}" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
+                                        @if(Auth::user()->isAdmin())
                                         <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="inline-block delete-confirm">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-primary-600 hover:text-primary-900">Delete</button>
                                         </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

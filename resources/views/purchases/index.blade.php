@@ -47,19 +47,21 @@
                                     <td class="px-5 py-3 border-b border-gray-200 bg-white text-sm">
                                         {{ $purchase->date->format('d/m/Y') }}
                                     </td>
-                                    <td class="px-5 py-3 border-b border-gray-200 bg-white text-sm">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            {{ $purchase->status == 'lunas' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    <td class="px-5 py-5 border-b border-gray-200 text-sm text-center">
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap {{ $purchase->status == 'lunas' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                             {{ $purchase->status == 'lunas' ? 'Lunas' : 'Belum Lunas' }}
                                         </span>
                                     </td>
                                     <td class="px-5 py-3 border-b border-gray-200 bg-white text-sm text-right font-mono">
                                         Rp {{ number_format($purchase->total_amount, 0, ',', '.') }}
                                     </td>
-                                    <td class="px-5 py-3 border-b border-gray-200 bg-white text-sm text-right">
+                                    <td class="px-5 py-3 border-b border-gray-200 bg-white text-sm text-right whitespace-nowrap">
                                         <a href="{{ route('purchases.show', $purchase) }}" class="text-blue-600 hover:text-blue-900 mr-2">Detail</a>
+                                        @if($purchase->status != 'lunas')
+                                            <a href="{{ route('purchases.edit', $purchase) }}" class="text-yellow-600 hover:text-yellow-900 mr-2">Edit</a>
+                                        @endif
                                         @if($purchase->status == 'unpaid')
-                                            <form action="{{ route('purchases.update', $purchase) }}" method="POST" class="inline" onsubmit="return confirm('Lunasi pembayaran ini sekarang? Saldo akan terpotong.')">
+                                            <form action="{{ route('purchases.update', $purchase) }}" method="POST" class="action-confirm inline" data-title="Konfirmasi Pelunasan" data-text="Lunasi pembayaran ini sekarang? Saldo akan terpotong." data-icon="question" data-confirm-text="Ya, Lunasi" data-confirm-color="#3b82f6">
                                                 @csrf
                                                 @method('PUT') 
                                                 <!-- Actually updateStatus is not standard resource method update, need custom route or use a dedicated method -->

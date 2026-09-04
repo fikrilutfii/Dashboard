@@ -11,10 +11,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Invoice extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
 
     protected $fillable = [
         'invoice_number',
+        'faktur_number',
         'customer_id',
         'invoice_date',
         'due_date',
@@ -26,6 +27,7 @@ class Invoice extends Model
         'entity',
         'payment_method',
         'tenure',
+        'is_printed',
     ];
 
     public function transactions()
@@ -81,7 +83,7 @@ class Invoice extends Model
         $receivableData = [
             'invoice_id'       => $this->id,
             'name'             => $this->customer->name ?? 'Customer',
-            'description'      => 'Tagihan Invoice #' . $this->invoice_number,
+            'description'      => 'Tagihan Invoice #' . ($this->faktur_number ?? $this->invoice_number),
             'total_amount'     => $this->total_amount,
             'remaining_amount' => $this->total_amount - $this->paid_amount,
             'monthly_amount'   => $this->tenure > 0 ? $this->total_amount / $this->tenure : 0,
@@ -97,5 +99,35 @@ class Invoice extends Model
         } else {
             $this->receivable()->create($receivableData);
         }
+    }
+
+    public static function generateFakturNumber($division)
+    {
+        // Try to get next sequential number by looking at the last invoice's faktur_number
+        $lastInvoice = self::where('division', $division)
+            ->whereNotNull('faktur_number')
+            ->where('faktur_number', '<>', '')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($lastInvoice) {
+            $lastNumber = $lastInvoice->faktur_number;
+            
+            // If it's numeric, increment it
+            if (is_numeric($lastNumber)) {
+                return (int)$lastNumber + 1;
+            }
+            
+            // If it matches pattern with digits at the end (e.g. INV/2026/001)
+            if (preg_match('/^(.*?)([0-9]+)$/', $lastNumber, $matches)) {
+                $prefix = $matches[1];
+                $number = $matches[2];
+                $newNumber = str_pad((int)$number + 1, strlen($number), '0', STR_PAD_LEFT);
+                return $prefix . $newNumber;
+            }
+        }
+
+        // Fallback to 936001
+        return 936001;
     }
 }

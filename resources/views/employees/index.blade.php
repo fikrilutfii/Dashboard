@@ -43,11 +43,13 @@
                                     <td class="px-5 py-3 border-b text-right flex justify-end gap-2 items-center">
                                         <a href="{{ route('kasbons.create', ['employee_id' => $employee->id]) }}" class="text-orange-600 hover:text-orange-900 text-xs border border-orange-600 px-2 py-1 rounded">Kasbon</a>
                                         <a href="{{ route('employees.edit', $employee) }}" class="text-blue-600 hover:text-blue-900 text-xs border border-blue-600 px-2 py-1 rounded">Edit</a>
+                                        @if(Auth::user()->isAdmin())
                                         <form action="{{ route('employees.destroy', $employee) }}" method="POST" class="inline-block delete-confirm">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-600 hover:text-red-900 text-xs border border-red-600 px-2 py-1 rounded">Hapus</button>
                                         </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

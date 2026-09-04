@@ -31,6 +31,18 @@ class CompanyReceivableController extends Controller
             $query->where('type', $request->type);
         }
 
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%')
+                  ->orWhereHas('invoice', function($invQ) use ($search) {
+                      $invQ->where('faktur_number', 'like', '%' . $search . '%')
+                           ->orWhere('invoice_number', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
         $receivables = $query->latest()->paginate(15);
 
         $totalBelumLunas = CompanyReceivable::when($division, fn($q) => $q->where('division', $division))
@@ -40,17 +52,13 @@ class CompanyReceivableController extends Controller
             ->where('status', 'lunas')
             ->sum('total_amount');
             
+        $today = now();
         $totalAngsuranBulanIni = CompanyReceivable::when($division, fn($q) => $q->where('division', $division))
             ->whereIn('status', ['belum_lunas', 'sebagian'])
-            ->where('monthly_amount', '>', 0)
+            ->where('type', 'installment')
             ->sum('monthly_amount');
 
         return view('company_receivables.index', compact('receivables', 'totalBelumLunas', 'totalLunas', 'totalAngsuranBulanIni'));
-    }
-
-    public function create()
-    {
-        return view('company_receivables.create');
     }
 
     public function store(Request $request)
@@ -118,6 +126,10 @@ class CompanyReceivableController extends Controller
 
     public function destroy(CompanyReceivable $companyReceivable)
     {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->back()->with('error', 'Hanya admin yang dapat menghapus tagihan.');
+        }
+
         DB::transaction(function () use ($companyReceivable) {
             // Delete associated transactions
             \App\Models\Transaction::where('reference_type', CompanyReceivable::class)

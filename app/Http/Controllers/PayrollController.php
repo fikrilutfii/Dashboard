@@ -35,7 +35,28 @@ class PayrollController extends Controller
 
         $payrolls = $query->latest('period_end')->paginate(20)->withQueryString();
 
-        return view('payrolls.index', compact('payrolls'));
+        $now = Carbon::now();
+        $statsQuery = Payroll::query();
+        if ($division) {
+            $statsQuery->whereHas('employee', fn($q) => $q->where('division', $division));
+        }
+
+        $totalGajiBulanIni = (clone $statsQuery)
+            ->whereMonth('period_end', $now->month)
+            ->whereYear('period_end', $now->year)
+            ->sum('total_salary');
+
+        $sudahLunasBulanIni = (clone $statsQuery)
+            ->where('status', 'lunas')
+            ->whereMonth('period_end', $now->month)
+            ->whereYear('period_end', $now->year)
+            ->sum('total_salary');
+
+        $belumLunasAll = (clone $statsQuery)
+            ->where('status', 'belum_lunas')
+            ->sum('total_salary');
+
+        return view('payrolls.index', compact('payrolls', 'totalGajiBulanIni', 'sudahLunasBulanIni', 'belumLunasAll'));
     }
 
     // ─── RECAP (Auto-calculate from attendance) ──────────────────────────
@@ -57,7 +78,7 @@ class PayrollController extends Controller
             $employee->working_days_count    = $workingDays;
             $employee->daily_rate            = $employee->salary_base;
             $employee->subtotal_salary       = $employee->salary_base * $workingDays;
-            $employee->overtime_rate         = $employee->overtime_rate ?: 0;
+            $employee->overtime_rate         = $employee->salary_base / 9;
             $employee->current_kasbon        = $employee->kasbons()->where('remaining_amount', '>', 0)->sum('remaining_amount');
             $employee->recommended_kasbon_deduction = 0;
 
@@ -99,7 +120,7 @@ class PayrollController extends Controller
 
                 $employee     = Employee::findOrFail($data['employee_id']);
                 $dailyRate    = $employee->salary_base;
-                $overtimeRate = $employee->overtime_rate;
+                $overtimeRate = $dailyRate / 9;
                 $basicSalary  = $dailyRate * $workingDays;
                 $overtimePay  = $overtimeRate * $overtimeHours;
                 $totalSalary  = $basicSalary + $overtimePay + $bonus - $deduction - $saveSalary;
@@ -209,7 +230,7 @@ class PayrollController extends Controller
                 ->where('status', 'masuk')->count();
             
             $dailyRate     = $employee->salary_base;
-            $overtimeRate  = $employee->overtime_rate;
+            $overtimeRate  = $dailyRate / 9;
             $overtimeHours = (float)($validated['overtime_hours'] ?? 0);
             $basicSalary   = $dailyRate * max($workingDays, 1);
             $overtimePay   = $overtimeRate * $overtimeHours;
@@ -258,7 +279,7 @@ class PayrollController extends Controller
         ]);
 
         $dailyRate     = $payroll->daily_rate ?: $payroll->employee->salary_base;
-        $overtimeRate  = $payroll->overtime_rate ?: $payroll->employee->overtime_rate;
+        $overtimeRate  = $dailyRate / 9;
         $overtimeHours = (float)($validated['overtime_hours'] ?? 0);
         $basicSalary   = $dailyRate * (int)$validated['working_days'];
         $overtimePay   = $overtimeRate * $overtimeHours;
@@ -286,6 +307,10 @@ class PayrollController extends Controller
     // ─── SOFT DELETE ─────────────────────────────────────────────────────
     public function destroy(Payroll $payroll)
     {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->back()->with('error', 'Hanya admin yang dapat menghapus data penggajian.');
+        }
+
         // Soft delete associated transaction
         Transaction::where('reference_type', Payroll::class)
             ->where('reference_id', $payroll->id)
@@ -354,7 +379,7 @@ class PayrollController extends Controller
 
         return response()->json([
             'salary_base'          => $employee->salary_base,
-            'overtime_rate'        => $employee->overtime_rate,
+            'overtime_rate'        => $employee->salary_base / 9,
             'open_kasbon'          => $totalRemaining,
             'recommended_deduction'=> $recommendedDeduction,
         ]);

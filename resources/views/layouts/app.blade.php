@@ -161,32 +161,53 @@
             });
 
             @if(session('success'))
-                Toast.fire({
+                Swal.fire({
                     icon: 'success',
-                    title: '{{ session('success') }}'
+                    title: 'Berhasil!',
+                    text: '{{ session('success') }}',
+                    confirmButtonColor: '#3b82f6',
+                    confirmButtonText: 'Tutup',
+                    customClass: {
+                        popup: 'rounded-2xl',
+                        confirmButton: 'rounded-lg'
+                    }
                 });
             @endif
 
             @if(session('error'))
-                Toast.fire({
+                Swal.fire({
                     icon: 'error',
-                    title: '{{ session('error') }}'
+                    title: 'Oops...',
+                    text: '{{ session('error') }}',
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'Tutup',
+                    customClass: {
+                        popup: 'rounded-2xl',
+                        confirmButton: 'rounded-lg'
+                    }
                 });
             @endif
 
             document.addEventListener('DOMContentLoaded', function() {
-                const deleteForms = document.querySelectorAll('.delete-confirm');
-                deleteForms.forEach(form => {
+                const actionForms = document.querySelectorAll('.action-confirm, .delete-confirm');
+                actionForms.forEach(form => {
                     form.addEventListener('submit', function(e) {
                         e.preventDefault();
+                        
+                        const title = form.getAttribute('data-title') || 'Apakah Anda yakin?';
+                        const text = form.getAttribute('data-text') || 'Data yang dihapus tidak dapat dikembalikan!';
+                        const icon = form.getAttribute('data-icon') || 'warning';
+                        const confirmText = form.getAttribute('data-confirm-text') || 'Ya, Hapus!';
+                        const confirmColor = form.getAttribute('data-confirm-color') || '#ef4444';
+
                         Swal.fire({
-                            title: 'Apakah Anda yakin?',
-                            text: "Data yang dihapus tidak dapat dikembalikan!",
-                            icon: 'warning',
+                            title: title,
+                            text: text,
+                            icon: icon,
                             showCancelButton: true,
-                            confirmButtonColor: '#ef4444',
-                            cancelButtonColor: '#3b82f6',
-                            confirmButtonText: 'Ya, Hapus!',
+                            confirmButtonColor: confirmColor,
+                            cancelButtonColor: '#9ca3af',
+                            confirmButtonText: confirmText,
                             cancelButtonText: 'Batal',
                             customClass: {
                                 popup: 'rounded-2xl',
@@ -201,6 +222,45 @@
                     });
                 });
             });
+
+            function confirmPrint(url, isDownload = false) {
+                Swal.fire({
+                    title: 'Cetak Dokumen?',
+                    text: 'Anda akan mencetak/mengunduh dokumen ini.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Cetak!',
+                    confirmButtonColor: '#3b82f6',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-2xl',
+                        confirmButton: 'rounded-lg',
+                        cancelButton: 'rounded-lg'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if(isDownload) {
+                            window.location.href = url;
+                        } else {
+                            window.open(url, '_blank');
+                        }
+                        
+                        setTimeout(() => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: 'Dokumen sedang diproses.',
+                                confirmButtonColor: '#3b82f6',
+                                customClass: {
+                                    popup: 'rounded-2xl',
+                                    confirmButton: 'rounded-lg'
+                                }
+                            }).then(() => window.location.reload());
+                        }, 1000);
+                    }
+                });
+            }
         </script>
+        @stack('scripts')
     </body>
 </html>

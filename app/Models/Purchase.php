@@ -50,14 +50,16 @@ class Purchase extends Model
 
     public function syncToDebt()
     {
+        $paid_amount = $this->debt ? ($this->debt->amount - $this->debt->remaining_amount) : 0;
+        
         if ($this->status === 'lunas') {
-            if ($this->debt) {
-                $this->debt->update([
-                    'status' => 'lunas',
-                    'remaining_amount' => 0,
-                ]);
-            }
-            return;
+            $new_remaining = 0;
+            $status = 'lunas';
+            $type = 'cash';
+        } else {
+            $new_remaining = max(0, $this->total_amount - $paid_amount);
+            $status = $new_remaining <= 0 ? 'lunas' : ($paid_amount > 0 ? 'sebagian' : 'belum_lunas');
+            $type = 'credit';
         }
 
         $debtData = [
@@ -65,12 +67,12 @@ class Purchase extends Model
             'name'             => $this->supplier->name ?? 'Supplier',
             'description'      => 'Hutang Pembelian #' . $this->purchase_number,
             'amount'           => $this->total_amount,
-            'remaining_amount' => $this->total_amount, // For simplicity, track full amount if not lunas
+            'remaining_amount' => $new_remaining,
             'due_date'         => $this->due_date,
-            'status'           => 'belum_lunas',
-            'type'             => 'credit',
-            'division'         => session('division'),
-            'entity'           => $this->entity ?? session('division'),
+            'status'           => $status,
+            'type'             => $type,
+            'division'         => $this->division ?? session('division'),
+            'entity'           => $this->entity ?? ($this->division ?? session('division')),
         ];
 
         if ($this->debt) {

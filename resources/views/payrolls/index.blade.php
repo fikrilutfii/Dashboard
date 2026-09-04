@@ -5,16 +5,16 @@
         <!-- Header Summary Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="bg-white rounded-2xl p-5 border border-zinc-100 shadow-sm">
-                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Gaji (Ditampilkan)</p>
-                <h3 class="text-xl font-bold text-zinc-800 mt-1">Rp {{ number_format($payrolls->sum('total_salary'), 0, ',', '.') }}</h3>
+                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Gaji Bulan Ini</p>
+                <h3 class="text-xl font-bold text-zinc-800 mt-1">Rp {{ number_format($totalGajiBulanIni, 0, ',', '.') }}</h3>
             </div>
             <div class="bg-white rounded-2xl p-5 border border-zinc-100 shadow-sm">
-                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Sudah Lunas</p>
-                <h3 class="text-xl font-bold text-emerald-600 mt-1">Rp {{ number_format($payrolls->filter(fn($p) => $p->status === 'lunas')->sum('total_salary'), 0, ',', '.') }}</h3>
+                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Sudah Lunas Bulan Ini</p>
+                <h3 class="text-xl font-bold text-emerald-600 mt-1">Rp {{ number_format($sudahLunasBulanIni, 0, ',', '.') }}</h3>
             </div>
             <div class="bg-white rounded-2xl p-5 border border-zinc-100 shadow-sm">
-                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Belum Lunas</p>
-                <h3 class="text-xl font-bold text-red-500 mt-1">Rp {{ number_format($payrolls->where('status', 'belum_lunas')->sum('total_salary'), 0, ',', '.') }}</h3>
+                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Belum Lunas (Semua)</p>
+                <h3 class="text-xl font-bold text-red-500 mt-1">Rp {{ number_format($belumLunasAll, 0, ',', '.') }}</h3>
             </div>
         </div>
 
@@ -75,12 +75,12 @@
                                 <td class="px-4 py-3 text-right font-bold text-zinc-800">Rp {{ number_format($payroll->total_salary, 0, ',', '.') }}</td>
                                 <td class="px-4 py-3 text-center">
                                     @if($isLunas)
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 whitespace-nowrap">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" /></svg>
                                             Lunas
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100 whitespace-nowrap">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>
                                             Belum Lunas
                                         </span>
@@ -96,10 +96,12 @@
                                             </form>
                                         @endif
                                         <a href="{{ route('payrolls.edit', $payroll) }}" class="px-2.5 py-1 bg-zinc-100 text-zinc-600 text-xs font-semibold rounded-lg hover:bg-zinc-200">Edit</a>
-                                        <form action="{{ route('payrolls.destroy', $payroll) }}" method="POST" onsubmit="return confirm('Hapus data penggajian ini? Aksi tidak dapat dibatalkan.')">
+                                        @if(Auth::user()->isAdmin())
+                                        <form action="{{ route('payrolls.destroy', $payroll) }}" method="POST" class="action-confirm inline-block" data-title="Apakah Anda yakin?" data-text="Hapus data penggajian ini? Aksi tidak dapat dibatalkan." data-icon="warning" data-confirm-text="Ya, Hapus!" data-confirm-color="#ef4444">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="px-2.5 py-1 bg-red-50 text-red-600 text-xs font-semibold rounded-lg hover:bg-red-100">Hapus</button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

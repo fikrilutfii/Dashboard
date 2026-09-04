@@ -43,6 +43,10 @@ class FinanceController extends Controller
             $query->whereDate('date', '<=', $request->end_date);
         }
 
+        if ($request->filled('search')) {
+            $query->where('description', 'like', '%' . $request->search . '%');
+        }
+
         $transaksi = $query->orderBy('date', 'desc')->paginate(15);
         
         $totalPemasukan = (clone $query)->where('type', 'credit')->sum('amount');

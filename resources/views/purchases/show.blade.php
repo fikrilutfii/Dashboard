@@ -65,7 +65,7 @@
                 <a href="{{ route('purchases.index', ['division' => $purchase->division]) }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Kembali</a>
                 
                 @if($purchase->status == 'belum_lunas')
-                <form action="{{ route('purchases.update-status', $purchase) }}" method="POST" onsubmit="return confirm('Konfirmasi pelunasan pembayaran ini?')">
+                <form action="{{ route('purchases.update-status', $purchase) }}" method="POST" class="action-confirm inline-block" data-title="Konfirmasi Pelunasan" data-text="Konfirmasi pelunasan pembayaran ini?" data-icon="question" data-confirm-text="Ya, Lunasi" data-confirm-color="#3b82f6">
                     @csrf
                     @method('PUT')
                     <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Lunasi Pembayaran Sekarang</button>

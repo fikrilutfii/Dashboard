@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Detail Invoice') }} : {{ $invoice->invoice_number }}
+            {{ __('Detail Invoice') }} : {{ $invoice->faktur_number }} <span class="text-sm font-normal text-gray-500">(OP: {{ $invoice->invoice_number ?? '-' }})</span>
         </h2>
     </x-slot>
 
@@ -19,6 +19,9 @@
                             </a>
                             <a href="{{ route('invoices.print-combined', $invoice) }}" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded">
                                 Print Gabungan
+                            </a>
+                            <a href="{{ route('invoices.print-excel', $invoice) }}" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                                Print Faktur
                             </a>
                             @if($invoice->status != 'lunas')
                                 <a href="{{ route('invoices.edit', $invoice) }}" class="bg-yellow-500 text-white px-4 py-2 rounded">
@@ -40,6 +43,8 @@
                         </div>
                         <div class="text-right">
                             <h3 class="font-bold text-lg mb-2">Info Invoice</h3>
+                            <p>No. Faktur: <strong>{{ $invoice->faktur_number }}</strong></p>
+                            <p>OP No: <strong>{{ $invoice->invoice_number ?? '-' }}</strong></p>
                             <p>Tanggal: <strong>{{ $invoice->invoice_date->format('d F Y') }}</strong></p>
                             <p>Status: 
                                 <span class="px-2 py-1 rounded text-sm {{ $invoice->status == 'lunas' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800' }}">
@@ -54,7 +59,7 @@
                         <div class="font-bold text-gray-700">Ubah Status Pembayaran:</div>
                         <div>
                             @if($invoice->status == 'belum_lunas')
-                                <form action="{{ route('invoices.update-status', $invoice) }}" method="POST" onsubmit="return confirm('Tandai invoice ini sebagai LUNAS?');">
+                                <form action="{{ route('invoices.update-status', $invoice) }}" method="POST" class="action-confirm inline-block" data-title="Tandai Lunas?" data-text="Tandai invoice ini sebagai LUNAS?" data-icon="question" data-confirm-text="Ya, Lunas" data-confirm-color="#3b82f6">
                                     @csrf
                                     @method('PUT')
                                     <input type="hidden" name="status" value="lunas">
@@ -63,7 +68,7 @@
                                     </button>
                                 </form>
                             @else
-                                <form action="{{ route('invoices.update-status', $invoice) }}" method="POST" onsubmit="return confirm('Kembalikan status ke BELUM LUNAS?');">
+                                <form action="{{ route('invoices.update-status', $invoice) }}" method="POST" class="action-confirm inline-block" data-title="Batal Lunas?" data-text="Kembalikan status ke BELUM LUNAS?" data-icon="warning" data-confirm-text="Ya, Batal Lunas" data-confirm-color="#f59e0b">
                                     @csrf
                                     @method('PUT')
                                     <input type="hidden" name="status" value="belum_lunas">

@@ -11,19 +11,57 @@ use App\Models\Transaction;
 
 class KasbonController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $division = session('division');
-        $kasbons = Kasbon::with('employee')
-            ->whereHas('employee', function($q) use ($division) {
-                if ($division) {
-                    $q->where('division', $division);
-                }
-            })
-            ->latest()
-            ->paginate(10);
+        $query = Kasbon::with(['employee', 'repayments']);
+        
+        if ($division) {
+            $query->whereHas('employee', function($q) use ($division) {
+                $q->where('division', $division);
+            });
+        }
+
+        if ($request->has('search') && $request->search != '') {
+            $query->whereHas('employee', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            })->orWhere('description', 'like', '%' . $request->search . '%');
+        }
+
+        // Calculate totals based on the query before pagination
+        $totalOutstanding = (clone $query)->sum('remaining_amount');
+        $now = \Carbon\Carbon::now();
+        $kasbonBulanIni = (clone $query)->whereMonth('date', $now->month)
+                                        ->whereYear('date', $now->year)
+                                        ->sum('amount');
+
+        $kasbons = $query->latest()->paginate(10);
             
-        return view('kasbons.index', compact('kasbons'));
+        return view('kasbons.index', compact('kasbons', 'totalOutstanding', 'kasbonBulanIni'));
+    }
+
+    public function printPdf(Request $request)
+    {
+        $division = session('division');
+        $query = Kasbon::with('employee');
+        
+        if ($division) {
+            $query->whereHas('employee', function($q) use ($division) {
+                $q->where('division', $division);
+            });
+        }
+
+        if ($request->has('search') && $request->search != '') {
+            $query->whereHas('employee', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            })->orWhere('description', 'like', '%' . $request->search . '%');
+        }
+
+        $kasbons = $query->latest()->get();
+        $totalOutstanding = $kasbons->sum('remaining_amount');
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('kasbons.pdf', compact('kasbons', 'totalOutstanding', 'division'));
+        return $pdf->stream('Laporan_Kasbon.pdf');
     }
 
     public function create(Request $request)
@@ -101,7 +139,7 @@ class KasbonController extends Controller
                 'category' => 'kasbon_repayment',
                 'reference_type' => \App\Models\Kasbon::class,
                 'reference_id' => $kasbon->id,
-                'description' => 'Pelunasan Kasbon ' . $kasbon->employee->name,
+                'description' => 'Pelunasan Kasbon ' . $kasbon->employee->name . ' - ' . ($validated['description'] ?? 'Tgl ' . \Carbon\Carbon::parse($validated['date'])->format('d/m/Y')),
                 'date' => $validated['date'],
                 'division' => $kasbon->employee->division,
             ]);
@@ -110,8 +148,68 @@ class KasbonController extends Controller
         return back()->with('success', 'Pembayaran cicilan berhasil.');
     }
 
+    public function edit(Kasbon $kasbon)
+    {
+        if ($kasbon->status !== 'aktif' && $kasbon->status !== 'lunas') {
+            return redirect()->back()->with('error', 'Hanya kasbon aktif atau lunas yang bisa diedit.');
+        }
+
+        $division = session('division');
+        $employees = Employee::when($division, function($q) use ($division) {
+            $q->where('division', $division);
+        })->get();
+
+        return view('kasbons.edit', compact('kasbon', 'employees'));
+    }
+
+    public function update(Request $request, Kasbon $kasbon)
+    {
+        if ($kasbon->status !== 'aktif' && $kasbon->status !== 'lunas') {
+            return redirect()->back()->with('error', 'Hanya kasbon aktif atau lunas yang bisa diedit.');
+        }
+
+        $validated = $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'type' => 'required|in:staff_kasbon,personal_credit,personal_loan',
+            'amount' => 'required|numeric|min:0',
+            'installment_amount' => 'nullable|numeric|min:0',
+            'date' => 'required|date',
+            'description' => 'nullable|string',
+        ]);
+
+        // Calculate paid amount before update
+        $paid_amount = $kasbon->amount - $kasbon->remaining_amount;
+
+        // If new amount is less than paid amount, it's an error
+        if ($validated['amount'] < $paid_amount) {
+            return redirect()->back()->with('error', 'Total pinjaman tidak boleh kurang dari jumlah yang sudah dibayar.');
+        }
+
+        $newRemaining = $validated['amount'] - $paid_amount;
+
+        $kasbon->update([
+            'employee_id' => $validated['employee_id'],
+            'type' => $validated['type'],
+            'amount' => $validated['amount'],
+            'remaining_amount' => $newRemaining,
+            'installment_amount' => $validated['installment_amount'] ?? 0,
+            'date' => $validated['date'],
+            'description' => $validated['description'],
+            'status' => $newRemaining > 0 ? 'aktif' : 'lunas',
+        ]);
+
+        $kasbon->load('employee');
+        $kasbon->syncToReceivable();
+
+        return redirect()->route('kasbons.index')->with('success', 'Kasbon berhasil diupdate.');
+    }
+
     public function destroy(Kasbon $kasbon)
     {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->back()->with('error', 'Hanya admin yang dapat menghapus kasbon.');
+        }
+
         if($kasbon->status !== 'aktif') {
              return back()->with('error', 'Hanya kasbon status Aktif yang bisa dihapus.');
         }

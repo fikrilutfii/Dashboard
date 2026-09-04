@@ -133,7 +133,7 @@
                         <select name="division" class="w-full border-gray-200 rounded-lg text-sm bg-gray-50/50">
                             <option value="">Semua Divisi</option>
                             <option value="percetakan" {{ request('division') == 'percetakan' ? 'selected' : '' }}>Percetakan</option>
-                            <option value="konfeksi" {{ request('division') == 'konfeksi' ? 'selected' : '' }}>Konfeksi</option>
+                            <option value="konfeksi" disabled>Konveksi (Belum Tersedia)</option>
                         </select>
                     </div>
                     <div class="md:col-span-2">
@@ -141,7 +141,7 @@
                         <select name="entity" class="w-full border-gray-200 rounded-lg text-sm bg-gray-50/50">
                             <option value="">Semua Entitas</option>
                             <option value="percetakan" {{ request('entity') == 'percetakan' ? 'selected' : '' }}>Percetakan</option>
-                            <option value="konfeksi" {{ request('entity') == 'konfeksi' ? 'selected' : '' }}>Konveksi</option>
+                            <option value="konfeksi" disabled>Konveksi (Belum Tersedia)</option>
                             <option value="pribadi" {{ request('entity') == 'pribadi' ? 'selected' : '' }}>Pribadi</option>
                         </select>
                     </div>

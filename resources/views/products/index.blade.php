@@ -19,7 +19,7 @@
                         </form>
                         <div class="flex gap-2 flex-wrap">
                             <a href="{{ route('products.create') }}" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 text-sm font-semibold">+ Tambah Barang</a>
-                            <form action="{{ route('products.import-csv') }}" method="POST" onsubmit="return confirm('Import data dari file \'data master.csv\' (di root project)? Data lama akan diupdate jika kode sama.')">
+                            <form action="{{ route('products.import-csv') }}" method="POST" class="action-confirm inline-block" data-title="Import CSV" data-text="Import data dari file 'data master.csv' (di root project)? Data lama akan diupdate jika kode sama." data-icon="question" data-confirm-text="Ya, Import" data-confirm-color="#3b82f6">
                                 @csrf
                                 <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-semibold">📥 Import Data Master CSV</button>
                             </form>
@@ -51,12 +51,14 @@
                                         @endif
                                     </td>
                                     <td class="border border-gray-300 p-2 text-center">
-                                        <a href="{{ route('products.edit', $product) }}" class="text-primary-600 hover:text-primary-900">Edit</a> |
-                                        <form action="{{ route('products.destroy', $product) }}" method="POST" class="inline delete-confirm">
+                                        <a href="{{ route('products.edit', $product) }}" class="text-primary-600 hover:text-primary-900">Edit</a>
+                                        @if(Auth::user()->isAdmin())
+                                        | <form action="{{ route('products.destroy', $product) }}" method="POST" class="inline delete-confirm">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-500 hover:underline">Hapus</button>
                                         </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

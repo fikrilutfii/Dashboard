@@ -26,66 +26,107 @@ class DashboardController extends Controller
             return redirect()->route('dashboard')->with('error', 'Anda tidak memiliki akses ke divisi tersebut.');
         }
 
-        $now = Carbon::now();
-        $startOfWeek = Carbon::now()->startOfWeek();
+        if ($division === 'peternakan') {
+            return redirect()->route('farm.dashboard');
+        }
 
-        // --- PEMBAYARAN & TAGIHAN PERCETAKAN ---
-        // 1. Pembayaran Percetakan (Bulan Ini) -> Income
-        $pembayaranPercetakan = Transaction::where('type', 'credit')
-            ->where('division', 'percetakan')
-            ->whereMonth('date', $now->month)
-            ->whereYear('date', $now->year)
-            ->sum('amount');
+        // Inisialisasi variabel statistik default
+        $pembayaranPercetakan = 0;
+        $tagihanPercetakan = 0;
+        $totalPembayaran = 0;
+        $totalTagihan = 0;
+        $keuntunganPercetakan = 0;
+        $keuntunganKonveksiMingguIni = 0;
+        $keuntunganKonveksiBulanIni = 0;
 
-        // 2. Tagihan Percetakan (Bulan Ini) -> Invoices
-        $tagihanPercetakan = Invoice::where('division', 'percetakan')
-            ->whereMonth('invoice_date', $now->month)
-            ->whereYear('invoice_date', $now->year)
-            ->sum('total_amount');
+        // Hanya hitung statistik jika bukan limited_invoice
+        if ($user->role !== 'limited_invoice') {
+            $now = Carbon::now();
+            $startOfWeek = Carbon::now()->startOfWeek();
 
-        // --- PEMBAYARAN & TAGIHAN KONVEKSI (For totals) ---
-        $pembayaranKonveksi = Transaction::where('type', 'credit')
-            ->where('division', 'konfeksi')
-            ->whereMonth('date', $now->month)
-            ->whereYear('date', $now->year)
-            ->sum('amount');
+            // --- PEMBAYARAN & TAGIHAN PERCETAKAN ---
+            // 1. Pembayaran Percetakan (Bulan Ini) -> Pengeluaran / Transaksi Debit Bulan Ini
+            $pembayaranPercetakan = Transaction::where('type', 'debit')
+                ->where('division', 'percetakan')
+                ->whereMonth('date', $now->month)
+                ->whereYear('date', $now->year)
+                ->sum('amount');
 
-        $tagihanKonveksi = Invoice::where('division', 'konfeksi')
-            ->whereMonth('invoice_date', $now->month)
-            ->whereYear('invoice_date', $now->year)
-            ->sum('total_amount');
+            // 2. Total Tagihan Percetakan (Seluruhnya) -> CompanyReceivable (Sisa Piutang)
+            $tagihanPercetakan = \App\Models\CompanyReceivable::where('division', 'percetakan')
+                ->whereNull('kasbon_id')
+                ->whereIn('status', ['belum_lunas', 'sebagian'])
+                ->sum('remaining_amount');
 
-        // 3. Total Pembayaran (Bulan Ini)
-        $totalPembayaran = $pembayaranPercetakan + $pembayaranKonveksi;
+            // Tagihan Bulan Ini -> Faktur belum lunas yang JATUH TEMPO bulan ini.
+            $tagihanPercetakanBulanIni = \App\Models\Invoice::where('division', 'percetakan')
+                ->where('status', '!=', 'lunas')
+                ->whereMonth('due_date', $now->month)
+                ->whereYear('due_date', $now->year)
+                ->sum('total_amount');
 
-        // 4. Total Tagihan (Bulan Ini)
-        $totalTagihan = $tagihanPercetakan + $tagihanKonveksi;
+            // --- PEMBAYARAN & TAGIHAN KONVEKSI (For totals) ---
+            $pembayaranKonveksi = Transaction::where('type', 'debit')
+                ->where('division', 'konfeksi')
+                ->whereMonth('date', $now->month)
+                ->whereYear('date', $now->year)
+                ->sum('amount');
 
-        // --- KEUNTUNGAN (Pembayaran - Pengeluaran) ---
-        
-        // 5. Keuntungan Percetakan (Bulan Ini)
-        $pengeluaranPercetakanBulanIni = \App\Models\Expense::where('division', 'percetakan')
-            ->whereMonth('date', $now->month)
-            ->whereYear('date', $now->year)
-            ->sum('amount');
-        $keuntunganPercetakan = $pembayaranPercetakan - $pengeluaranPercetakanBulanIni;
+            $tagihanKonveksi = \App\Models\Invoice::where('division', 'konfeksi')
+                ->where('status', '!=', 'lunas')
+                ->whereMonth('due_date', $now->month)
+                ->whereYear('due_date', $now->year)
+                ->sum('total_amount');
 
-        // 6. Keuntungan Konveksi (Minggu Ini)
-        $pembayaranKonveksiMingguIni = Transaction::where('type', 'credit')
-            ->where('division', 'konfeksi')
-            ->whereBetween('date', [$startOfWeek, $now])
-            ->sum('amount');
-        $pengeluaranKonveksiMingguIni = \App\Models\Expense::where('division', 'konfeksi')
-            ->whereBetween('date', [$startOfWeek, $now])
-            ->sum('amount');
-        $keuntunganKonveksiMingguIni = $pembayaranKonveksiMingguIni - $pengeluaranKonveksiMingguIni;
+            // 3. Total Pembayaran Percetakan (Seluruhnya) -> Company Debt (Sisa Hutang Seluruhnya)
+            $totalPembayaran = \App\Models\CompanyDebt::where('division', 'percetakan')
+                ->whereIn('status', ['belum_lunas', 'sebagian'])
+                ->sum('remaining_amount');
 
-        // 7. Keuntungan Konveksi (Bulan Ini)
-        $pengeluaranKonveksiBulanIni = \App\Models\Expense::where('division', 'konfeksi')
-            ->whereMonth('date', $now->month)
-            ->whereYear('date', $now->year)
-            ->sum('amount');
-        $keuntunganKonveksiBulanIni = $pembayaranKonveksi - $pengeluaranKonveksiBulanIni;
+            // 4. Total Tagihan (Bulan Ini) -> Penjualan Bulan Ini
+            $totalTagihan = $tagihanPercetakanBulanIni + $tagihanKonveksi;
+
+            // --- KEUNTUNGAN (Pemasukan - Pengeluaran) ---
+            
+            // Pemasukan Percetakan
+            $pemasukanPercetakanBulanIni = Transaction::where('type', 'credit')
+                ->where('division', 'percetakan')
+                ->whereMonth('date', $now->month)
+                ->whereYear('date', $now->year)
+                ->sum('amount');
+
+            // 5. Keuntungan Percetakan (Bulan Ini)
+            $pengeluaranPercetakanBulanIni = Transaction::where('type', 'debit')
+                ->where('division', 'percetakan')
+                ->whereMonth('date', $now->month)
+                ->whereYear('date', $now->year)
+                ->sum('amount');
+            $keuntunganPercetakan = $pemasukanPercetakanBulanIni - $pengeluaranPercetakanBulanIni;
+
+            // 6. Keuntungan Konveksi (Minggu Ini)
+            $pemasukanKonveksiMingguIni = Transaction::where('type', 'credit')
+                ->where('division', 'konfeksi')
+                ->whereBetween('date', [$startOfWeek, $now])
+                ->sum('amount');
+            $pengeluaranKonveksiMingguIni = Transaction::where('type', 'debit')
+                ->where('division', 'konfeksi')
+                ->whereBetween('date', [$startOfWeek, $now])
+                ->sum('amount');
+            $keuntunganKonveksiMingguIni = $pemasukanKonveksiMingguIni - $pengeluaranKonveksiMingguIni;
+
+            // 7. Keuntungan Konveksi (Bulan Ini)
+            $pemasukanKonveksiBulanIni = Transaction::where('type', 'credit')
+                ->where('division', 'konfeksi')
+                ->whereMonth('date', $now->month)
+                ->whereYear('date', $now->year)
+                ->sum('amount');
+            $pengeluaranKonveksiBulanIni = Transaction::where('type', 'debit')
+                ->where('division', 'konfeksi')
+                ->whereMonth('date', $now->month)
+                ->whereYear('date', $now->year)
+                ->sum('amount');
+            $keuntunganKonveksiBulanIni = $pemasukanKonveksiBulanIni - $pengeluaranKonveksiBulanIni;
+        }
 
         return view('dashboard', compact(
             'division', 
@@ -102,7 +143,7 @@ class DashboardController extends Controller
     public function setDivision(Request $request)
     {
         $request->validate([
-            'division' => 'required|in:percetakan,konfeksi',
+            'division' => 'required|in:percetakan,konfeksi,peternakan',
         ]);
 
         $user = $request->user();
@@ -113,6 +154,10 @@ class DashboardController extends Controller
         }
 
         $request->session()->put('division', $request->division);
+
+        if ($request->division === 'peternakan') {
+            return redirect()->route('farm.dashboard');
+        }
 
         return redirect()->route('dashboard');
     }

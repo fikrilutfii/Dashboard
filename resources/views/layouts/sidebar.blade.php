@@ -31,7 +31,6 @@
                         <span>Faktur Penjualan</span>
                     </a>
                 </li>
-                @if(Auth::user()->role !== 'faktur')
                 <li>
                     <a href="{{ route('purchases.index', ['division' => 'percetakan']) }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->fullUrlIs(route('purchases.index', ['division' => 'percetakan'])) ? 'text-white bg-gray-800 border-l-4 border-primary-500' : 'text-gray-400' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
@@ -102,7 +101,6 @@
                         <span>Penjualan Barang</span>
                     </a>
                 </li>
-                @if(Auth::user()->role !== 'faktur')
                 <li>
                     <a href="{{ route('purchases.index', ['division' => 'konfeksi']) }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->fullUrlIs(route('purchases.index', ['division' => 'konfeksi'])) ? 'text-white bg-gray-800 border-l-4 border-primary-500' : 'text-gray-400' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
@@ -158,10 +156,102 @@
             -->
             <!-- Keuangan Pusat -->
             <!-- TRANSAKSI Section -->
-            @if(Auth::user()->role !== 'faktur')
+
+            @if(session('division') == 'peternakan')
+                <!-- Divisi Peternakan Ayam -->
+                <li class="px-6 py-2 mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Penjualan & Tagihan
+                </li>
+                <li>
+                    <a href="{{ route('farm.invoices.index') }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->routeIs('farm.invoices.*') ? 'text-white bg-gray-800 border-l-4 border-amber-500' : 'text-gray-400' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
+                        <span>Faktur Penjualan</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('farm.billing.index') }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->routeIs('farm.billing.*') ? 'text-white bg-gray-800 border-l-4 border-amber-500' : 'text-gray-400' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Tagihan Klien</span>
+                    </a>
+                </li>
+
+                <li class="px-6 py-2 mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Operasional
+                </li>
+                <li>
+                    <a href="{{ route('farm.operational.index') }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->routeIs('farm.operational.*') ? 'text-white bg-gray-800 border-l-4 border-amber-500' : 'text-gray-400' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span>Log Operasional</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('farm.transportation.index') }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->routeIs('farm.transportation.*') ? 'text-white bg-gray-800 border-l-4 border-amber-500' : 'text-gray-400' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        <span>Transportasi</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('farm.expenses.index') }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->routeIs('farm.expenses.*') ? 'text-white bg-gray-800 border-l-4 border-amber-500' : 'text-gray-400' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span>Pengeluaran</span>
+                    </a>
+                </li>
+
+                <li class="px-6 py-2 mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    SDM & Penggajian
+                </li>
+                <li>
+                    <a href="{{ route('farm.payroll.index') }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->routeIs('farm.payroll.*') ? 'text-white bg-gray-800 border-l-4 border-amber-500' : 'text-gray-400' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Penggajian Pegawai</span>
+                    </a>
+                </li>
+
+                <li class="px-6 py-2 mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Master Data
+                </li>
+                <li>
+                    <a href="{{ route('farm.master.customers.index') }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->routeIs('farm.master.customers.*') ? 'text-white bg-gray-800 border-l-4 border-amber-500' : 'text-gray-400' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                        </svg>
+                        <span>Pembeli Panen</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('farm.master.suppliers.index') }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->routeIs('farm.master.suppliers.*') ? 'text-white bg-gray-800 border-l-4 border-amber-500' : 'text-gray-400' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125V14.25m-2.25 4.5v3.375c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V18.75m-7.5-6.75h3.86a2.25 2.25 0 012.012 1.244l1.5 3a2.25 2.25 0 01-.437 2.486l-1.664 1.71a.75.75 0 01-.197.12l-.968.322a3.003 3.003 0 01-3.69-3.69l.322-.968a.75.75 0 01.12-.197l1.71-1.664a2.25 2.25 0 012.486-.437l3-1.5a2.25 2.25 0 011.244-2.012l3.86-1.287A1.125 1.125 0 0121 4.875v7.875M3 14.25h12.75" />
+                        </svg>
+                        <span>Supplier DOC & Pakan</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('farm.master.coops.index') }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->routeIs('farm.master.coops.*') ? 'text-white bg-gray-800 border-l-4 border-amber-500' : 'text-gray-400' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-1-4h.01M9 16h.01M9 12h.01M9 8h.01M15 16h.01M15 12h.01M15 8h.01" />
+                        </svg>
+                        <span>Data Kandang</span>
+                    </a>
+                </li>
+            @endif
+
             <li class="px-6 py-2 mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Transaksi
             </li>
+
             <li>
                 <a href="{{ route('finance.transactions') }}" class="flex items-center px-6 py-2 transition-all duration-200 hover:bg-gray-800 hover:text-white {{ request()->routeIs('finance.transactions') ? 'text-white bg-gray-800 border-l-4 border-primary-500' : 'text-gray-400' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400">

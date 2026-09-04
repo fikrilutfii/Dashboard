@@ -90,7 +90,7 @@
             const id = document.getElementById('employee_id').value;
             if(!id) return;
 
-            fetch(`/api/employees/${id}/data`)
+            fetch(`{{ url('/api/employees') }}/${id}/data`)
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('base_salary').value = data.salary_base;

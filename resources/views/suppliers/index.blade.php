@@ -31,11 +31,13 @@
                                     <td class="px-5 py-3 border-b">{{ $supplier->address }}</td>
                                     <td class="px-5 py-3 border-b text-right flex justify-end items-center">
                                         <a href="{{ route('suppliers.edit', $supplier) }}" class="text-primary-600 hover:text-primary-900 mr-4">Edit</a>
+                                        @if(Auth::user()->isAdmin())
                                         <form action="{{ route('suppliers.destroy', $supplier) }}" method="POST" class="inline-block delete-confirm">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-500 hover:text-red-700">Hapus</button>
                                         </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

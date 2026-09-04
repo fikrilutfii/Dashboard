@@ -13,46 +13,51 @@
                         @csrf
                         <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2">Kode Barang</label>
-                            <input type="text" name="code" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required placeholder="Contoh: A001">
-                            @error('code') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            <input type="text" name="code" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('code') border-red-500 @enderror" placeholder="Contoh: A001" value="{{ old('code') }}">
+                            @error('code')
+                                <p class="text-red-500 text-xs italic mt-1 feedback-error" id="error-code">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2">Nama Barang</label>
-                            <input type="text" name="name" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                            <input type="text" name="name" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('name') border-red-500 @enderror" value="{{ old('name') }}">
+                            @error('name')
+                                <p class="text-red-500 text-xs italic mt-1 feedback-error" id="error-name">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <div class="flex gap-4 mb-4">
                             <div class="w-1/2">
                                 <label class="block text-gray-700 text-sm font-bold mb-2">Satuan</label>
-                                <input type="text" name="unit" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required placeholder="Pcs, Rim, Box">
+                                <input type="text" name="unit" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('unit') border-red-500 @enderror" placeholder="Pcs, Rim, Box" value="{{ old('unit') }}">
+                                @error('unit')
+                                    <p class="text-red-500 text-xs italic mt-1 feedback-error" id="error-unit">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div class="w-1/2">
                                 <label class="block text-gray-700 text-sm font-bold mb-2">Harga Default</label>
-                                <input type="number" name="price" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required min="0">
+                                <input type="number" name="price" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('price') border-red-500 @enderror" min="0" value="{{ old('price') }}">
+                                @error('price')
+                                    <p class="text-red-500 text-xs italic mt-1 feedback-error" id="error-price">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
 
                         <div class="flex gap-4 mb-6">
                             <div class="w-1/2">
                                 <label class="block text-gray-700 text-sm font-bold mb-2">Stok Awal</label>
-                                <input type="number" name="stock" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" min="0" value="0">
+                                <input type="number" name="stock" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('stock') border-red-500 @enderror" min="0" value="{{ old('stock', 0) }}">
+                                @error('stock')
+                                    <p class="text-red-500 text-xs italic mt-1 feedback-error" id="error-stock">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div class="w-1/2">
                                 <label class="block text-gray-700 text-sm font-bold mb-2">Kode Stok Bersama (Opsional)</label>
-                                <input type="text" name="shared_stock_code" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Abaikan untuk stok terpisah">
-                                <p class="text-xs text-gray-500 mt-1">Samakan kode ini antar barang jika fisiknya sama persis.</p>
-                            </div>
-                        </div>
-
-                        <div class="flex gap-4 mb-6">
-                            <div class="w-1/2">
-                                <label class="block text-gray-700 text-sm font-bold mb-2">Stok Awal</label>
-                                <input type="number" name="stock" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" min="0" value="0">
-                            </div>
-                            <div class="w-1/2">
-                                <label class="block text-gray-700 text-sm font-bold mb-2">Kode Stok Bersama (Opsional)</label>
-                                <input type="text" name="shared_stock_code" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Abaikan untuk stok terpisah">
+                                <input type="text" name="shared_stock_code" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('shared_stock_code') border-red-500 @enderror" placeholder="Abaikan untuk stok terpisah" value="{{ old('shared_stock_code') }}">
+                                @error('shared_stock_code')
+                                    <p class="text-red-500 text-xs italic mt-1 feedback-error" id="error-shared_stock_code">{{ $message }}</p>
+                                @enderror
                                 <p class="text-xs text-gray-500 mt-1">Samakan kode ini antar barang jika fisiknya sama persis.</p>
                             </div>
                         </div>

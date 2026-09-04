@@ -67,7 +67,7 @@
 
     <script>
     const dailyRate = {{ $payroll->daily_rate ?: $payroll->employee->salary_base }};
-    const otRate    = {{ $payroll->overtime_rate ?: $payroll->employee->overtime_rate }};
+    const otRate    = dailyRate / 9;
     function calcPreview() {
         const days    = parseInt(document.getElementById('working_days').value)    || 0;
         const otHours = parseFloat(document.getElementById('overtime_hours').value) || 0;

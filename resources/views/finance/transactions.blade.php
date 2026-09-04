@@ -34,7 +34,11 @@
 
             <!-- Filter -->
             <div class="p-4 border-b border-zinc-100 bg-zinc-50/50">
-                <form method="GET" class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+                    <div class="lg:col-span-2">
+                        <label class="block text-[10px] font-bold text-zinc-400 uppercase mb-1">Cari Keterangan</label>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, keterangan..." class="w-full text-sm border border-zinc-200 rounded-xl px-3 py-2 bg-white">
+                    </div>
                     <div>
                         <label class="block text-[10px] font-bold text-zinc-400 uppercase mb-1">Jenis</label>
                         <select name="type" class="w-full text-sm border border-zinc-200 rounded-xl px-3 py-2 bg-white">
@@ -51,9 +55,9 @@
                         <label class="block text-[10px] font-bold text-zinc-400 uppercase mb-1">Selesai</label>
                         <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full text-sm border border-zinc-200 rounded-xl px-3 py-2 bg-white">
                     </div>
-                    <div class="sm:col-span-2 flex items-end gap-2">
-                        <button type="submit" class="flex-1 py-2 bg-zinc-800 text-white text-sm font-bold rounded-xl hover:bg-zinc-700 transition-all">Terapkan Filter</button>
-                        <a href="{{ route('finance.transactions') }}" class="px-4 py-2 text-zinc-500 text-sm font-bold rounded-xl hover:bg-zinc-100 transition-all text-center">Reset</a>
+                    <div class="flex items-end gap-2">
+                        <button type="submit" class="flex-1 py-2 bg-zinc-800 text-white text-sm font-bold rounded-xl hover:bg-zinc-700 transition-all">Terapkan</button>
+                        <a href="{{ route('finance.transactions') }}" class="px-3 py-2 text-zinc-500 text-sm font-bold rounded-xl hover:bg-zinc-100 transition-all text-center">Reset</a>
                     </div>
                 </form>
             </div>

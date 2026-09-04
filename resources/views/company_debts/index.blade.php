@@ -34,19 +34,31 @@
 
             <!-- Filter -->
             <div class="p-4 border-b border-zinc-100 bg-zinc-50">
-                <form method="GET" class="flex flex-col sm:flex-row gap-3">
-                    <select name="status" class="border rounded-md px-3 py-2 mr-2">
-                        <option value="">Semua Status</option>
-                        <option value="unpaid" {{ request('status') == 'unpaid' ? 'selected' : '' }}>Belum Lunas</option>
-                        <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Lunas</option>
-                    </select>
-                    <select name="type" class="text-sm border border-zinc-200 rounded-xl px-3 py-2 bg-white">
-                        <option value="">Semua Jenis</option>
-                        <option value="cash" {{ request('type') == 'cash' ? 'selected' : '' }}>Tunai</option>
-                        <option value="credit" {{ request('type') == 'credit' ? 'selected' : '' }}>Kredit</option>
-                    </select>
-                    <button type="submit" class="px-4 py-2 bg-zinc-800 text-white text-sm rounded-xl hover:bg-zinc-700">Terapkan</button>
-                    <a href="{{ route('company-debts.index') }}" class="px-4 py-2 text-zinc-500 text-sm rounded-xl hover:bg-zinc-100">Reset</a>
+                <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    <div class="lg:col-span-2">
+                        <label class="block text-[10px] font-bold text-zinc-400 uppercase mb-1">Cari Nama / Keterangan</label>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama kreditur, keterangan..." class="w-full text-sm border border-zinc-200 rounded-xl px-3 py-2 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-400 uppercase mb-1">Status</label>
+                        <select name="status" class="w-full text-sm border border-zinc-200 rounded-xl px-3 py-2 bg-white">
+                            <option value="">Semua Status</option>
+                            <option value="belum_lunas" {{ request('status') == 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
+                            <option value="lunas" {{ request('status') == 'lunas' ? 'selected' : '' }}>Lunas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-400 uppercase mb-1">Jenis</label>
+                        <select name="type" class="w-full text-sm border border-zinc-200 rounded-xl px-3 py-2 bg-white">
+                            <option value="">Semua Jenis</option>
+                            <option value="cash" {{ request('type') == 'cash' ? 'selected' : '' }}>Tunai</option>
+                            <option value="credit" {{ request('type') == 'credit' ? 'selected' : '' }}>Kredit</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button type="submit" class="flex-1 py-2 bg-zinc-800 text-white text-sm font-bold rounded-xl hover:bg-zinc-700 transition-all">Terapkan</button>
+                        <a href="{{ route('company-debts.index') }}" class="px-3 py-2 text-zinc-500 text-sm rounded-xl hover:bg-zinc-100 transition-all text-center">Reset</a>
+                    </div>
                 </form>
             </div>
 
@@ -94,16 +106,16 @@
                                 {{ $debt->due_date ? $debt->due_date->format('d M Y') : '—' }}
                             </td>
                             <td class="px-6 py-4 text-center">
-                                @if($debt->status == 'lunas')
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                @if($debt->status === 'lunas')
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 whitespace-nowrap">
                                         Lunas
                                     </span>
                                 @elseif($debt->remaining_amount < $debt->amount)
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap">
                                         Sebagian
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-100">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 whitespace-nowrap">
                                         Belum Lunas
                                     </span>
                                 @endif
@@ -116,18 +128,24 @@
                                             class="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-lg hover:bg-indigo-100 border border-indigo-100">
                                             Bayar
                                         </button>
-                                        <form action="{{ route('company-debts.mark-lunas', $debt) }}" method="POST" onsubmit="return confirm('Lunasi pembayaran ini?')">
+                                        <form action="{{ route('company-debts.mark-lunas', $debt) }}" method="POST" class="action-confirm inline" data-title="Konfirmasi Pelunasan" data-text="Lunasi pembayaran ini?" data-icon="question" data-confirm-text="Ya, Lunasi" data-confirm-color="#3b82f6">
                                             @csrf
                                             <button type="submit" class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-lg hover:bg-emerald-100 border border-emerald-100">Lunasi</button>
                                         </form>
                                     @endif
-                                    <a href="{{ route('company-debts.edit', $debt) }}" class="px-3 py-1 bg-zinc-100 text-zinc-600 text-xs font-semibold rounded-lg hover:bg-zinc-200">Edit</a>
-                                    <form action="{{ route('company-debts.destroy', $debt) }}" method="POST" onsubmit="return confirm('Hapus data ini?')">
+                                    @if($debt->purchase_id)
+                                        <a href="{{ route('purchases.edit', $debt->purchase_id) }}" class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-lg hover:bg-yellow-200">Edit Rincian</a>
+                                    @else
+                                        <a href="{{ route('company-debts.edit', $debt) }}" class="px-3 py-1 bg-zinc-100 text-zinc-600 text-xs font-semibold rounded-lg hover:bg-zinc-200">Edit</a>
+                                    @endif
+                                    @if(Auth::user()->isAdmin())
+                                    <form action="{{ route('company-debts.destroy', $debt) }}" method="POST" class="action-confirm inline" data-title="Apakah Anda yakin?" data-text="Hapus data ini? Data yang dihapus tidak dapat dikembalikan." data-icon="warning" data-confirm-text="Ya, Hapus!" data-confirm-color="#ef4444">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="p-1 text-red-400 hover:text-red-600">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                                         </button>
                                     </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

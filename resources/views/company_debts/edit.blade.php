@@ -55,7 +55,7 @@
                     <label class="block text-sm font-semibold text-zinc-700 mb-1">Entitas Keuangan</label>
                     <select name="entity" class="w-full border border-zinc-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:border-indigo-400">
                         <option value="percetakan" {{ old('entity', $companyDebt->entity) == 'percetakan' ? 'selected' : '' }}>Percetakan</option>
-                        <option value="konfeksi" {{ old('entity', $companyDebt->entity) == 'konfeksi' ? 'selected' : '' }}>Konveksi</option>
+                        <option value="konfeksi" disabled>Konveksi (Belum Tersedia)</option>
                         <option value="pribadi" {{ old('entity', $companyDebt->entity) == 'pribadi' ? 'selected' : '' }}>Pribadi</option>
                     </select>
                 </div>

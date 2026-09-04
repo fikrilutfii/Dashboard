@@ -57,39 +57,43 @@
                 <th>No. Faktur</th>
                 <th>Tanggal</th>
                 <th>Customer</th>
-                <th>Jumlah Item</th>
-                <th class="right">Total (Rp)</th>
-                <th>Status</th>
+                <th>Nama Barang</th>
+                <th style="text-align: center;">Qty</th>
+                <th class="right">Harga (Rp)</th>
+                <th class="right">Subtotal (Rp)</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($invoices as $i => $invoice)
-            <tr>
-                <td>{{ $i + 1 }}</td>
-                <td style="font-family: monospace; font-weight: 600;">{{ $invoice->invoice_number }}</td>
-                <td>{{ $invoice->invoice_date->format('d/m/Y') }}</td>
-                <td>{{ $invoice->customer->name }}</td>
-                <td>{{ $invoice->items->count() }} item</td>
-                <td class="right">{{ number_format($invoice->total_amount, 0, ',', '.') }}</td>
-                <td>
-                    @if($invoice->status == 'lunas')
-                        <span class="badge-paid">LUNAS</span>
-                    @else
-                        <span class="badge-unpaid">BELUM LUNAS</span>
-                    @endif
-                </td>
-            </tr>
+            @php $no = 1; $totalSemua = 0; @endphp
+            @forelse($invoices as $invoice)
+                @foreach($invoice->items as $item)
+                @php $totalSemua += $item->subtotal; @endphp
+                <tr>
+                    <td>{{ $no++ }}</td>
+                    <td style="font-family: monospace; font-weight: 600;">
+                        {{ $invoice->invoice_number }}
+                        @if($invoice->faktur_number)
+                            <br><span style="font-size: 9px; color: #555; font-weight: normal;">Faktur: {{ $invoice->faktur_number }}</span>
+                        @endif
+                    </td>
+                    <td>{{ $invoice->invoice_date->format('d/m/Y') }}</td>
+                    <td>{{ $invoice->customer->name ?? '-' }}</td>
+                    <td>{{ $item->item_name }}</td>
+                    <td style="text-align: center;">{{ $item->quantity }}</td>
+                    <td class="right">{{ number_format($item->unit_price, 0, ',', '.') }}</td>
+                    <td class="right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
+                </tr>
+                @endforeach
             @empty
             <tr>
-                <td colspan="7" style="text-align:center; padding:20px; color:#aaa;">Tidak ada data faktur.</td>
+                <td colspan="8" style="text-align:center; padding:20px; color:#aaa;">Tidak ada data rincian barang.</td>
             </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="5">TOTAL</td>
-                <td class="right">{{ number_format($invoices->sum('total_amount'), 0, ',', '.') }}</td>
-                <td></td>
+                <td colspan="7">TOTAL KESELURUHAN</td>
+                <td class="right">{{ number_format($totalSemua, 0, ',', '.') }}</td>
             </tr>
         </tfoot>
     </table>

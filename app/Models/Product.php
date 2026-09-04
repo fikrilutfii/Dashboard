@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\LogsActivity;
 
     protected $fillable = [
         'code',
@@ -23,7 +23,7 @@ class Product extends Model
      * Sync stock for this product and any other product sharing the same code.
      * $quantity can be negative (for sales) or positive (for purchases).
      */
-    public function syncStock(int $quantity, string $type = 'system', string $description = null, string $reference_type = null, int $reference_id = null)
+    public function syncStock(float $quantity, string $type = 'system', string $description = null, string $reference_type = null, int $reference_id = null)
     {
         $userId = auth()->id();
         
@@ -61,4 +61,3 @@ class Product extends Model
         }
     }
 }
-

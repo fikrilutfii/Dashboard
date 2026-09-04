@@ -13,7 +13,7 @@ class FinanceDashboardService
     /**
      * Get saldo for each entity.
      * Saldo Entitas = Total Pemasukan Entitas – Total Pembayaran Entitas
-     */
+     */ 
     public function getSaldoPerEntitas()
     {
         $stats = Transaction::select('entity', 

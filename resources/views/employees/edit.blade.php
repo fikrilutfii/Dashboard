@@ -15,26 +15,41 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-gray-700 text-sm font-bold mb-2">Nama Lengkap</label>
-                                <input type="text" name="name" value="{{ $employee->name }}" class="w-full border rounded px-3 py-2" required>
+                                <input type="text" name="name" value="{{ old('name', $employee->name) }}" class="w-full border rounded px-3 py-2 @error('name') border-red-500 @enderror">
+                                @error('name')
+                                    <p class="text-red-500 text-xs italic mt-1 feedback-error" id="error-name">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="block text-gray-700 text-sm font-bold mb-2">Divisi</label>
-                                <select name="division" class="w-full border rounded px-3 py-2">
-                                    <option value="konfeksi" {{ $employee->division == 'konfeksi' ? 'selected' : '' }}>Konfeksi</option>
-                                    <option value="percetakan" {{ $employee->division == 'percetakan' ? 'selected' : '' }}>Percetakan</option>
+                                <select name="division" class="w-full border rounded px-3 py-2 @error('division') border-red-500 @enderror">
+                                    <option value="percetakan" {{ old('division', $employee->division) == 'percetakan' ? 'selected' : '' }}>Percetakan</option>
+                                    <option value="konfeksi" disabled>Konveksi (Belum Tersedia)</option>
                                 </select>
+                                @error('division')
+                                    <p class="text-red-500 text-xs italic mt-1 feedback-error" id="error-division">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="block text-gray-700 text-sm font-bold mb-2">Jabatan / Role</label>
-                                <input type="text" name="role" value="{{ $employee->role }}" class="w-full border rounded px-3 py-2" required>
+                                <input type="text" name="role" value="{{ old('role', $employee->role) }}" class="w-full border rounded px-3 py-2 @error('role') border-red-500 @enderror">
+                                @error('role')
+                                    <p class="text-red-500 text-xs italic mt-1 feedback-error" id="error-role">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="block text-gray-700 text-sm font-bold mb-2">Gaji Pokok (Base Salary)</label>
-                                <input type="number" name="salary_base" value="{{ $employee->salary_base }}" class="w-full border rounded px-3 py-2" required>
+                                <input type="number" name="salary_base" value="{{ old('salary_base', $employee->salary_base) }}" class="w-full border rounded px-3 py-2 @error('salary_base') border-red-500 @enderror">
+                                @error('salary_base')
+                                    <p class="text-red-500 text-xs italic mt-1 feedback-error" id="error-salary_base">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="block text-gray-700 text-sm font-bold mb-2">Upah Lembur / Jam</label>
-                                <input type="number" name="overtime_rate" value="{{ $employee->overtime_rate }}" class="w-full border rounded px-3 py-2">
+                                <input type="number" name="overtime_rate" value="{{ old('overtime_rate', $employee->overtime_rate) }}" class="w-full border rounded px-3 py-2 @error('overtime_rate') border-red-500 @enderror">
+                                @error('overtime_rate')
+                                    <p class="text-red-500 text-xs italic mt-1 feedback-error" id="error-overtime_rate">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
                         <div class="mt-6 flex justify-end">

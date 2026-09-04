@@ -18,37 +18,43 @@
 
                     @if(session('division') == 'percetakan')
                         <x-nav-link :href="route('invoices.index')" :active="request()->routeIs('invoices.*')">
-                            {{ __('Invoices') }}
+                            {{ __('Tagihan (Invoice)') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('purchases.index', ['division' => 'percetakan'])" :active="request()->routeIs('purchases.*') && request('division') == 'percetakan'">
-                            {{ __('Purchases') }}
-                        </x-nav-link>
+                        @if(Auth::user()->role !== 'limited_invoice')
+                        @endif
                         <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
-                            {{ __('Products') }}
+                            {{ __('Stok Barang') }}
                         </x-nav-link>
                         <x-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
-                            {{ __('Customers') }}
+                            {{ __('Pelanggan') }}
                         </x-nav-link>
                     @endif
 
                     @if(session('division') == 'konfeksi')
+                        @if(Auth::user()->role !== 'limited_invoice')
                         <x-nav-link :href="route('employees.index')" :active="request()->routeIs('employees.*')">
-                            {{ __('Employees') }}
+                            {{ __('Karyawan') }}
                         </x-nav-link>
                         <x-nav-link :href="route('payrolls.index')" :active="request()->routeIs('payrolls.*')">
-                            {{ __('Payrolls') }}
+                            {{ __('Penggajian') }}
                         </x-nav-link>
                         <x-nav-link :href="route('kasbons.index')" :active="request()->routeIs('kasbons.*')">
-                            {{ __('Kasbons') }}
+                            {{ __('Kasbon') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('purchases.index', ['division' => 'konfeksi'])" :active="request()->routeIs('purchases.*') && request('division') == 'konfeksi'">
-                            {{ __('Purchases') }}
-                        </x-nav-link>
+                        @endif
                     @endif
 
+                    @if(Auth::user()->role !== 'limited_invoice')
                     <x-nav-link :href="route('finance.index')" :active="request()->routeIs('finance.*')">
-                        {{ __('Finance') }}
+                        {{ __('Laporan Keuangan') }}
                     </x-nav-link>
+                    @endif
+
+                    @if(Auth::user()->role === 'admin')
+                    <x-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
+                        {{ __('Log Aktivitas') }}
+                    </x-nav-link>
+                    @endif
                     
                     @if(session('division'))
                         <div class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
@@ -134,14 +140,18 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <!-- Add responsive links here similarly if needed -->
+            @if(Auth::user()->role === 'admin')
+            <x-responsive-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
+                {{ __('Log Aktivitas') }}
+            </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">
             <div class="px-4">
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->username }}</div>
             </div>
 
             <div class="mt-3 space-y-1">

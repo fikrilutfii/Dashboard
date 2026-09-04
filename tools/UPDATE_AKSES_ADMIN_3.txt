@@ -1,0 +1,12 @@
+AKSES LAPORAN TAGIHAN KLIEN UNTUK admin_3
+
+1. Ekstrak ZIP update di folder utama aplikasi hosting dan timpa file lama.
+2. Buka sekali melalui browser:
+   https://alamat-domain-anda/update_admin_3_billing_access.php
+3. Logout, lalu login kembali sebagai admin_3.
+4. Buka menu Laporan Tagihan Klien.
+5. Hapus file update_admin_3_billing_access.php dari hosting setelah berhasil.
+
+Alternatif jika ada Terminal/SSH:
+php artisan migrate --force
+php artisan optimize:clear

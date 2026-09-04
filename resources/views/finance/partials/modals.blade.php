@@ -27,14 +27,14 @@
                     <label class="block text-sm font-bold text-gray-700 mb-1">Divisi (Data Source)</label>
                     <select name="division" class="w-full border-gray-200 rounded-lg focus:ring-green-500 focus:border-green-500">
                         <option value="percetakan" {{ session('division') == 'percetakan' ? 'selected' : '' }}>Percetakan</option>
-                        <option value="konfeksi" {{ session('division') == 'konfeksi' ? 'selected' : '' }}>Konveksi</option>
+                        <option value="konfeksi" disabled>Konveksi (Belum Tersedia)</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Entitas Keuangan</label>
                     <select name="entity" class="w-full border-gray-200 rounded-lg focus:ring-green-500 focus:border-green-500">
                         <option value="percetakan" {{ session('division') == 'percetakan' ? 'selected' : '' }}>Percetakan</option>
-                        <option value="konfeksi" {{ session('division') == 'konfeksi' ? 'selected' : '' }}>Konveksi</option>
+                        <option value="konfeksi" disabled>Konveksi (Belum Tersedia)</option>
                         <option value="pribadi">Pribadi</option>
                     </select>
                     <p class="text-[10px] text-gray-400 mt-1">*Pilih Pribadi jika transaksi ini adalah dana pribadi owner.</p>
@@ -86,7 +86,7 @@
                     <label class="block text-sm font-bold text-gray-700 mb-1">Entitas Penanggung Jawab</label>
                     <select name="entity" class="w-full border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="percetakan" {{ session('division') == 'percetakan' ? 'selected' : '' }}>Percetakan</option>
-                        <option value="konfeksi" {{ session('division') == 'konfeksi' ? 'selected' : '' }}>Konveksi</option>
+                        <option value="konfeksi" disabled>Konveksi (Belum Tersedia)</option>
                         <option value="pribadi">Pribadi</option>
                     </select>
                 </div>

@@ -32,8 +32,11 @@
                         </form>
 
                         <div class="flex items-center gap-2">
+                            <a href="{{ route('reports.billing') }}" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-indigo-700 flex items-center gap-1">
+                                Tagihan per Klien
+                            </a>
                             <a href="{{ route('invoices.printReport', request()->only(['search','status','date_filter','division'])) }}" target="_blank" class="bg-gray-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-gray-700 flex items-center gap-1">
-                                🖨️ Cetak Laporan
+                                Cetak Laporan
                             </a>
                             <a href="{{ route('invoices.create') }}" class="bg-green-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-green-700">
                                 + Buat Invoice
@@ -52,13 +55,17 @@
                                     <th class="border p-2 text-center">Metode</th>
                                     <th class="border p-2 text-right">Total</th>
                                     <th class="border p-2 text-center">Status</th>
+                                    <th class="border p-2 text-center">Cetak</th>
                                     <th class="border p-2 text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($invoices as $invoice)
                                     <tr class="hover:bg-gray-50 text-sm">
-                                        <td class="border p-2 font-mono font-bold">{{ $invoice->invoice_number }}</td>
+                                        <td class="border p-2 font-mono">
+                                            <strong>{{ $invoice->faktur_number }}</strong><br>
+                                            <small class="text-gray-500">OP: {{ $invoice->invoice_number ?? '-' }}</small>
+                                        </td>
                                         <td class="border p-2">{{ $invoice->invoice_date->format('d/m/Y') }}</td>
                                         <td class="border p-2">{{ $invoice->customer->name }}</td>
                                         <td class="border p-2 text-center">
@@ -71,24 +78,31 @@
                                         <td class="border p-2 text-right font-mono">{{ number_format($invoice->total_amount, 0, ',', '.') }}</td>
                                         <td class="border p-2 text-center">
                                             @if($invoice->status == 'lunas')
-                                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full border border-green-200 uppercase font-bold">Lunas</span>
+                                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full border border-green-200 uppercase font-bold whitespace-nowrap">Lunas</span>
                                             @else
-                                                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full border border-red-200 uppercase font-bold">Belum Lunas</span>
+                                                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full border border-red-200 uppercase font-bold whitespace-nowrap">Belum Lunas</span>
                                             @endif
                                         </td>
-                                        <td class="border p-2 text-center space-x-2">
+                                        <td class="border p-2 text-center">
+                                            @if($invoice->is_printed)
+                                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full border border-blue-200 uppercase font-bold">Sudah</span>
+                                            @else
+                                                <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full border border-gray-200 uppercase font-bold">Belum</span>
+                                            @endif
+                                        </td>
+                                        <td class="border p-2 text-center whitespace-nowrap space-x-2">
                                             <a href="{{ route('invoices.show', $invoice) }}" class="text-primary-600 hover:underline">Lihat</a>
                                             @if($invoice->status != 'lunas')
                                                 | <a href="{{ route('invoices.edit', $invoice) }}" class="text-yellow-600 hover:underline">Edit</a>
-                                                | <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus invoice ini? Data tidak dapat dikembalikan.')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:underline bg-transparent border-0 cursor-pointer p-0">Hapus</button>
-                                                </form>
                                             @endif
-                                            | <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="text-gray-600 hover:text-gray-900 hover:underline">Print SJ</a>
-                                            | <a href="{{ route('invoices.print-combined', $invoice) }}" target="_blank" class="text-blue-600 hover:text-blue-900 hover:underline">Print Gabung</a>
-                                            | <a href="{{ route('invoices.export', $invoice) }}" class="text-green-600 hover:text-green-900 hover:underline font-semibold">Excel</a>
+                                            | <a href="javascript:void(0)" onclick="confirmPrint('{{ route('invoices.print', $invoice) }}')" class="text-gray-600 hover:text-gray-900 hover:underline">Print SJ</a>
+                                            | <a href="javascript:void(0)" onclick="confirmPrint('{{ route('invoices.print-combined', $invoice) }}')" class="text-blue-600 hover:text-blue-900 hover:underline">Print Gabung</a>
+                                            | <a href="javascript:void(0)" onclick="confirmPrint('{{ route('invoices.export', $invoice) }}', true)" class="text-green-600 hover:text-green-900 hover:underline font-semibold">Excel</a>
+                                            | <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus faktur ini? Stok barang akan dikembalikan.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-900 hover:underline">Hapus</button>
+                                              </form>
                                         </td>
                                     </tr>
                                 @empty

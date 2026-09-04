@@ -46,8 +46,15 @@
 
     <div class="slip-card">
         <div class="header">
-            <h1>SLIP GAJI KARYAWAN</h1>
-            <p>CV. ABADI SENTOSA - {{ ucfirst($payroll->employee->division) }}</p>
+            <h1 style="color: #000000; font-family: 'Times New Roman', serif; font-size: 18px; font-weight: bold; margin: 0; letter-spacing: 1px;">
+                ABADI SENTOSA
+            </h1>
+            <p style="font-family: Arial, sans-serif; font-size: 9px; font-weight: bold; color: #1e1e1d; margin: 2px 0; letter-spacing: 1px; text-transform: uppercase; text-align: center;">
+                KONTRAKTOR &bull; PERDAGANGAN UMUM &bull; PERCETAKAN &bull; JASA
+            </p>
+            <p style="font-size: 9px; color: #4b4b4b; margin-top: 2px; text-align: center;">
+                SLIP GAJI KARYAWAN - {{ strtoupper($payroll->employee->division) }}
+            </p>
         </div>
 
         <div class="info-grid">
@@ -90,6 +97,16 @@
         @else
         <p style="color: #94a3b8; font-size: 9px; text-align: center;">Tidak ada potongan</p>
         @endif
+        
+        @php
+            $sisaKasbon = $payroll->employee ? $payroll->employee->kasbons()->sum('remaining_amount') : 0;
+        @endphp
+        @if($sisaKasbon > 0 || $payroll->kasbon_deduction > 0)
+        <div class="item-row" style="margin-top: 5px; font-size: 9px; color: #64748b; border-top: 1px dotted #e2e8f0; padding-top: 4px;">
+            <span class="item-label">Sisa Kasbon Karyawan</span>
+            <span class="item-value">Rp {{ number_format($sisaKasbon, 0, ',', '.') }}</span>
+        </div>
+        @endif
 
         <div class="total-section">
             <div class="total-row">
@@ -100,7 +117,7 @@
 
         <div class="footer">
             <p>Terima kasih atas dedikasi dan kerja keras Anda.</p>
-            <p style="margin-top: 5px; font-weight: 600;">CV. Abadi Sentosa</p>
+            <p style="margin-top: 5px; font-weight: 600;">ABADI SENTOSA</p>
         </div>
     </div>
 </body>
