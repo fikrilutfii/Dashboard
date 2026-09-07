@@ -45,9 +45,15 @@ class DashboardController extends Controller
             $startOfWeek = Carbon::now()->startOfWeek();
 
             // --- PEMBAYARAN & TAGIHAN PERCETAKAN ---
-            // 1. Pembayaran Percetakan (Bulan Ini) -> Pengeluaran / Transaksi Debit Bulan Ini
-            $pembayaranPercetakan = Transaction::where('type', 'debit')
+            // 1. Pembayaran Percetakan (Bulan Ini) -> penerimaan dari pembayaran invoice.
+            // Pelunasan/cicilan invoice direkam sebagai transaksi credit dengan tanggal
+            // saat pembayaran dicatat, sehingga hanya pembayaran bulan berjalan yang dihitung.
+            $pembayaranPercetakan = Transaction::where('type', 'credit')
                 ->where('division', 'percetakan')
+                ->where('reference_type', \App\Models\CompanyReceivable::class)
+                ->whereIn('reference_id', \App\Models\CompanyReceivable::query()
+                    ->whereNotNull('invoice_id')
+                    ->select('id'))
                 ->whereMonth('date', $now->month)
                 ->whereYear('date', $now->year)
                 ->sum('amount');
