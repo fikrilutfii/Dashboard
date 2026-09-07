@@ -9,7 +9,7 @@
                 <h3 class="text-2xl font-black text-rose-500 mt-2 tracking-tight">Rp {{ number_format($totalBelumLunas, 0, ',', '.') }}</h3>
             </div>
             <div class="bg-white rounded-2xl p-6 border border-zinc-100 shadow-premium border-l-4 border-l-indigo-500">
-                <p class="text-xs font-black text-indigo-400 uppercase tracking-[0.2em]">Angsuran Bulan Ini</p>
+                <p class="text-xs font-black text-indigo-400 uppercase tracking-[0.2em]">Pembayaran Jatuh Tempo Bulan Ini</p>
                 <h3 class="text-2xl font-black text-indigo-600 mt-2 tracking-tight">Rp {{ number_format($totalAngsuranBulanIni, 0, ',', '.') }}</h3>
             </div>
             <div class="bg-white rounded-2xl p-6 border border-zinc-100 shadow-premium">

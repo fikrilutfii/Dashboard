@@ -41,10 +41,7 @@ class CompanyDebtController extends Controller
             ->where('status', 'lunas')
             ->sum('amount');
             
-        $totalAngsuranBulanIni = CompanyDebt::when($division, fn($q) => $q->where('division', $division))
-            ->where('status', '!=', 'lunas')
-            ->where('monthly_amount', '>', 0)
-            ->sum('monthly_amount');
+        $totalAngsuranBulanIni = CompanyDebt::monthlyDueTotal($division, now());
 
         return view('company_debts.index', compact('debts', 'totalBelumLunas', 'totalLunas', 'totalAngsuranBulanIni'));
     }

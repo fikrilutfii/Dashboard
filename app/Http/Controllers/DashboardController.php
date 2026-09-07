@@ -45,12 +45,9 @@ class DashboardController extends Controller
             $startOfWeek = Carbon::now()->startOfWeek();
 
             // --- PEMBAYARAN & TAGIHAN PERCETAKAN ---
-            // 1. Pembayaran Percetakan (Bulan Ini) -> sama dengan kartu
-            // "Angsuran Bulan Ini" pada menu Pembayaran Perusahaan.
-            $pembayaranPercetakan = \App\Models\CompanyDebt::where('division', 'percetakan')
-                ->where('status', '!=', 'lunas')
-                ->where('monthly_amount', '>', 0)
-                ->sum('monthly_amount');
+            // 1. Pembayaran Percetakan (Bulan Ini) memakai rumus yang sama
+            // dengan kartu pembayaran pada menu Pembayaran Perusahaan.
+            $pembayaranPercetakan = \App\Models\CompanyDebt::monthlyDueTotal('percetakan', $now);
 
             // 2. Total Tagihan Percetakan -> sama dengan kartu "Sisa Tagihan"
             // pada menu Tagihan Perusahaan.
