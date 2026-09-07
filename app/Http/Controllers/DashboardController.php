@@ -45,61 +45,33 @@ class DashboardController extends Controller
             $startOfWeek = Carbon::now()->startOfWeek();
 
             // --- PEMBAYARAN & TAGIHAN PERCETAKAN ---
-            // 1. Pembayaran Percetakan (Bulan Ini) -> kewajiban hutang perusahaan.
-            // Hutang angsuran dibayar sebesar cicilan bulanannya (tidak melebihi sisa),
-            // sedangkan hutang non-angsuran hanya masuk bila jatuh tempo bulan ini.
+            // 1. Pembayaran Percetakan (Bulan Ini) -> sama dengan kartu
+            // "Angsuran Bulan Ini" pada menu Pembayaran Perusahaan.
             $pembayaranPercetakan = \App\Models\CompanyDebt::where('division', 'percetakan')
                 ->where('status', '!=', 'lunas')
-                ->get(['remaining_amount', 'monthly_amount', 'due_date'])
-                ->sum(function ($debt) use ($now) {
-                    $remaining = (float) $debt->remaining_amount;
-                    $monthlyAmount = (float) $debt->monthly_amount;
+                ->where('monthly_amount', '>', 0)
+                ->sum('monthly_amount');
 
-                    if ($monthlyAmount > 0) {
-                        return min($monthlyAmount, $remaining);
-                    }
+            // 2. Total Tagihan Percetakan -> sama dengan kartu "Sisa Tagihan"
+            // pada menu Tagihan Perusahaan.
+            $tagihanPercetakan = \App\Models\CompanyReceivable::where('division', 'percetakan')
+                ->whereIn('status', ['belum_lunas', 'sebagian'])
+                ->sum('remaining_amount');
 
-                    return $debt->due_date
-                        && $debt->due_date->month === $now->month
-                        && $debt->due_date->year === $now->year
-                        ? $remaining
-                        : 0;
-                });
-
-            // 2. Total Tagihan Percetakan (Seluruhnya) -> sisa nilai invoice.
-            // Invoice menjadi sumber data utama agar tagihan lama yang belum memiliki
-            // record CompanyReceivable tetap masuk ke dashboard.
-            $tagihanPercetakan = Invoice::where('division', 'percetakan')
-                ->where('status', '!=', 'lunas')
-                ->sum(\Illuminate\Support\Facades\DB::raw('total_amount - COALESCE(paid_amount, 0)'));
-
-            // Tagihan Bulan Ini -> Faktur belum lunas yang JATUH TEMPO bulan ini.
-            $tagihanPercetakanBulanIni = \App\Models\Invoice::where('division', 'percetakan')
-                ->where('status', '!=', 'lunas')
-                ->whereMonth('due_date', $now->month)
-                ->whereYear('due_date', $now->year)
-                ->sum('total_amount');
-
-            // --- PEMBAYARAN & TAGIHAN KONVEKSI (For totals) ---
-            $pembayaranKonveksi = Transaction::where('type', 'debit')
-                ->where('division', 'konfeksi')
-                ->whereMonth('date', $now->month)
-                ->whereYear('date', $now->year)
-                ->sum('amount');
-
-            $tagihanKonveksi = \App\Models\Invoice::where('division', 'konfeksi')
-                ->where('status', '!=', 'lunas')
-                ->whereMonth('due_date', $now->month)
-                ->whereYear('due_date', $now->year)
-                ->sum('total_amount');
+            // 3. Tagihan Percetakan Bulan Ini -> sama dengan kartu
+            // "Tagihan Bulan Ini (Angsuran)" pada menu Tagihan Perusahaan.
+            $tagihanPercetakanBulanIni = \App\Models\CompanyReceivable::where('division', 'percetakan')
+                ->whereIn('status', ['belum_lunas', 'sebagian'])
+                ->where('type', 'installment')
+                ->sum('monthly_amount');
 
             // 3. Total Pembayaran Percetakan (Seluruhnya) -> Company Debt (Sisa Hutang Seluruhnya)
             $totalPembayaran = \App\Models\CompanyDebt::where('division', 'percetakan')
                 ->whereIn('status', ['belum_lunas', 'sebagian'])
                 ->sum('remaining_amount');
 
-            // 4. Total Tagihan (Bulan Ini) -> Penjualan Bulan Ini
-            $totalTagihan = $tagihanPercetakanBulanIni + $tagihanKonveksi;
+            // 4. Total Tagihan (Bulan Ini) hanya untuk divisi Percetakan.
+            $totalTagihan = $tagihanPercetakanBulanIni;
 
             // --- KEUNTUNGAN (Pemasukan - Pengeluaran) ---
             
