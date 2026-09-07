@@ -169,7 +169,7 @@
                                         {{ $item->item_name }}
                                     </td>
                                     <td class="px-6 py-4 text-center font-medium text-zinc-600">
-                                        {{ $item->quantity }}
+                                        {{ $item->formatted_quantity }}
                                     </td>
                                     <td class="px-6 py-4 text-right font-medium text-zinc-500">
                                         Rp {{ number_format($item->unit_price, 0, ',', '.') }}

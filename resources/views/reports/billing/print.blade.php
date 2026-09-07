@@ -201,7 +201,7 @@
                     </td>
                     <td class="text-center">{{ $invoice->invoice_date ? $invoice->invoice_date->format('d-m-Y') : '-' }}</td>
                     <td>{{ $item->item_name }}</td>
-                    <td class="text-center">{{ $item->quantity }}</td>
+                    <td class="text-center">{{ $item->formatted_quantity }}</td>
                     <td class="text-right">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
                 </tr>

@@ -20,6 +20,21 @@ class InvoiceItem extends Model
         'subtotal',
     ];
 
+    /**
+     * Quantity for documents: retain meaningful decimals, but omit trailing zeroes.
+     * Examples: 427.000 -> 427, 12.500 -> 12,5, 1,250.000 -> 1.250.
+     */
+    public function getFormattedQuantityAttribute(): string
+    {
+        $formatted = number_format((float) $this->quantity, 3, ',', '.');
+
+        if (str_contains($formatted, ',')) {
+            $formatted = rtrim(rtrim($formatted, '0'), ',');
+        }
+
+        return $formatted;
+    }
+
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);

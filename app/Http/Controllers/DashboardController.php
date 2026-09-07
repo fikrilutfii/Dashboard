@@ -52,11 +52,12 @@ class DashboardController extends Controller
                 ->whereYear('date', $now->year)
                 ->sum('amount');
 
-            // 2. Total Tagihan Percetakan (Seluruhnya) -> CompanyReceivable (Sisa Piutang)
-            $tagihanPercetakan = \App\Models\CompanyReceivable::where('division', 'percetakan')
-                ->whereNull('kasbon_id')
-                ->whereIn('status', ['belum_lunas', 'sebagian'])
-                ->sum('remaining_amount');
+            // 2. Total Tagihan Percetakan (Seluruhnya) -> sisa nilai invoice.
+            // Invoice menjadi sumber data utama agar tagihan lama yang belum memiliki
+            // record CompanyReceivable tetap masuk ke dashboard.
+            $tagihanPercetakan = Invoice::where('division', 'percetakan')
+                ->where('status', '!=', 'lunas')
+                ->sum(\Illuminate\Support\Facades\DB::raw('total_amount - COALESCE(paid_amount, 0)'));
 
             // Tagihan Bulan Ini -> Faktur belum lunas yang JATUH TEMPO bulan ini.
             $tagihanPercetakanBulanIni = \App\Models\Invoice::where('division', 'percetakan')
