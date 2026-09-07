@@ -45,18 +45,26 @@ class DashboardController extends Controller
             $startOfWeek = Carbon::now()->startOfWeek();
 
             // --- PEMBAYARAN & TAGIHAN PERCETAKAN ---
-            // 1. Pembayaran Percetakan (Bulan Ini) -> penerimaan dari pembayaran invoice.
-            // Pelunasan/cicilan invoice direkam sebagai transaksi credit dengan tanggal
-            // saat pembayaran dicatat, sehingga hanya pembayaran bulan berjalan yang dihitung.
-            $pembayaranPercetakan = Transaction::where('type', 'credit')
-                ->where('division', 'percetakan')
-                ->where('reference_type', \App\Models\CompanyReceivable::class)
-                ->whereIn('reference_id', \App\Models\CompanyReceivable::query()
-                    ->whereNotNull('invoice_id')
-                    ->select('id'))
-                ->whereMonth('date', $now->month)
-                ->whereYear('date', $now->year)
-                ->sum('amount');
+            // 1. Pembayaran Percetakan (Bulan Ini) -> kewajiban hutang perusahaan.
+            // Hutang angsuran dibayar sebesar cicilan bulanannya (tidak melebihi sisa),
+            // sedangkan hutang non-angsuran hanya masuk bila jatuh tempo bulan ini.
+            $pembayaranPercetakan = \App\Models\CompanyDebt::where('division', 'percetakan')
+                ->where('status', '!=', 'lunas')
+                ->get(['remaining_amount', 'monthly_amount', 'due_date'])
+                ->sum(function ($debt) use ($now) {
+                    $remaining = (float) $debt->remaining_amount;
+                    $monthlyAmount = (float) $debt->monthly_amount;
+
+                    if ($monthlyAmount > 0) {
+                        return min($monthlyAmount, $remaining);
+                    }
+
+                    return $debt->due_date
+                        && $debt->due_date->month === $now->month
+                        && $debt->due_date->year === $now->year
+                        ? $remaining
+                        : 0;
+                });
 
             // 2. Total Tagihan Percetakan (Seluruhnya) -> sisa nilai invoice.
             // Invoice menjadi sumber data utama agar tagihan lama yang belum memiliki
