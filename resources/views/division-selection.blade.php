@@ -27,10 +27,10 @@
             $canPeternakan = $allowed === 'all' || $allowed === 'peternakan';
         @endphp
 
-        <!-- Divisi Peternakan Ayam -->
+        <!-- Divisi Pemotongan Ayam (Asfour Broiler) -->
         <div class="relative group">
             @if(!$canPeternakan)
-                <div onclick="showAccessDenied('Peternakan Ayam')" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm rounded-2xl cursor-pointer border-2 border-dashed border-gray-300">
+                <div onclick="showAccessDenied('Pemotongan Ayam')" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm rounded-2xl cursor-pointer border-2 border-dashed border-gray-300">
                     <div class="bg-red-500 text-white p-3 rounded-full shadow-lg mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd" />
@@ -48,8 +48,8 @@
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-1-4h.01M9 16h.01M9 12h.01M9 8h.01M15 16h.01M15 12h.01M15 8h.01"/></svg>
                     </div>
                     <div class="ml-5">
-                        <h3 class="text-xl font-bold text-gray-900">Peternakan Ayam</h3>
-                        <p class="text-sm text-gray-500">Panen, Operasional Kandang, Transportasi & Piutang</p>
+                        <h3 class="text-xl font-bold text-gray-900">Pemotongan Ayam (Asfour Broiler)</h3>
+                        <p class="text-sm text-gray-500">Penerimaan Ayam Hidup, Hasil Parting, Faktur Multi-Pengirim, Transportasi & Penggajian</p>
                     </div>
                 </button>
             </form>

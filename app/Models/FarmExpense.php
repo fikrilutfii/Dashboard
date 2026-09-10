@@ -2,38 +2,35 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FarmExpense extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'expense_date', 'category', 'description', 'amount',
-        'payment_method', 'farm_supplier_id', 'notes',
+        'expense_date',
+        'category',
+        'subcategory',
+        'description',
+        'amount',
+        'payment_method',
+        'notes',
     ];
 
     protected $casts = [
         'expense_date' => 'date',
-        'amount'       => 'decimal:2',
+        'amount' => 'decimal:2',
     ];
 
-    public function supplier(): BelongsTo
-    {
-        return $this->belongsTo(FarmSupplier::class, 'farm_supplier_id');
-    }
-
-    public function getCategoryLabelAttribute(): string
+    public function getCategoryLabelAttribute()
     {
         return match($this->category) {
-            'doc'           => 'DOC / Bibit',
-            'pakan'         => 'Pakan',
-            'obat'          => 'Obat & Vaksin',
-            'listrik'       => 'Listrik',
-            'air'           => 'Air',
-            'alat'          => 'Peralatan',
-            'transportasi'  => 'Transportasi',
-            'gaji'          => 'Gaji',
-            default         => 'Lain-lain',
+            'operasional_rpa' => 'Operasional RPA',
+            'administrasi' => 'Administrasi & Umum',
+            'armada_umum' => 'Armada Kendaraan (Servis/Pajak)',
+            default => 'Lain-lain',
         };
     }
 }

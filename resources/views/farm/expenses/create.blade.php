@@ -1,66 +1,63 @@
-<x-farm-layout title="Catat Pengeluaran" subtitle="Input Pengeluaran Operasional / Pembelian">
-    <div style="max-width:680px;margin:0 auto;">
-        <div class="ios-card" style="padding:28px;">
-            <form action="{{ route('farm.expenses.store') }}" method="POST">
-                @csrf
+<x-farm.layout title="Catat Pengeluaran Kas" subtitle="Input kas keluar untuk kebutuhan operasional pemotongan ayam">
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+    <div style="max-width: 700px; margin: 0 auto;">
+        <form method="POST" action="{{ route('farm.expenses.store') }}">
+            @csrf
+
+            <div class="ios-card" style="padding: 24px; margin-bottom: 24px;">
+                <h3 style="font-size: 16px; font-weight: 800; color: #09090b; margin: 0 0 16px;">Informasi Pengeluaran</h3>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
                     <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Tanggal Pengeluaran <span style="color:#ff3b30;">*</span></label>
-                        <input type="date" name="expense_date" value="{{ old('expense_date', date('Y-m-d')) }}" required class="ios-input">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Tanggal Pengeluaran <span style="color: #dc2626;">*</span></label>
+                        <input type="date" name="expense_date" value="{{ date('Y-m-d') }}" class="ios-input" required>
                     </div>
+
                     <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Kategori Pengeluaran <span style="color:#ff3b30;">*</span></label>
-                        <select name="category" required class="ios-input">
-                            <option value="pakan" @selected(old('category') == 'pakan')>Pakan Ayam</option>
-                            <option value="doc" @selected(old('category') == 'doc')>Bibit DOC</option>
-                            <option value="obat" @selected(old('category') == 'obat')>Obat & Vaksin</option>
-                            <option value="operasional" @selected(old('category') == 'operasional')>Operasional Kandang / Listrik / Sekam</option>
-                            <option value="peralatan" @selected(old('category') == 'peralatan')>Peralatan & Maintenance</option>
-                            <option value="lainnya" @selected(old('category') == 'lainnya')>Lain-lain</option>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Kategori Pengeluaran <span style="color: #dc2626;">*</span></label>
+                        <select name="category" class="ios-input" required>
+                            <option value="operasional_rpa">Operasional Produksi RPA</option>
+                            <option value="administrasi">Administrasi & Umum</option>
+                            <option value="armada_umum">Armada (Servis/Pajak Berkala)</option>
+                            <option value="lain">Lain-lain</option>
                         </select>
                     </div>
-                </div>
 
-                <div style="margin-bottom:20px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Keterangan / Deskripsi <span style="color:#ff3b30;">*</span></label>
-                    <input type="text" name="description" value="{{ old('description') }}" required placeholder="Contoh: Pembelian Pakan BR-1 50 Sak / Pembelian Sekam 100 Karung" class="ios-input">
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
                     <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Jumlah Nominal (Rp) <span style="color:#ff3b30;">*</span></label>
-                        <input type="number" name="amount" value="{{ old('amount') }}" required min="0" placeholder="0" class="ios-input">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Jenis / Subkategori</label>
+                        <input type="text" name="subcategory" placeholder="Contoh: Es Balok, Plastik, Gas Scalder, Kuli" class="ios-input">
                     </div>
+
                     <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Metode Pembayaran</label>
-                        <select name="payment_method" class="ios-input">
-                            <option value="transfer" @selected(old('payment_method') == 'transfer')>Transfer Bank</option>
-                            <option value="cash" @selected(old('payment_method') == 'cash')>Tunai / Cash</option>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Nominal (Rp) <span style="color: #dc2626;">*</span></label>
+                        <input type="number" name="amount" step="any" min="1" class="ios-input" placeholder="0" required>
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Metode Pembayaran <span style="color: #dc2626;">*</span></label>
+                        <select name="payment_method" class="ios-input" required>
+                            <option value="Tunai">Tunai / Cash</option>
+                            <option value="Transfer Bank">Transfer Bank</option>
                         </select>
                     </div>
-                </div>
 
-                <div style="margin-bottom:20px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Supplier (Opsional)</label>
-                    <select name="farm_supplier_id" class="ios-input">
-                        <option value="">-- Tanpa Supplier / Pembelian Bebas --</option>
-                        @foreach($suppliers as $s)
-                            <option value="{{ $s->id }}" @selected(old('farm_supplier_id') == $s->id)>{{ $s->name }} ({{ ucfirst($s->type) }})</option>
-                        @endforeach
-                    </select>
-                </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Deskripsi / Keterangan <span style="color: #dc2626;">*</span></label>
+                        <input type="text" name="description" placeholder="Keterangan pengeluaran detail..." class="ios-input" required>
+                    </div>
 
-                <div style="margin-bottom:24px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Catatan Tambahan</label>
-                    <textarea name="notes" rows="3" placeholder="Nomor nota, rincian item, atau catatan lainnya..." class="ios-input" style="resize:vertical;">{{ old('notes') }}</textarea>
+                    <div style="grid-column: 1 / -1;">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Catatan Tambahan (Opsional)</label>
+                        <textarea name="notes" rows="2" class="ios-input" placeholder="Catatan no nota / struk..."></textarea>
+                    </div>
                 </div>
+            </div>
 
-                <div style="display:flex;justify-content:flex-end;gap:12px;">
-                    <a href="{{ route('farm.expenses.index') }}" class="ios-btn ios-btn-secondary">Batal</a>
-                    <button type="submit" class="ios-btn ios-btn-primary">Simpan Pengeluaran</button>
-                </div>
-            </form>
-        </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <a href="{{ route('farm.expenses.index') }}" class="ios-btn ios-btn-secondary">Batal</a>
+                <button type="submit" class="ios-btn ios-btn-primary" style="padding: 12px 28px;">Simpan Pengeluaran</button>
+            </div>
+        </form>
     </div>
-</x-farm-layout>
+
+</x-farm.layout>

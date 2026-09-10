@@ -1,202 +1,223 @@
-<x-farm-layout title="Buat Faktur Penjualan" subtitle="Faktur Penjualan Panen Ayam / Hasil Peternakan">
-    <div class="max-w-4xl mx-auto">
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-            <form action="{{ route('farm.invoices.store') }}" method="POST" id="invoiceForm">
-                @csrf
+<x-farm.layout title="Buat Faktur Penjualan" subtitle="Pilih pengirim faktur dan input rincian karkas/parting">
 
-                {{-- Available Harvest Quick Picker Alert (Optional) --}}
-                @if(isset($availableHarvests) && count($availableHarvests) > 0)
-                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold text-amber-900 uppercase">Pilih dari Stok Panen Tersedia (Opsional)</span>
-                        <span class="text-[10px] text-amber-700 font-semibold">{{ count($availableHarvests) }} Stok Tersedia</span>
-                    </div>
-                    <select id="harvestPicker" onchange="applyHarvestData(this)" class="w-full border border-amber-300 rounded-lg p-2 text-xs bg-white text-gray-900 font-medium">
-                        <option value="">-- Pilih Stok Panen (Atau Isi Manual di Bawah) --</option>
-                        @foreach($availableHarvests as $h)
-                            <option value="{{ $h->id }}" 
-                                    data-coop-id="{{ $h->farm_coop_id }}"
-                                    data-desc="{{ $h->type === 'panen_broiler' ? 'Panen Ayam Broiler - ' . ($h->coop->name ?? '') : 'Afkir Ayam Layer - ' . ($h->coop->name ?? '') }} ({{ number_format($h->chicken_count) }} ekor / {{ number_format($h->total_weight_kg, 1) }} kg)"
-                                    data-qty="{{ $h->total_weight_kg }}"
-                                    data-price="{{ $h->reference_price_per_kg > 0 ? $h->reference_price_per_kg : 22000 }}">
-                                Tgl {{ \Carbon\Carbon::parse($h->harvest_date)->format('d/m/Y') }} | {{ $h->coop->name ?? '-' }} | {{ $h->type === 'panen_broiler' ? 'Broiler' : 'Afkir' }} | {{ number_format($h->chicken_count) }} ekor ({{ number_format($h->total_weight_kg, 1) }} kg)
+    <div style="max-width: 960px; margin: 0 auto;">
+        <form method="POST" action="{{ route('farm.invoices.store') }}" x-data="invoiceForm()">
+            @csrf
+
+            <!-- Header Info Card -->
+            <div class="ios-card" style="padding: 24px; margin-bottom: 20px;">
+                <h3 style="font-size: 16px; font-weight: 800; color: #09090b; margin: 0 0 16px;">Informasi Faktur & Pengirim</h3>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+                    <!-- Dropdown Pengirim Faktur (Multi-Entity) -->
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">
+                            Nama / Identitas Pengirim Faktur <span style="color: #dc2626;">*</span>
+                        </label>
+                        <select name="farm_sender_id" class="ios-input" required>
+                            @foreach($senders as $s)
+                            <option value="{{ $s->id }}" {{ $s->is_default ? 'selected' : '' }}>
+                                {{ $s->name }} {{ $s->is_default ? '(Default)' : '' }}
                             </option>
-                        @endforeach
-                    </select>
-                    <input type="hidden" name="farm_harvest_log_id" id="farm_harvest_log_id" value="">
-                </div>
-                @endif
+                            @endforeach
+                        </select>
+                        <div style="font-size: 11px; color: #71717a; margin-top: 4px;">Kop faktur & data pengirim akan mengikuti entitas yang dipilih.</div>
+                    </div>
 
-                {{-- Header Info --}}
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <!-- Dropdown Customer -->
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">No. Faktur <span class="text-red-500">*</span></label>
-                        <input type="text" name="invoice_number" value="{{ old('invoice_number', $invoiceNumber) }}" required class="w-full border border-gray-300 rounded-lg p-2 text-sm font-bold text-amber-600">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Tanggal Faktur <span class="text-red-500">*</span></label>
-                        <input type="date" name="invoice_date" value="{{ old('invoice_date', date('Y-m-d')) }}" required class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Jatuh Tempo (Due Date)</label>
-                        <input type="date" name="due_date" value="{{ old('due_date', date('Y-m-d', strtotime('+14 days'))) }}" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Pembeli / Customer <span class="text-red-500">*</span></label>
-                        <select name="farm_customer_id" required class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">
+                            Pelanggan / Customer <span style="color: #dc2626;">*</span>
+                        </label>
+                        <select name="farm_customer_id" class="ios-input" required>
                             <option value="">-- Pilih Customer --</option>
                             @foreach($customers as $c)
-                                <option value="{{ $c->id }}" @selected(old('farm_customer_id') == $c->id)>{{ $c->name }} {{ $c->city ? '('.$c->city.')' : '' }}</option>
+                            <option value="{{ $c->id }}">{{ $c->name }} ({{ $c->city ?? 'Umum' }})</option>
                             @endforeach
                         </select>
                     </div>
+
+                    <!-- No Faktur -->
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Asal Kandang</label>
-                        <select name="farm_coop_id" id="farm_coop_id" class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white">
-                            <option value="">-- Pilih Kandang --</option>
-                            @foreach($coops as $coop)
-                                <option value="{{ $coop->id }}" @selected(old('farm_coop_id') == $coop->id)>{{ $coop->name }}</option>
-                            @endforeach
-                        </select>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">
+                            Nomor Faktur <span style="color: #dc2626;">*</span>
+                        </label>
+                        <input type="text" name="invoice_number" value="{{ old('invoice_number', $generatedInvoiceNumber) }}" class="ios-input" required>
                     </div>
+
+                    <!-- Tanggal Faktur -->
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Metode Pembayaran</label>
-                        <select name="payment_method" class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white">
-                            <option value="transfer" @selected(old('payment_method') == 'transfer')>Transfer Bank</option>
-                            <option value="cash" @selected(old('payment_method') == 'cash')>Tunai / Cash</option>
-                            <option value="tempo" @selected(old('payment_method') == 'tempo')>Kredit / Tempo</option>
-                        </select>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">
+                            Tanggal Faktur <span style="color: #dc2626;">*</span>
+                        </label>
+                        <input type="date" name="invoice_date" value="{{ old('invoice_date', date('Y-m-d')) }}" class="ios-input" required>
+                    </div>
+
+                    <!-- Tanggal Jatuh Tempo -->
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">
+                            Tanggal Jatuh Tempo
+                        </label>
+                        <input type="date" name="due_date" value="{{ old('due_date', date('Y-m-d', strtotime('+7 days'))) }}" class="ios-input">
                     </div>
                 </div>
+            </div>
 
-                {{-- Line Items Table --}}
-                <div class="mb-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="font-bold text-sm text-gray-800 uppercase">Item Penjualan / Rincian Panen</h3>
-                        <button type="button" onclick="addItemRow()" class="bg-gray-100 border border-gray-300 text-gray-800 px-3 py-1 rounded text-xs font-bold hover:bg-gray-200">+ Tambah Baris</button>
+            <!-- Line Items Card -->
+            <div class="ios-card" style="padding: 24px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 800; color: #09090b; margin: 0;">Rincian Barang Karkas / Parting</h3>
+                        <p style="font-size: 12px; color: #71717a; margin: 2px 0 0;">Stok produk terkait akan otomatis berkurang saat faktur disimpan</p>
                     </div>
+                    <button type="button" @click="addItem()" class="ios-btn ios-btn-secondary" style="font-size: 12.5px; padding: 7px 14px;">
+                        + Tambah Baris
+                    </button>
+                </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm border-collapse border border-gray-200">
-                            <thead>
-                                <tr class="bg-gray-100 text-xs text-gray-600 uppercase font-semibold">
-                                    <th class="p-2 border text-left">Deskripsi Barang / Panen</th>
-                                    <th class="p-2 border text-right w-28">Qty</th>
-                                    <th class="p-2 border text-left w-24">Satuan</th>
-                                    <th class="p-2 border text-right w-36">Harga Satuan (Rp)</th>
-                                    <th class="p-2 border text-right w-36">Total (Rp)</th>
-                                    <th class="p-2 border w-12 text-center"></th>
+                <div style="overflow-x: auto;">
+                    <table class="ios-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 28%;">Pilih Produk</th>
+                                <th style="width: 22%;">Nama Produk</th>
+                                <th style="width: 14%; text-align: right;">Berat (Kg)</th>
+                                <th style="width: 10%; text-align: right;">Ekor</th>
+                                <th style="width: 14%; text-align: right;">Harga / Satuan</th>
+                                <th style="width: 16%; text-align: right;">Subtotal (Rp)</th>
+                                <th style="width: 6%; text-align: center;">Hapus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="(item, index) in items" :key="index">
+                                <tr>
+                                    <td>
+                                        <select :name="`items[${index}][farm_product_id]`" class="ios-input" style="padding: 8px 12px; font-size: 12.5px;" @change="onProductSelect(index, $event.target.value)">
+                                            <option value="">-- Manual / Custom --</option>
+                                            @foreach($products as $p)
+                                            <option value="{{ $p->id }}" data-code="{{ $p->code }}" data-name="{{ $p->name }}" data-price="{{ $p->standard_price }}" data-unit="{{ $p->unit }}" data-stock="{{ $p->current_stock_kg }}">
+                                                {{ $p->name }} (Stok: {{ number_format($p->current_stock_kg, 1) }}kg)
+                                            </option>
+                                            @endforeach
+                                        </select>
+                                        <input type="hidden" :name="`items[${index}][product_code]`" x-model="item.product_code">
+                                        <input type="hidden" :name="`items[${index}][unit]`" x-model="item.unit">
+                                    </td>
+                                    <td>
+                                        <input type="text" :name="`items[${index}][item_name]`" x-model="item.item_name" class="ios-input" style="padding: 8px 12px; font-size: 12.5px;" placeholder="Nama Item" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" :name="`items[${index}][weight_kg]`" x-model.number="item.weight_kg" step="any" min="0" class="ios-input" style="padding: 8px 12px; text-align: right; font-size: 12.5px;" placeholder="0.0" @input="calcSubtotal(index)">
+                                    </td>
+                                    <td>
+                                        <input type="number" :name="`items[${index}][qty_ekor]`" x-model.number="item.qty_ekor" min="0" class="ios-input" style="padding: 8px 12px; text-align: right; font-size: 12.5px;" placeholder="0">
+                                    </td>
+                                    <td>
+                                        <input type="number" :name="`items[${index}][unit_price]`" x-model.number="item.unit_price" step="any" min="0" class="ios-input" style="padding: 8px 12px; text-align: right; font-size: 12.5px;" placeholder="Rp" @input="calcSubtotal(index)" required>
+                                    </td>
+                                    <td style="text-align: right; font-weight: 700; font-size: 13.5px;">
+                                        <span x-text="formatRupiah(item.subtotal)"></span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <button type="button" @click="removeItem(index)" style="background: none; border: none; color: #f43f5e; cursor: pointer; font-size: 16px; font-weight: 800;" x-show="items.length > 1">&times;</button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody id="itemsTbody">
-                                {{-- Rows generated dynamically --}}
-                            </tbody>
-                        </table>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Grand Total Summary -->
+                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(0,0,0,0.06); display: flex; justify-content: flex-end;">
+                    <div style="width: 320px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #71717a;">
+                            <span>Total Berat:</span>
+                            <strong style="color: #09090b;" x-text="totalWeightKg.toFixed(1) + ' Kg'"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; color: #09090b; padding-top: 8px; border-top: 2px solid #09090b;">
+                            <span>Grand Total:</span>
+                            <span x-text="formatRupiah(grandTotal)"></span>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                {{-- Grand Total Display --}}
-                <div class="flex justify-end mb-6">
-                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 min-w-[280px] text-right">
-                        <div class="text-xs font-bold text-amber-800 uppercase">Total Faktur Penjualan</div>
-                        <div id="grandTotalDisplay" class="text-2xl font-bold text-amber-600 mt-1 font-mono">Rp 0</div>
+            <!-- Payment & Notes Card -->
+            <div class="ios-card" style="padding: 24px; margin-bottom: 24px;">
+                <h3 style="font-size: 16px; font-weight: 800; color: #09090b; margin: 0 0 16px;">Pembayaran Awal & Catatan</h3>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Pembayaran Awal (Rp)</label>
+                        <input type="number" name="paid_amount" value="0" step="any" min="0" class="ios-input" placeholder="0 jika tempo/belum bayar">
+                        <div style="font-size: 11px; color: #71717a; margin-top: 4px;">Biarkan 0 jika belum ada pembayaran saat pembuatan faktur.</div>
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Metode Pembayaran</label>
+                        <select name="payment_method" class="ios-input">
+                            <option value="Transfer Bank">Transfer Bank</option>
+                            <option value="Tunai">Tunai / Cash</option>
+                            <option value="Giro / Tempo">Giro / Tempo</option>
+                        </select>
+                    </div>
+
+                    <div style="grid-column: 1 / -1;">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Catatan Faktur (Opsional)</label>
+                        <textarea name="notes" rows="2" class="ios-input" placeholder="Catatan tambahan untuk pelanggan atau internal..."></textarea>
                     </div>
                 </div>
+            </div>
 
-                <div class="mb-6">
-                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Catatan Faktur</label>
-                    <textarea name="notes" rows="2" placeholder="Catatan syarat pembayaran, rincian timbangan, dll..." class="w-full border border-gray-300 rounded-lg p-2 text-sm">{{ old('notes') }}</textarea>
-                </div>
-
-                <div class="flex justify-end gap-2">
-                    <a href="{{ route('farm.invoices.index') }}" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50">Batal</a>
-                    <button type="submit" class="bg-amber-600 text-white font-bold px-5 py-2 rounded-lg text-sm hover:bg-amber-700 shadow">Simpan Faktur Penjualan</button>
-                </div>
-            </form>
-        </div>
+            <!-- Action Buttons -->
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <a href="{{ route('farm.invoices.index') }}" class="ios-btn ios-btn-secondary">Batal</a>
+                <button type="submit" class="ios-btn ios-btn-primary" style="padding: 12px 28px;">Simpan Faktur Penjualan</button>
+            </div>
+        </form>
     </div>
 
     <script>
-        let itemIndex = 0;
-
-        function addItemRow(desc = 'Ayam Broiler Panen', qty = 1000, unit = 'kg', price = 22000) {
-            const tbody = document.getElementById('itemsTbody');
-            const tr = document.createElement('tr');
-            tr.className = 'border-b border-gray-200 item-row';
-            tr.innerHTML = `
-                <td class="p-2 border">
-                    <input type="text" name="items[${itemIndex}][description]" value="${desc}" required class="w-full border border-gray-300 rounded p-1.5 text-xs">
-                </td>
-                <td class="p-2 border">
-                    <input type="number" step="0.01" min="0" name="items[${itemIndex}][qty]" value="${qty}" oninput="calcRow(${itemIndex})" id="qty_${itemIndex}" required class="w-full border border-gray-300 rounded p-1.5 text-xs text-right font-mono">
-                </td>
-                <td class="p-2 border">
-                    <input type="text" name="items[${itemIndex}][unit]" value="${unit}" class="w-full border border-gray-300 rounded p-1.5 text-xs">
-                </td>
-                <td class="p-2 border">
-                    <input type="number" min="0" name="items[${itemIndex}][unit_price]" value="${price}" oninput="calcRow(${itemIndex})" id="price_${itemIndex}" required class="w-full border border-gray-300 rounded p-1.5 text-xs text-right font-mono">
-                </td>
-                <td class="p-2 border text-right font-mono font-bold text-gray-900" id="total_${itemIndex}">
-                    Rp 0
-                </td>
-                <td class="p-2 border text-center">
-                    <button type="button" onclick="this.closest('tr').remove(); calcGrandTotal();" class="text-red-600 hover:text-red-800 text-xs font-bold">X</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-            calcRow(itemIndex);
-            itemIndex++;
-        }
-
-        function calcRow(idx) {
-            const qty = parseFloat(document.getElementById(`qty_${idx}`)?.value || 0);
-            const price = parseFloat(document.getElementById(`price_${idx}`)?.value || 0);
-            const total = qty * price;
-            const totalEl = document.getElementById(`total_${idx}`);
-            if (totalEl) {
-                totalEl.innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(total);
-            }
-            calcGrandTotal();
-        }
-
-        function calcGrandTotal() {
-            let grandTotal = 0;
-            const rows = document.querySelectorAll('#itemsTbody tr');
-            rows.forEach((row) => {
-                const qtyInput = row.querySelector('input[name*="[qty]"]');
-                const priceInput = row.querySelector('input[name*="[unit_price]"]');
-                if (qtyInput && priceInput) {
-                    grandTotal += (parseFloat(qtyInput.value || 0) * parseFloat(priceInput.value || 0));
+        function invoiceForm() {
+            return {
+                items: [
+                    { farm_product_id: '', product_code: '', item_name: '', weight_kg: 0, qty_ekor: 0, unit: 'kg', unit_price: 0, subtotal: 0 }
+                ],
+                addItem() {
+                    this.items.push({ farm_product_id: '', product_code: '', item_name: '', weight_kg: 0, qty_ekor: 0, unit: 'kg', unit_price: 0, subtotal: 0 });
+                },
+                removeItem(index) {
+                    if (this.items.length > 1) {
+                        this.items.splice(index, 1);
+                    }
+                },
+                onProductSelect(index, productId) {
+                    const selectEl = event.target;
+                    const opt = selectEl.options[selectEl.selectedIndex];
+                    if (productId && opt) {
+                        this.items[index].product_code = opt.dataset.code || '';
+                        this.items[index].item_name = opt.dataset.name || '';
+                        this.items[index].unit_price = parseFloat(opt.dataset.price) || 0;
+                        this.items[index].unit = opt.dataset.unit || 'kg';
+                        this.calcSubtotal(index);
+                    }
+                },
+                calcSubtotal(index) {
+                    const item = this.items[index];
+                    const qty = item.weight_kg > 0 ? item.weight_kg : (item.qty_ekor > 0 ? item.qty_ekor : 1);
+                    item.subtotal = (qty || 0) * (item.unit_price || 0);
+                },
+                get grandTotal() {
+                    return this.items.reduce((acc, item) => acc + (item.subtotal || 0), 0);
+                },
+                get totalWeightKg() {
+                    return this.items.reduce((acc, item) => acc + (parseFloat(item.weight_kg) || 0), 0);
+                },
+                formatRupiah(num) {
+                    return 'Rp ' + (num || 0).toLocaleString('id-ID');
                 }
-            });
-            document.getElementById('grandTotalDisplay').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal);
-        }
-
-        function applyHarvestData(selectEl) {
-            const selectedOpt = selectEl.options[selectEl.selectedIndex];
-            if (!selectedOpt.value) return;
-
-            const harvestId = selectedOpt.value;
-            const coopId = selectedOpt.getAttribute('data-coop-id');
-            const desc = selectedOpt.getAttribute('data-desc');
-            const qty = parseFloat(selectedOpt.getAttribute('data-qty') || 0);
-            const price = parseFloat(selectedOpt.getAttribute('data-price') || 0);
-
-            document.getElementById('farm_harvest_log_id').value = harvestId;
-            if (coopId) {
-                document.getElementById('farm_coop_id').value = coopId;
             }
-
-            // Clear existing rows & set new harvest item row
-            document.getElementById('itemsTbody').innerHTML = '';
-            addItemRow(desc, qty, 'kg', price);
         }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            addItemRow();
-        });
     </script>
-</x-farm-layout>
+
+</x-farm.layout>

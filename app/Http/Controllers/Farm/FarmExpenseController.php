@@ -4,97 +4,144 @@ namespace App\Http\Controllers\Farm;
 
 use App\Http\Controllers\Controller;
 use App\Models\FarmExpense;
-use App\Models\FarmSupplier;
+use App\Models\FarmTransaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FarmExpenseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = FarmExpense::with('supplier')->latest('expense_date');
-
-        if ($request->filled('search')) {
-            $s = trim($request->search);
-            $query->where(function($q) use ($s) {
-                $q->where('description', 'like', "%$s%")
-                  ->orWhere('category', 'like', "%$s%");
-            });
-        }
+        $query = FarmExpense::query();
 
         if ($request->filled('category')) {
             $query->where('category', $request->category);
         }
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('expense_date', '>=', $request->date_from);
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('expense_date', [$request->start_date, $request->end_date]);
         }
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('expense_date', '<=', $request->date_to);
-        }
+        $expenses = $query->orderBy('expense_date', 'desc')->orderBy('id', 'desc')->paginate(15);
+        $totalExpense = $query->sum('amount');
 
-        $expenses = $query->paginate(15);
-
-        $totalBulanIni = FarmExpense::whereMonth('expense_date', now()->month)
-            ->whereYear('expense_date', now()->year)->sum('amount');
-
-        $byCategory = FarmExpense::whereMonth('expense_date', now()->month)
-            ->selectRaw('category, SUM(amount) as total')
-            ->groupBy('category')
-            ->pluck('total', 'category');
-
-        return view('farm.expenses.index', compact('expenses', 'totalBulanIni', 'byCategory'));
+        return view('farm.expenses.index', compact('expenses', 'totalExpense'));
     }
 
     public function create()
     {
-        $suppliers = FarmSupplier::orderBy('name')->get();
-        return view('farm.expenses.create', compact('suppliers'));
+        return view('farm.expenses.create');
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'expense_date' => 'required|date',
-            'category'     => 'required|string',
-            'description'  => 'required|string|max:255',
-            'amount'       => 'required|numeric|min:0',
+            'category' => 'required|in:operasional_rpa,administrasi,armada_umum,lain',
+            'description' => 'required|string',
+            'amount' => 'required|numeric|min:1',
+            'payment_method' => 'required|string',
         ]);
 
-        FarmExpense::create($request->only([
-            'expense_date', 'category', 'description',
-            'amount', 'payment_method', 'farm_supplier_id', 'notes',
-        ]));
+        DB::beginTransaction();
+        try {
+            $expense = FarmExpense::create([
+                'expense_date' => $request->expense_date,
+                'category' => $request->category,
+                'subcategory' => $request->subcategory,
+                'description' => $request->description,
+                'amount' => $request->amount,
+                'payment_method' => $request->payment_method,
+                'notes' => $request->notes,
+            ]);
 
-        return redirect()->route('farm.expenses.index')->with('success', 'Pengeluaran berhasil dicatat.');
+            FarmTransaction::create([
+                'type' => 'pengeluaran',
+                'category' => $request->category,
+                'description' => "Pengeluaran: {$request->description}",
+                'amount' => $request->amount,
+                'transaction_date' => $request->expense_date,
+                'reference_type' => FarmExpense::class,
+                'reference_id' => $expense->id,
+            ]);
+
+            DB::commit();
+            return redirect()->route('farm.expenses.index')->with('success', 'Pengeluaran kas berhasil dicatat.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Gagal mencatat pengeluaran: ' . $e->getMessage());
+        }
     }
 
-    public function edit(FarmExpense $farmExpense)
+    public function edit($id)
     {
-        $suppliers = FarmSupplier::orderBy('name')->get();
-        return view('farm.expenses.edit', ['expense' => $farmExpense, 'suppliers' => $suppliers]);
+        $expense = FarmExpense::findOrFail($id);
+        return view('farm.expenses.edit', compact('expense'));
     }
 
-    public function update(Request $request, FarmExpense $farmExpense)
+    public function update(Request $request, $id)
     {
+        $expense = FarmExpense::findOrFail($id);
+
         $request->validate([
             'expense_date' => 'required|date',
-            'category'     => 'required|string',
-            'description'  => 'required|string|max:255',
-            'amount'       => 'required|numeric|min:0',
+            'category' => 'required|in:operasional_rpa,administrasi,armada_umum,lain',
+            'description' => 'required|string',
+            'amount' => 'required|numeric|min:1',
+            'payment_method' => 'required|string',
         ]);
 
-        $farmExpense->update($request->only([
-            'expense_date', 'category', 'description',
-            'amount', 'payment_method', 'farm_supplier_id', 'notes',
-        ]));
+        DB::beginTransaction();
+        try {
+            $expense->update([
+                'expense_date' => $request->expense_date,
+                'category' => $request->category,
+                'subcategory' => $request->subcategory,
+                'description' => $request->description,
+                'amount' => $request->amount,
+                'payment_method' => $request->payment_method,
+                'notes' => $request->notes,
+            ]);
 
-        return redirect()->route('farm.expenses.index')->with('success', 'Pengeluaran berhasil diperbarui.');
+            FarmTransaction::updateOrCreate(
+                [
+                    'reference_type' => FarmExpense::class,
+                    'reference_id' => $expense->id,
+                ],
+                [
+                    'type' => 'pengeluaran',
+                    'category' => $request->category,
+                    'description' => "Pengeluaran: {$request->description}",
+                    'amount' => $request->amount,
+                    'transaction_date' => $request->expense_date,
+                ]
+            );
+
+            DB::commit();
+            return redirect()->route('farm.expenses.index')->with('success', 'Pengeluaran kas berhasil diperbarui.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Gagal memperbarui pengeluaran: ' . $e->getMessage());
+        }
     }
 
-    public function destroy(FarmExpense $farmExpense)
+    public function destroy($id)
     {
-        $farmExpense->delete();
-        return redirect()->route('farm.expenses.index')->with('success', 'Pengeluaran berhasil dihapus.');
+        $expense = FarmExpense::findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            FarmTransaction::where('reference_type', FarmExpense::class)
+                ->where('reference_id', $expense->id)
+                ->delete();
+
+            $expense->delete();
+
+            DB::commit();
+            return redirect()->route('farm.expenses.index')->with('success', 'Pengeluaran kas berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus pengeluaran: ' . $e->getMessage());
+        }
     }
 }

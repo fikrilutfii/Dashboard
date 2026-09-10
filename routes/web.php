@@ -28,8 +28,9 @@ use App\Http\Controllers\ExpenseController;
 // Farm Division Controllers
 use App\Http\Controllers\Farm\FarmDashboardController;
 use App\Http\Controllers\Farm\FarmInvoiceController;
+use App\Http\Controllers\Farm\FarmBillingController;
 use App\Http\Controllers\Farm\FarmTransportationController;
-use App\Http\Controllers\Farm\FarmOperationalController;
+use App\Http\Controllers\Farm\FarmProductionController;
 use App\Http\Controllers\Farm\FarmExpenseController;
 use App\Http\Controllers\Farm\FarmPayrollController;
 use App\Http\Controllers\Farm\FarmMasterDataController;
@@ -116,76 +117,67 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Activity Logs
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
-    // ===================== FARM DIVISION ROUTES =====================
+    // ===================== FARM DIVISION ROUTES (ASFOUR BROILER / RPA) =====================
     Route::prefix('farm')->name('farm.')->group(function () {
 
-        // Dashboard Peternakan
-        Route::get('/dashboard', [FarmDashboardController::class, 'index'])->name('dashboard');
+        // 1. Dashboard
+        Route::get('/', [FarmDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [FarmDashboardController::class, 'index'])->name('dashboard.index');
 
-        // Faktur Penjualan
+        // 2. Faktur Penjualan
         Route::resource('invoices', FarmInvoiceController::class);
-        Route::post('/invoices/{farmInvoice}/payment', [FarmInvoiceController::class, 'recordPayment'])->name('invoices.payment');
-        Route::get('/invoices/{farmInvoice}/print', [FarmInvoiceController::class, 'print'])->name('invoices.print');
+        Route::post('/invoices/{invoice}/payment', [FarmInvoiceController::class, 'storePayment'])->name('invoices.payment.store');
+        Route::delete('/invoices/{invoice}/payment/{payment}', [FarmInvoiceController::class, 'destroyPayment'])->name('invoices.payment.destroy');
+        Route::get('/invoices/{invoice}/export-excel', [FarmInvoiceController::class, 'exportExcel'])->name('invoices.export-excel');
 
-        // Laporan Tagihan Klien
-        Route::get('/billing', [FarmInvoiceController::class, 'billing'])->name('billing.index');
+        // 3. Laporan Tagihan & Aging Report
+        Route::get('/billing', [FarmBillingController::class, 'index'])->name('billing.index');
 
-        // Transportasi
-        Route::resource('transportation', FarmTransportationController::class)->parameters(['transportation' => 'farmTransportation']);
+        // 4. Transportasi
+        Route::resource('transportations', FarmTransportationController::class);
 
-        // Operasional
-        Route::resource('operational', FarmOperationalController::class)->parameters(['operational' => 'farmOperationalLog']);
-        Route::post('/operational/batch', [FarmOperationalController::class, 'storeBatch'])->name('operational.batch.store');
-        Route::post('/operational/batch/{farmBatch}/close', [FarmOperationalController::class, 'closeBatch'])->name('operational.batch.close');
+        // 5. Produksi (Operasional RPA)
+        Route::resource('production', FarmProductionController::class);
+
+        // 6. Pengeluaran
+        Route::resource('expenses', FarmExpenseController::class);
+
+        // 7. Penggajian
+        Route::resource('payroll', FarmPayrollController::class);
+        Route::post('/payroll/{payroll}/mark-paid', [FarmPayrollController::class, 'markAsPaid'])->name('payroll.mark-paid');
+
+        // 8. Master Data
+        Route::get('/master-data', [FarmMasterDataController::class, 'index'])->name('master_data.index');
         
-        Route::post('/operational/feed', [FarmOperationalController::class, 'storeFeed'])->name('operational.feed.store');
-        Route::delete('/operational/feed/{farmFeedLog}', [FarmOperationalController::class, 'destroyFeed'])->name('operational.feed.destroy');
-        
-        Route::post('/operational/health', [FarmOperationalController::class, 'storeHealth'])->name('operational.health.store');
-        Route::delete('/operational/health/{farmHealthLog}', [FarmOperationalController::class, 'destroyHealth'])->name('operational.health.destroy');
+        // Senders
+        Route::post('/master-data/senders', [FarmMasterDataController::class, 'storeSender'])->name('master_data.senders.store');
+        Route::put('/master-data/senders/{sender}', [FarmMasterDataController::class, 'updateSender'])->name('master_data.senders.update');
+        Route::delete('/master-data/senders/{sender}', [FarmMasterDataController::class, 'destroySender'])->name('master_data.senders.destroy');
 
-        Route::post('/operational/vaccine', [FarmOperationalController::class, 'storeVaccine'])->name('operational.vaccine.store');
-        Route::post('/operational/vaccine/{farmVaccineSchedule}/complete', [FarmOperationalController::class, 'completeVaccine'])->name('operational.vaccine.complete');
-        Route::delete('/operational/vaccine/{farmVaccineSchedule}', [FarmOperationalController::class, 'destroyVaccine'])->name('operational.vaccine.destroy');
+        // Customers
+        Route::post('/master-data/customers', [FarmMasterDataController::class, 'storeCustomer'])->name('master_data.customers.store');
+        Route::put('/master-data/customers/{customer}', [FarmMasterDataController::class, 'updateCustomer'])->name('master_data.customers.update');
+        Route::delete('/master-data/customers/{customer}', [FarmMasterDataController::class, 'destroyCustomer'])->name('master_data.customers.destroy');
 
-        Route::post('/operational/production', [FarmOperationalController::class, 'storeProduction'])->name('operational.production.store');
-        Route::delete('/operational/production/{farmProductionLog}', [FarmOperationalController::class, 'destroyProduction'])->name('operational.production.destroy');
+        // Suppliers
+        Route::post('/master-data/suppliers', [FarmMasterDataController::class, 'storeSupplier'])->name('master_data.suppliers.store');
+        Route::put('/master-data/suppliers/{supplier}', [FarmMasterDataController::class, 'updateSupplier'])->name('master_data.suppliers.update');
+        Route::delete('/master-data/suppliers/{supplier}', [FarmMasterDataController::class, 'destroySupplier'])->name('master_data.suppliers.destroy');
 
-        Route::post('/operational/harvest', [FarmOperationalController::class, 'storeHarvest'])->name('operational.harvest.store');
-        Route::delete('/operational/harvest/{farmHarvestLog}', [FarmOperationalController::class, 'destroyHarvest'])->name('operational.harvest.destroy');
+        // Products
+        Route::post('/master-data/products', [FarmMasterDataController::class, 'storeProduct'])->name('master_data.products.store');
+        Route::put('/master-data/products/{product}', [FarmMasterDataController::class, 'updateProduct'])->name('master_data.products.update');
+        Route::delete('/master-data/products/{product}', [FarmMasterDataController::class, 'destroyProduct'])->name('master_data.products.destroy');
 
-        // Pengeluaran
-        Route::resource('expenses', FarmExpenseController::class)->parameters(['expenses' => 'farmExpense']);
+        // Employees
+        Route::post('/master-data/employees', [FarmMasterDataController::class, 'storeEmployee'])->name('master_data.employees.store');
+        Route::put('/master-data/employees/{employee}', [FarmMasterDataController::class, 'updateEmployee'])->name('master_data.employees.update');
+        Route::delete('/master-data/employees/{employee}', [FarmMasterDataController::class, 'destroyEmployee'])->name('master_data.employees.destroy');
 
-        // Penggajian
-        Route::resource('payroll', FarmPayrollController::class)->parameters(['payroll' => 'farmPayroll'])->except(['show']);
-        Route::post('/payroll/{farmPayroll}/mark-paid', [FarmPayrollController::class, 'markPaid'])->name('payroll.mark-paid');
-
-        // Master Data — Customers
-        Route::prefix('master')->name('master.')->group(function () {
-            Route::get('/customers', [FarmMasterDataController::class, 'customersIndex'])->name('customers.index');
-            Route::get('/customers/create', [FarmMasterDataController::class, 'customersCreate'])->name('customers.create');
-            Route::post('/customers', [FarmMasterDataController::class, 'customersStore'])->name('customers.store');
-            Route::get('/customers/{farmCustomer}/edit', [FarmMasterDataController::class, 'customersEdit'])->name('customers.edit');
-            Route::put('/customers/{farmCustomer}', [FarmMasterDataController::class, 'customersUpdate'])->name('customers.update');
-            Route::delete('/customers/{farmCustomer}', [FarmMasterDataController::class, 'customersDestroy'])->name('customers.destroy');
-
-            // Suppliers
-            Route::get('/suppliers', [FarmMasterDataController::class, 'suppliersIndex'])->name('suppliers.index');
-            Route::get('/suppliers/create', [FarmMasterDataController::class, 'suppliersCreate'])->name('suppliers.create');
-            Route::post('/suppliers', [FarmMasterDataController::class, 'suppliersStore'])->name('suppliers.store');
-            Route::get('/suppliers/{farmSupplier}/edit', [FarmMasterDataController::class, 'suppliersEdit'])->name('suppliers.edit');
-            Route::put('/suppliers/{farmSupplier}', [FarmMasterDataController::class, 'suppliersUpdate'])->name('suppliers.update');
-            Route::delete('/suppliers/{farmSupplier}', [FarmMasterDataController::class, 'suppliersDestroy'])->name('suppliers.destroy');
-
-            // Coops / Kandang
-            Route::get('/coops', [FarmMasterDataController::class, 'coopsIndex'])->name('coops.index');
-            Route::get('/coops/create', [FarmMasterDataController::class, 'coopsCreate'])->name('coops.create');
-            Route::post('/coops', [FarmMasterDataController::class, 'coopsStore'])->name('coops.store');
-            Route::get('/coops/{farmCoop}/edit', [FarmMasterDataController::class, 'coopsEdit'])->name('coops.edit');
-            Route::put('/coops/{farmCoop}', [FarmMasterDataController::class, 'coopsUpdate'])->name('coops.update');
-            Route::delete('/coops/{farmCoop}', [FarmMasterDataController::class, 'coopsDestroy'])->name('coops.destroy');
-        });
+        // Vehicles
+        Route::post('/master-data/vehicles', [FarmMasterDataController::class, 'storeVehicle'])->name('master_data.vehicles.store');
+        Route::put('/master-data/vehicles/{vehicle}', [FarmMasterDataController::class, 'updateVehicle'])->name('master_data.vehicles.update');
+        Route::delete('/master-data/vehicles/{vehicle}', [FarmMasterDataController::class, 'destroyVehicle'])->name('master_data.vehicles.destroy');
     });
     // ===================== END FARM DIVISION ROUTES =====================
 });

@@ -1,173 +1,202 @@
-<x-farm-layout title="Edit Faktur Penjualan" subtitle="{{ $invoice->invoice_number }}">
-    <div style="max-width:960px;margin:0 auto;">
-        <div class="ios-card" style="padding:28px;">
-            <form action="{{ route('farm.invoices.update', $invoice) }}" method="POST" id="invoiceForm">
-                @csrf
-                @method('PUT')
+<x-farm.layout title="Edit Faktur Penjualan" subtitle="{{ $invoice->invoice_number }}">
 
-                <!-- Header Info -->
-                <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:16px;margin-bottom:20px;">
-                    <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">No. Faktur <span style="color:#ff3b30;">*</span></label>
-                        <input type="text" name="invoice_number" value="{{ old('invoice_number', $invoice->invoice_number) }}" required class="ios-input" style="font-weight:700;color:#d97706;">
-                    </div>
-                    <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Tanggal Faktur <span style="color:#ff3b30;">*</span></label>
-                        <input type="date" name="invoice_date" value="{{ old('invoice_date', $invoice->invoice_date) }}" required class="ios-input">
-                    </div>
-                    <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Jatuh Tempo (Due Date)</label>
-                        <input type="date" name="due_date" value="{{ old('due_date', $invoice->due_date) }}" class="ios-input">
-                    </div>
-                </div>
+    <div style="max-width: 960px; margin: 0 auto;">
+        <form method="POST" action="{{ route('farm.invoices.update', $invoice->id) }}" x-data="invoiceEditForm()">
+            @csrf
+            @method('PUT')
 
-                <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:16px;margin-bottom:28px;">
+            <!-- Header Info Card -->
+            <div class="ios-card" style="padding: 24px; margin-bottom: 20px;">
+                <h3 style="font-size: 16px; font-weight: 800; color: #09090b; margin: 0 0 16px;">Informasi Faktur & Pengirim</h3>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
                     <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Customer / Pembeli Panen <span style="color:#ff3b30;">*</span></label>
-                        <select name="farm_customer_id" required class="ios-input">
-                            <option value="">-- Pilih Customer --</option>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">
+                            Nama / Identitas Pengirim Faktur <span style="color: #dc2626;">*</span>
+                        </label>
+                        <select name="farm_sender_id" class="ios-input" required>
+                            @foreach($senders as $s)
+                            <option value="{{ $s->id }}" {{ $invoice->farm_sender_id == $s->id ? 'selected' : '' }}>
+                                {{ $s->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">
+                            Pelanggan / Customer <span style="color: #dc2626;">*</span>
+                        </label>
+                        <select name="farm_customer_id" class="ios-input" required>
                             @foreach($customers as $c)
-                                <option value="{{ $c->id }}" @selected(old('farm_customer_id', $invoice->farm_customer_id) == $c->id)>{{ $c->name }} {{ $c->city ? '('.$c->city.')' : '' }}</option>
+                            <option value="{{ $c->id }}" {{ $invoice->farm_customer_id == $c->id ? 'selected' : '' }}>
+                                {{ $c->name }}
+                            </option>
                             @endforeach
                         </select>
                     </div>
+
                     <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Asal Kandang (Panen)</label>
-                        <select name="farm_coop_id" class="ios-input">
-                            <option value="">-- Pilih Kandang --</option>
-                            @foreach($coops as $coop)
-                                <option value="{{ $coop->id }}" @selected(old('farm_coop_id', $invoice->farm_coop_id) == $coop->id)>{{ $coop->name }}</option>
-                            @endforeach
-                        </select>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">
+                            Tanggal Faktur <span style="color: #dc2626;">*</span>
+                        </label>
+                        <input type="date" name="invoice_date" value="{{ old('invoice_date', $invoice->invoice_date->format('Y-m-d')) }}" class="ios-input" required>
                     </div>
+
                     <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Metode Pembayaran</label>
-                        <select name="payment_method" class="ios-input">
-                            <option value="transfer" @selected(old('payment_method', $invoice->payment_method) == 'transfer')>Transfer Bank</option>
-                            <option value="cash" @selected(old('payment_method', $invoice->payment_method) == 'cash')>Tunai / Cash</option>
-                            <option value="tempo" @selected(old('payment_method', $invoice->payment_method) == 'tempo')>Kredit / Tempo</option>
-                        </select>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">
+                            Tanggal Jatuh Tempo
+                        </label>
+                        <input type="date" name="due_date" value="{{ old('due_date', $invoice->due_date ? $invoice->due_date->format('Y-m-d') : '') }}" class="ios-input">
                     </div>
                 </div>
+            </div>
 
-                <!-- Line Items Table -->
-                <div style="margin-bottom:24px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                        <h3 style="font-size:16px;font-weight:700;color:#1c1c1e;margin:0;">Item Penjualan / Rincian Panen</h3>
-                        <button type="button" onclick="addItemRow()" class="ios-btn ios-btn-secondary" style="padding:6px 14px;font-size:13px;">+ Tambah Baris Item</button>
+            <!-- Line Items Card -->
+            <div class="ios-card" style="padding: 24px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 800; color: #09090b; margin: 0;">Rincian Barang Karkas / Parting</h3>
+                        <p style="font-size: 12px; color: #71717a; margin: 2px 0 0;">Stok produk akan disesuaikan otomatis</p>
                     </div>
+                    <button type="button" @click="addItem()" class="ios-btn ios-btn-secondary" style="font-size: 12.5px; padding: 7px 14px;">
+                        + Tambah Baris
+                    </button>
+                </div>
 
-                    <table class="ios-table" id="itemsTable">
+                <div style="overflow-x: auto;">
+                    <table class="ios-table">
                         <thead>
                             <tr>
-                                <th style="width:40%;">Deskripsi Panen / Barang</th>
-                                <th style="width:15%;">Jumlah / Qty</th>
-                                <th style="width:15%;">Satuan</th>
-                                <th style="width:20%;">Harga Satuan (Rp)</th>
-                                <th style="width:10%;text-align:right;">Total (Rp)</th>
-                                <th style="width:50px;"></th>
+                                <th style="width: 28%;">Pilih Produk</th>
+                                <th style="width: 22%;">Nama Produk</th>
+                                <th style="width: 14%; text-align: right;">Berat (Kg)</th>
+                                <th style="width: 10%; text-align: right;">Ekor</th>
+                                <th style="width: 14%; text-align: right;">Harga / Satuan</th>
+                                <th style="width: 16%; text-align: right;">Subtotal (Rp)</th>
+                                <th style="width: 6%; text-align: center;">Hapus</th>
                             </tr>
                         </thead>
-                        <tbody id="itemsTbody">
-                            <!-- Rows loaded dynamically -->
+                        <tbody>
+                            <template x-for="(item, index) in items" :key="index">
+                                <tr>
+                                    <td>
+                                        <select :name="`items[${index}][farm_product_id]`" class="ios-input" style="padding: 8px 12px; font-size: 12.5px;" x-model="item.farm_product_id" @change="onProductSelect(index, $event.target.value)">
+                                            <option value="">-- Manual / Custom --</option>
+                                            @foreach($products as $p)
+                                            <option value="{{ $p->id }}" data-code="{{ $p->code }}" data-name="{{ $p->name }}" data-price="{{ $p->standard_price }}" data-unit="{{ $p->unit }}">
+                                                {{ $p->name }}
+                                            </option>
+                                            @endforeach
+                                        </select>
+                                        <input type="hidden" :name="`items[${index}][product_code]`" x-model="item.product_code">
+                                        <input type="hidden" :name="`items[${index}][unit]`" x-model="item.unit">
+                                    </td>
+                                    <td>
+                                        <input type="text" :name="`items[${index}][item_name]`" x-model="item.item_name" class="ios-input" style="padding: 8px 12px; font-size: 12.5px;" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" :name="`items[${index}][weight_kg]`" x-model.number="item.weight_kg" step="any" min="0" class="ios-input" style="padding: 8px 12px; text-align: right; font-size: 12.5px;" @input="calcSubtotal(index)">
+                                    </td>
+                                    <td>
+                                        <input type="number" :name="`items[${index}][qty_ekor]`" x-model.number="item.qty_ekor" min="0" class="ios-input" style="padding: 8px 12px; text-align: right; font-size: 12.5px;">
+                                    </td>
+                                    <td>
+                                        <input type="number" :name="`items[${index}][unit_price]`" x-model.number="item.unit_price" step="any" min="0" class="ios-input" style="padding: 8px 12px; text-align: right; font-size: 12.5px;" @input="calcSubtotal(index)" required>
+                                    </td>
+                                    <td style="text-align: right; font-weight: 700; font-size: 13.5px;">
+                                        <span x-text="formatRupiah(item.subtotal)"></span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <button type="button" @click="removeItem(index)" style="background: none; border: none; color: #f43f5e; cursor: pointer; font-size: 16px; font-weight: 800;" x-show="items.length > 1">&times;</button>
+                                    </td>
+                                </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Grand Total Card -->
-                <div style="display:flex;justify-content:flex-end;margin-bottom:24px;">
-                    <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:16px;padding:20px;min-width:320px;text-align:right;">
-                        <div style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;">Total Faktur Penjualan</div>
-                        <div id="grandTotalDisplay" style="font-size:30px;font-weight:800;color:#d97706;margin-top:4px;">Rp 0</div>
+                <!-- Grand Total Summary -->
+                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(0,0,0,0.06); display: flex; justify-content: flex-end;">
+                    <div style="width: 320px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #71717a;">
+                            <span>Total Berat:</span>
+                            <strong style="color: #09090b;" x-text="totalWeightKg.toFixed(1) + ' Kg'"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; color: #09090b; padding-top: 8px; border-top: 2px solid #09090b;">
+                            <span>Grand Total:</span>
+                            <span x-text="formatRupiah(grandTotal)"></span>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div style="margin-bottom:24px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Catatan Faktur</label>
-                    <textarea name="notes" rows="2" class="ios-input" style="resize:vertical;">{{ old('notes', $invoice->notes) }}</textarea>
-                </div>
+            <!-- Notes Card -->
+            <div class="ios-card" style="padding: 24px; margin-bottom: 24px;">
+                <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Catatan Faktur (Opsional)</label>
+                <textarea name="notes" rows="2" class="ios-input">{{ old('notes', $invoice->notes) }}</textarea>
+            </div>
 
-                <div style="display:flex;justify-content:flex-end;gap:12px;">
-                    <a href="{{ route('farm.invoices.show', $invoice) }}" class="ios-btn ios-btn-secondary">Batal</a>
-                    <button type="submit" class="ios-btn ios-btn-primary">Update Faktur Penjualan</button>
-                </div>
-            </form>
-        </div>
+            <!-- Action Buttons -->
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <a href="{{ route('farm.invoices.show', $invoice->id) }}" class="ios-btn ios-btn-secondary">Batal</a>
+                <button type="submit" class="ios-btn ios-btn-primary" style="padding: 12px 28px;">Perbarui Faktur Penjualan</button>
+            </div>
+        </form>
     </div>
 
     <script>
-        let itemIndex = 0;
-
-        function addItemRow(desc = '', qty = 0, unit = 'kg', price = 0) {
-            const tbody = document.getElementById('itemsTbody');
-            const tr = document.createElement('tr');
-            tr.id = `item-row-${itemIndex}`;
-            tr.innerHTML = `
-                <td>
-                    <input type="text" name="items[${itemIndex}][description]" value="${desc}" required class="ios-input" style="padding:8px 12px;font-size:14px;">
-                </td>
-                <td>
-                    <input type="number" step="0.01" name="items[${itemIndex}][qty]" value="${qty}" required min="0" oninput="calculateRow(${itemIndex})" class="ios-input item-qty" style="padding:8px 12px;font-size:14px;">
-                </td>
-                <td>
-                    <select name="items[${itemIndex}][unit]" class="ios-input" style="padding:8px 12px;font-size:14px;">
-                        <option value="kg" ${unit === 'kg' ? 'selected' : ''}>Kg (Kilogram)</option>
-                        <option value="ekor" ${unit === 'ekor' ? 'selected' : ''}>Ekor</option>
-                        <option value="box" ${unit === 'box' ? 'selected' : ''}>Box / Keranjang</option>
-                        <option value="pcs" ${unit === 'pcs' ? 'selected' : ''}>Pcs</option>
-                    </select>
-                </td>
-                <td>
-                    <input type="number" name="items[${itemIndex}][unit_price]" value="${price}" required min="0" oninput="calculateRow(${itemIndex})" class="ios-input item-price" style="padding:8px 12px;font-size:14px;">
-                </td>
-                <td style="text-align:right;font-weight:700;color:#1c1c1e;">
-                    <span id="row-total-${itemIndex}">Rp 0</span>
-                </td>
-                <td style="text-align:center;">
-                    <button type="button" onclick="removeRow(${itemIndex})" class="ios-btn ios-btn-danger" style="padding:4px 8px;font-size:12px;">✕</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-            calculateRow(itemIndex);
-            itemIndex++;
+        function invoiceEditForm() {
+            return {
+                items: [
+                    @foreach($invoice->items as $it)
+                    {
+                        farm_product_id: '{{ $it->farm_product_id ?? '' }}',
+                        product_code: '{{ $it->product_code ?? '' }}',
+                        item_name: '{{ $it->item_name }}',
+                        weight_kg: {{ $it->weight_kg }},
+                        qty_ekor: {{ $it->qty_ekor }},
+                        unit: '{{ $it->unit }}',
+                        unit_price: {{ $it->unit_price }},
+                        subtotal: {{ $it->total_price }}
+                    },
+                    @endforeach
+                ],
+                addItem() {
+                    this.items.push({ farm_product_id: '', product_code: '', item_name: '', weight_kg: 0, qty_ekor: 0, unit: 'kg', unit_price: 0, subtotal: 0 });
+                },
+                removeItem(index) {
+                    if (this.items.length > 1) {
+                        this.items.splice(index, 1);
+                    }
+                },
+                onProductSelect(index, productId) {
+                    const selectEl = event.target;
+                    const opt = selectEl.options[selectEl.selectedIndex];
+                    if (productId && opt) {
+                        this.items[index].product_code = opt.dataset.code || '';
+                        this.items[index].item_name = opt.dataset.name || '';
+                        this.items[index].unit_price = parseFloat(opt.dataset.price) || 0;
+                        this.items[index].unit = opt.dataset.unit || 'kg';
+                        this.calcSubtotal(index);
+                    }
+                },
+                calcSubtotal(index) {
+                    const item = this.items[index];
+                    const qty = item.weight_kg > 0 ? item.weight_kg : (item.qty_ekor > 0 ? item.qty_ekor : 1);
+                    item.subtotal = (qty || 0) * (item.unit_price || 0);
+                },
+                get grandTotal() {
+                    return this.items.reduce((acc, item) => acc + (item.subtotal || 0), 0);
+                },
+                get totalWeightKg() {
+                    return this.items.reduce((acc, item) => acc + (parseFloat(item.weight_kg) || 0), 0);
+                },
+                formatRupiah(num) {
+                    return 'Rp ' + (num || 0).toLocaleString('id-ID');
+                }
+            }
         }
-
-        function removeRow(idx) {
-            const tr = document.getElementById(`item-row-${idx}`);
-            if (tr) tr.remove();
-            calculateGrandTotal();
-        }
-
-        function calculateRow(idx) {
-            const tr = document.getElementById(`item-row-${idx}`);
-            if (!tr) return;
-            const qty = parseFloat(tr.querySelector('.item-qty').value) || 0;
-            const price = parseFloat(tr.querySelector('.item-price').value) || 0;
-            const total = qty * price;
-            document.getElementById(`row-total-${idx}`).innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(total);
-            calculateGrandTotal();
-        }
-
-        function calculateGrandTotal() {
-            let total = 0;
-            const rows = document.querySelectorAll('#itemsTbody tr');
-            rows.forEach(tr => {
-                const qty = parseFloat(tr.querySelector('.item-qty')?.value) || 0;
-                const price = parseFloat(tr.querySelector('.item-price')?.value) || 0;
-                total += (qty * price);
-            });
-            document.getElementById('grandTotalDisplay').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(total);
-        }
-
-        // Initialize with existing items
-        document.addEventListener('DOMContentLoaded', () => {
-            @if($invoice->items && $invoice->items->count() > 0)
-                @foreach($invoice->items as $item)
-                    addItemRow("{{ addslashes($item->description) }}", {{ $item->qty }}, "{{ $item->unit }}", {{ $item->unit_price }});
-                @endforeach
-            @else
-                addItemRow();
-            @endif
-        });
     </script>
-</x-farm-layout>
+
+</x-farm.layout>

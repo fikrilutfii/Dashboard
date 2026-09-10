@@ -1,117 +1,137 @@
-<x-farm-layout title="Penggajian Pegawai Peternakan" subtitle="Pencatatan Gaji, Tunjangan, Potongan & Status Pembayaran Pegawai">
-    <x-slot name="headerActions">
-        <a href="{{ route('farm.payroll.create') }}" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 text-sm shadow">
-            + Tambah Gaji Pegawai
-        </a>
-    </x-slot>
+<x-farm.layout title="Penggajian Karyawan RPA" subtitle="Skema fleksibel: Borongan per Kg/Ekor, Gaji Harian, dan Gaji Bulanan">
 
-    {{-- Stat Cards --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Gaji Terbayar (Bulan Ini)</p>
-            <h3 class="text-2xl font-bold text-emerald-600 mt-1">Rp {{ number_format($totalBulanIni, 0, ',', '.') }}</h3>
-        </div>
-        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Gaji Pending</p>
-            <h3 class="text-2xl font-bold text-amber-600 mt-1">Rp {{ number_format($totalPending, 0, ',', '.') }}</h3>
-        </div>
+    <x-slot:headerActions>
+        <a href="{{ route('farm.payroll.create') }}" class="ios-btn ios-btn-primary">
+            + Buat Slip Gaji Baru
+        </a>
+    </x-slot:headerActions>
+
+    <!-- Filter Bar -->
+    <div class="ios-card" style="padding: 16px 20px; margin-bottom: 20px;">
+        <form method="GET" action="{{ route('farm.payroll.index') }}" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <div style="width: 180px;">
+                <select name="salary_type" class="ios-input">
+                    <option value="">Semua Skema Gaji</option>
+                    <option value="borongan" {{ request('salary_type') === 'borongan' ? 'selected' : '' }}>Borongan (Kg / Ekor)</option>
+                    <option value="harian" {{ request('salary_type') === 'harian' ? 'selected' : '' }}>Gaji Harian</option>
+                    <option value="bulanan" {{ request('salary_type') === 'bulanan' ? 'selected' : '' }}>Gaji Bulanan</option>
+                </select>
+            </div>
+
+            <div style="width: 140px;">
+                <select name="month" class="ios-input">
+                    <option value="">Bulan</option>
+                    @for($m = 1; $m <= 12; $m++)
+                    <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>{{ DateTime::createFromFormat('!m', $m)->format('F') }}</option>
+                    @endfor
+                </select>
+            </div>
+
+            <div style="width: 120px;">
+                <select name="year" class="ios-input">
+                    <option value="">Tahun</option>
+                    @for($y = date('Y') - 1; $y <= date('Y') + 1; $y++)
+                    <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endfor
+                </select>
+            </div>
+
+            <button type="submit" class="ios-btn ios-btn-secondary">Filter</button>
+            @if(request()->hasAny(['salary_type', 'month', 'year']))
+            <a href="{{ route('farm.payroll.index') }}" class="ios-btn ios-btn-secondary" style="color: #71717a;">Reset</a>
+            @endif
+        </form>
     </div>
 
-    {{-- Card Main --}}
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        {{-- Filter Section --}}
-        <div class="p-4 bg-gray-50 border-b border-gray-200">
-            <form method="GET" action="{{ route('farm.payroll.index') }}" class="flex flex-wrap gap-3 items-center">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama pegawai / jabatan..."
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary-500 w-full sm:w-64">
-
-                <select name="status" class="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-                    <option value="">-- Semua Status --</option>
-                    <option value="pending" @selected(request('status') == 'pending')>Belum Dibayar (Pending)</option>
-                    <option value="dibayar" @selected(request('status') == 'dibayar')>Sudah Dibayar</option>
-                </select>
-
-                <button type="submit" class="bg-primary-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-primary-700 text-sm">Filter</button>
-                @if(request('search') || request('status'))
-                    <a href="{{ route('farm.payroll.index') }}" class="text-gray-500 hover:underline text-sm ml-1">Reset</a>
-                @endif
-            </form>
-        </div>
-
-        {{-- Table --}}
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm border-collapse">
+    <!-- Payroll Table -->
+    <div class="ios-card" style="padding: 20px 24px;">
+        <div style="overflow-x: auto;">
+            <table class="ios-table">
                 <thead>
-                    <tr class="bg-gray-100 border-b border-gray-200 text-xs text-gray-600 uppercase font-semibold">
-                        <th class="p-3 text-left">Nama Pegawai</th>
-                        <th class="p-3 text-left">Jabatan</th>
-                        <th class="p-3 text-left">Periode Gaji</th>
-                        <th class="p-3 text-right">Gaji Pokok</th>
-                        <th class="p-3 text-right">Tunjangan</th>
-                        <th class="p-3 text-right">Potongan</th>
-                        <th class="p-3 text-right">Gaji Bersih</th>
-                        <th class="p-3 text-center">Status</th>
-                        <th class="p-3 text-center">Aksi</th>
+                    <tr>
+                        <th>Nama Karyawan</th>
+                        <th>Jabatan / Role</th>
+                        <th>Skema Gaji</th>
+                        <th>Periode Kerja</th>
+                        <th style="text-align: right;">Produktivitas / Hari</th>
+                        <th style="text-align: right;">Gaji Bersih</th>
+                        <th style="text-align: center;">Status</th>
+                        <th style="text-align: right;">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
+                <tbody>
                     @forelse($payrolls as $p)
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-3">
-                            <div class="font-bold text-gray-900">{{ $p->employee_name }}</div>
-                            @if($p->notes)
-                                <div class="text-xs text-gray-500 mt-0.5">{{ $p->notes }}</div>
-                            @endif
-                        </td>
-                        <td class="p-3 text-xs">
-                            <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200 uppercase font-semibold">
-                                {{ $p->role ?? 'Staf Lapangan' }}
-                            </span>
-                        </td>
-                        <td class="p-3 text-xs text-gray-600">
-                            {{ \Carbon\Carbon::parse($p->period_start)->format('d/m/Y') }} – {{ \Carbon\Carbon::parse($p->period_end)->format('d/m/Y') }}
-                        </td>
-                        <td class="p-3 text-right font-mono">Rp {{ number_format($p->basic_salary, 0, ',', '.') }}</td>
-                        <td class="p-3 text-right font-mono text-emerald-600">+{{ number_format($p->allowances, 0, ',', '.') }}</td>
-                        <td class="p-3 text-right font-mono text-red-600">−{{ number_format($p->deductions, 0, ',', '.') }}</td>
-                        <td class="p-3 text-right font-mono font-bold text-gray-900">Rp {{ number_format($p->net_salary, 0, ',', '.') }}</td>
-                        <td class="p-3 text-center">
-                            @if($p->status === 'dibayar')
-                                <span class="bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-full font-bold uppercase">
-                                    Dibayar ({{ \Carbon\Carbon::parse($p->paid_at)->format('d/m') }})
-                                </span>
+                    <tr>
+                        <td style="font-weight: 700; color: #09090b;">{{ $p->employee_name }}</td>
+                        <td style="font-size: 12.5px; color: #71717a;">{{ $p->role ?? '-' }}</td>
+                        <td>
+                            @if($p->salary_type === 'borongan')
+                            <span class="badge badge-amber"><span class="badge-dot"></span> Borongan</span>
+                            @elseif($p->salary_type === 'harian')
+                            <span class="badge badge-blue"><span class="badge-dot"></span> Harian</span>
                             @else
-                                <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-bold uppercase">
-                                    Pending
-                                </span>
+                            <span class="badge badge-zinc"><span class="badge-dot"></span> Bulanan</span>
                             @endif
                         </td>
-                        <td class="p-3 text-center">
-                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                        <td style="font-size: 12.5px; color: #71717a;">
+                            {{ $p->period_start->format('d/m/Y') }} - {{ $p->period_end->format('d/m/Y') }}
+                        </td>
+                        <td style="text-align: right; font-size: 12.5px;">
+                            @if($p->salary_type === 'borongan')
+                                @if($p->total_kg_produced > 0)
+                                    <strong>{{ number_format($p->total_kg_produced, 1, ',', '.') }}</strong> Kg
+                                @elseif($p->total_ekor_produced > 0)
+                                    <strong>{{ number_format($p->total_ekor_produced) }}</strong> Ekor
+                                @endif
+                            @elseif($p->salary_type === 'harian')
+                                <strong>{{ $p->work_days }}</strong> Hari
+                            @else
+                                1 Bulan
+                            @endif
+                        </td>
+                        <td style="text-align: right; font-weight: 800; color: #09090b;">
+                            Rp {{ number_format($p->net_salary, 0, ',', '.') }}
+                        </td>
+                        <td style="text-align: center;">
+                            @if($p->status === 'dibayar')
+                            <span class="badge badge-green"><span class="badge-dot"></span> Dibayar</span>
+                            @else
+                            <span class="badge badge-red"><span class="badge-dot"></span> Pending</span>
+                            @endif
+                        </td>
+                        <td style="text-align: right;">
+                            <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                                <a href="{{ route('farm.payroll.show', $p->id) }}" class="ios-btn ios-btn-secondary" style="padding: 6px 10px; font-size: 11.5px;">
+                                    Slip Gaji
+                                </a>
+
                                 @if($p->status !== 'dibayar')
-                                <form action="{{ route('farm.payroll.mark-paid', $p) }}" method="POST" class="inline-block">
+                                <form method="POST" action="{{ route('farm.payroll.mark-paid', $p->id) }}" onsubmit="return confirm('Tandai gaji ini sudah dibayar? Pengeluaran kas akan otomatis dicatat.');" style="display: inline;">
                                     @csrf
-                                    <button type="submit" class="bg-green-600 text-white text-xs px-2.5 py-1 rounded font-semibold hover:bg-green-700">✓ Lunasi</button>
+                                    <button type="submit" class="ios-btn ios-btn-gold" style="padding: 6px 10px; font-size: 11.5px;">Bayar</button>
                                 </form>
                                 @endif
-                                <a href="{{ route('farm.payroll.edit', $p) }}" class="text-amber-600 border border-amber-300 hover:bg-amber-50 text-xs px-2 py-1 rounded font-medium">Edit</a>
-                                <form action="{{ route('farm.payroll.destroy', $p) }}" method="POST" class="inline-block delete-confirm">
+
+                                <form method="POST" action="{{ route('farm.payroll.destroy', $p->id) }}" onsubmit="return confirm('Hapus data slip gaji ini?');" style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-600 border border-red-300 hover:bg-red-50 text-xs px-2 py-1 rounded font-medium">Hapus</button>
+                                    <button type="submit" class="ios-btn ios-btn-danger" style="padding: 6px 10px; font-size: 11.5px;">Hapus</button>
                                 </form>
                             </div>
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="9" class="p-6 text-center text-gray-500">Belum ada data penggajian pegawai peternakan.</td></tr>
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #a1a1aa; padding: 32px;">Belum ada data slip penggajian</td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        @if($payrolls->hasPages())
-        <div class="p-4 border-t border-gray-200">{{ $payrolls->links() }}</div>
-        @endif
+        <div style="margin-top: 20px;">
+            {{ $payrolls->links() }}
+        </div>
     </div>
-</x-farm-layout>
+
+</x-farm.layout>

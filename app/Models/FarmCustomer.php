@@ -2,15 +2,29 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FarmCustomer extends Model
 {
-    protected $fillable = ['name', 'phone', 'address', 'city', 'contact_person', 'notes'];
+    use HasFactory;
 
-    public function invoices(): HasMany
+    protected $fillable = [
+        'name',
+        'phone',
+        'address',
+        'city',
+        'contact_person',
+        'notes',
+    ];
+
+    public function invoices()
     {
-        return $this->hasMany(FarmInvoice::class);
+        return $this->hasMany(FarmInvoice::class, 'farm_customer_id');
+    }
+
+    public function customPrices()
+    {
+        return $this->hasMany(FarmCustomerPrice::class, 'farm_customer_id');
     }
 }

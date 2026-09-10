@@ -3,91 +3,113 @@
 namespace App\Http\Controllers\Farm;
 
 use App\Http\Controllers\Controller;
+use App\Models\FarmInvoice;
 use App\Models\FarmTransportation;
+use App\Models\FarmVehicle;
 use Illuminate\Http\Request;
 
 class FarmTransportationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = FarmTransportation::latest('transport_date');
+        $query = FarmTransportation::with(['invoice.customer', 'vehicle']);
 
-        if ($request->filled('search')) {
-            $s = trim($request->search);
-            $query->where(function($q) use ($s) {
-                $q->where('description', 'like', "%$s%")
-                  ->orWhere('destination', 'like', "%$s%")
-                  ->orWhere('driver', 'like', "%$s%");
-            });
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('transport_date', [$request->start_date, $request->end_date]);
         }
 
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
+        if ($request->filled('status')) {
+            $query->where('delivery_status', $request->status);
         }
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('transport_date', '>=', $request->date_from);
-        }
+        $transportations = $query->orderBy('transport_date', 'desc')->orderBy('id', 'desc')->paginate(15);
+        $vehicles = FarmVehicle::orderBy('plate_number')->get();
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('transport_date', '<=', $request->date_to);
-        }
-
-        $transportations = $query->paginate(15);
-
-        $totalBulanIni = FarmTransportation::whereMonth('transport_date', now()->month)
-            ->whereYear('transport_date', now()->year)->sum('amount');
-
-        return view('farm.transportation.index', compact('transportations', 'totalBulanIni'));
+        return view('farm.transportations.index', compact('transportations', 'vehicles'));
     }
 
     public function create()
     {
-        return view('farm.transportation.create');
+        $invoices = FarmInvoice::with('customer')->whereDoesntHave('transportation')->orderBy('id', 'desc')->limit(30)->get();
+        $vehicles = FarmVehicle::orderBy('plate_number')->get();
+
+        return view('farm.transportations.create', compact('invoices', 'vehicles'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'transport_date' => 'required|date',
-            'type'           => 'required|in:masuk,keluar',
-            'description'    => 'required|string|max:255',
-            'amount'         => 'required|numeric|min:0',
+            'driver_name' => 'required|string',
+            'delivery_status' => 'required|in:sedang_dikirim,baik,komplain_sebagian,komplain_penuh',
+            'bbm_cost' => 'nullable|numeric|min:0',
+            'toll_cost' => 'nullable|numeric|min:0',
+            'other_cost' => 'nullable|numeric|min:0',
         ]);
 
-        FarmTransportation::create($request->only([
-            'transport_date', 'type', 'description', 'destination',
-            'driver', 'vehicle_plate', 'amount', 'status', 'notes',
-        ]));
+        FarmTransportation::create([
+            'transport_date' => $request->transport_date,
+            'farm_invoice_id' => $request->farm_invoice_id ?: null,
+            'farm_vehicle_id' => $request->farm_vehicle_id ?: null,
+            'driver_name' => $request->driver_name,
+            'destination' => $request->destination,
+            'departure_time' => $request->departure_time,
+            'arrival_time' => $request->arrival_time,
+            'delivery_status' => $request->delivery_status,
+            'bbm_cost' => $request->bbm_cost ?? 0,
+            'toll_cost' => $request->toll_cost ?? 0,
+            'other_cost' => $request->other_cost ?? 0,
+            'notes' => $request->notes,
+        ]);
 
-        return redirect()->route('farm.transportation.index')->with('success', 'Data transportasi berhasil ditambahkan.');
+        return redirect()->route('farm.transportations.index')->with('success', 'Log Transportasi berhasil dicatat.');
     }
 
-    public function edit(FarmTransportation $farmTransportation)
+    public function edit($id)
     {
-        return view('farm.transportation.edit', ['transportation' => $farmTransportation]);
+        $transportation = FarmTransportation::findOrFail($id);
+        $invoices = FarmInvoice::with('customer')->orderBy('id', 'desc')->limit(50)->get();
+        $vehicles = FarmVehicle::orderBy('plate_number')->get();
+
+        return view('farm.transportations.edit', compact('transportation', 'invoices', 'vehicles'));
     }
 
-    public function update(Request $request, FarmTransportation $farmTransportation)
+    public function update(Request $request, $id)
     {
+        $transportation = FarmTransportation::findOrFail($id);
+
         $request->validate([
             'transport_date' => 'required|date',
-            'type'           => 'required|in:masuk,keluar',
-            'description'    => 'required|string|max:255',
-            'amount'         => 'required|numeric|min:0',
+            'driver_name' => 'required|string',
+            'delivery_status' => 'required|in:sedang_dikirim,baik,komplain_sebagian,komplain_penuh',
+            'bbm_cost' => 'nullable|numeric|min:0',
+            'toll_cost' => 'nullable|numeric|min:0',
+            'other_cost' => 'nullable|numeric|min:0',
         ]);
 
-        $farmTransportation->update($request->only([
-            'transport_date', 'type', 'description', 'destination',
-            'driver', 'vehicle_plate', 'amount', 'status', 'notes',
-        ]));
+        $transportation->update([
+            'transport_date' => $request->transport_date,
+            'farm_invoice_id' => $request->farm_invoice_id ?: null,
+            'farm_vehicle_id' => $request->farm_vehicle_id ?: null,
+            'driver_name' => $request->driver_name,
+            'destination' => $request->destination,
+            'departure_time' => $request->departure_time,
+            'arrival_time' => $request->arrival_time,
+            'delivery_status' => $request->delivery_status,
+            'bbm_cost' => $request->bbm_cost ?? 0,
+            'toll_cost' => $request->toll_cost ?? 0,
+            'other_cost' => $request->other_cost ?? 0,
+            'notes' => $request->notes,
+        ]);
 
-        return redirect()->route('farm.transportation.index')->with('success', 'Data transportasi berhasil diperbarui.');
+        return redirect()->route('farm.transportations.index')->with('success', 'Log Transportasi berhasil diperbarui.');
     }
 
-    public function destroy(FarmTransportation $farmTransportation)
+    public function destroy($id)
     {
-        $farmTransportation->delete();
-        return redirect()->route('farm.transportation.index')->with('success', 'Data transportasi berhasil dihapus.');
+        $transportation = FarmTransportation::findOrFail($id);
+        $transportation->delete();
+
+        return redirect()->route('farm.transportations.index')->with('success', 'Log Transportasi berhasil dihapus.');
     }
 }

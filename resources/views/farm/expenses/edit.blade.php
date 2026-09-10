@@ -1,67 +1,64 @@
-<x-farm-layout title="Edit Pengeluaran" subtitle="Perbarui Data Pengeluaran">
-    <div style="max-width:680px;margin:0 auto;">
-        <div class="ios-card" style="padding:28px;">
-            <form action="{{ route('farm.expenses.update', $expense) }}" method="POST">
-                @csrf
-                @method('PUT')
+<x-farm.layout title="Edit Pengeluaran Kas" subtitle="Perbarui data kas keluar operasional RPA">
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+    <div style="max-width: 700px; margin: 0 auto;">
+        <form method="POST" action="{{ route('farm.expenses.update', $expense->id) }}">
+            @csrf
+            @method('PUT')
+
+            <div class="ios-card" style="padding: 24px; margin-bottom: 24px;">
+                <h3 style="font-size: 16px; font-weight: 800; color: #09090b; margin: 0 0 16px;">Informasi Pengeluaran</h3>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
                     <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Tanggal Pengeluaran <span style="color:#ff3b30;">*</span></label>
-                        <input type="date" name="expense_date" value="{{ old('expense_date', $expense->expense_date) }}" required class="ios-input">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Tanggal Pengeluaran <span style="color: #dc2626;">*</span></label>
+                        <input type="date" name="expense_date" value="{{ old('expense_date', $expense->expense_date->format('Y-m-d')) }}" class="ios-input" required>
                     </div>
+
                     <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Kategori Pengeluaran <span style="color:#ff3b30;">*</span></label>
-                        <select name="category" required class="ios-input">
-                            <option value="pakan" @selected(old('category', $expense->category) == 'pakan')>Pakan Ayam</option>
-                            <option value="doc" @selected(old('category', $expense->category) == 'doc')>Bibit DOC</option>
-                            <option value="obat" @selected(old('category', $expense->category) == 'obat')>Obat & Vaksin</option>
-                            <option value="operasional" @selected(old('category', $expense->category) == 'operasional')>Operasional Kandang / Listrik / Sekam</option>
-                            <option value="peralatan" @selected(old('category', $expense->category) == 'peralatan')>Peralatan & Maintenance</option>
-                            <option value="lainnya" @selected(old('category', $expense->category) == 'lainnya')>Lain-lain</option>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Kategori Pengeluaran <span style="color: #dc2626;">*</span></label>
+                        <select name="category" class="ios-input" required>
+                            <option value="operasional_rpa" {{ $expense->category === 'operasional_rpa' ? 'selected' : '' }}>Operasional Produksi RPA</option>
+                            <option value="administrasi" {{ $expense->category === 'administrasi' ? 'selected' : '' }}>Administrasi & Umum</option>
+                            <option value="armada_umum" {{ $expense->category === 'armada_umum' ? 'selected' : '' }}>Armada (Servis/Pajak Berkala)</option>
+                            <option value="lain" {{ $expense->category === 'lain' ? 'selected' : '' }}>Lain-lain</option>
                         </select>
                     </div>
-                </div>
 
-                <div style="margin-bottom:20px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Keterangan / Deskripsi <span style="color:#ff3b30;">*</span></label>
-                    <input type="text" name="description" value="{{ old('description', $expense->description) }}" required class="ios-input">
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
                     <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Jumlah Nominal (Rp) <span style="color:#ff3b30;">*</span></label>
-                        <input type="number" name="amount" value="{{ old('amount', $expense->amount) }}" required min="0" class="ios-input">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Jenis / Subkategori</label>
+                        <input type="text" name="subcategory" value="{{ old('subcategory', $expense->subcategory) }}" class="ios-input">
                     </div>
+
                     <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Metode Pembayaran</label>
-                        <select name="payment_method" class="ios-input">
-                            <option value="transfer" @selected(old('payment_method', $expense->payment_method) == 'transfer')>Transfer Bank</option>
-                            <option value="cash" @selected(old('payment_method', $expense->payment_method) == 'cash')>Tunai / Cash</option>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Nominal (Rp) <span style="color: #dc2626;">*</span></label>
+                        <input type="number" name="amount" value="{{ old('amount', $expense->amount) }}" step="any" min="1" class="ios-input" required>
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Metode Pembayaran <span style="color: #dc2626;">*</span></label>
+                        <select name="payment_method" class="ios-input" required>
+                            <option value="Tunai" {{ $expense->payment_method === 'Tunai' ? 'selected' : '' }}>Tunai / Cash</option>
+                            <option value="Transfer Bank" {{ $expense->payment_method === 'Transfer Bank' ? 'selected' : '' }}>Transfer Bank</option>
                         </select>
                     </div>
-                </div>
 
-                <div style="margin-bottom:20px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Supplier (Opsional)</label>
-                    <select name="farm_supplier_id" class="ios-input">
-                        <option value="">-- Tanpa Supplier / Pembelian Bebas --</option>
-                        @foreach($suppliers as $s)
-                            <option value="{{ $s->id }}" @selected(old('farm_supplier_id', $expense->farm_supplier_id) == $s->id)>{{ $s->name }} ({{ ucfirst($s->type) }})</option>
-                        @endforeach
-                    </select>
-                </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Deskripsi / Keterangan <span style="color: #dc2626;">*</span></label>
+                        <input type="text" name="description" value="{{ old('description', $expense->description) }}" class="ios-input" required>
+                    </div>
 
-                <div style="margin-bottom:24px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:8px;">Catatan Tambahan</label>
-                    <textarea name="notes" rows="3" class="ios-input" style="resize:vertical;">{{ old('notes', $expense->notes) }}</textarea>
+                    <div style="grid-column: 1 / -1;">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Catatan Tambahan (Opsional)</label>
+                        <textarea name="notes" rows="2" class="ios-input">{{ old('notes', $expense->notes) }}</textarea>
+                    </div>
                 </div>
+            </div>
 
-                <div style="display:flex;justify-content:flex-end;gap:12px;">
-                    <a href="{{ route('farm.expenses.index') }}" class="ios-btn ios-btn-secondary">Batal</a>
-                    <button type="submit" class="ios-btn ios-btn-primary">Update Pengeluaran</button>
-                </div>
-            </form>
-        </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <a href="{{ route('farm.expenses.index') }}" class="ios-btn ios-btn-secondary">Batal</a>
+                <button type="submit" class="ios-btn ios-btn-primary" style="padding: 12px 28px;">Perbarui Pengeluaran</button>
+            </div>
+        </form>
     </div>
-</x-farm-layout>
+
+</x-farm.layout>

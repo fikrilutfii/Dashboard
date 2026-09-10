@@ -5,31 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class FarmInvoiceItem extends Model
+class FarmProductionItem extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'farm_invoice_id',
+        'farm_production_batch_id',
         'farm_product_id',
-        'product_code',
-        'item_name',
-        'weight_kg',
         'qty_ekor',
-        'unit',
-        'unit_price',
-        'total_price',
+        'weight_kg',
+        'notes',
     ];
 
     protected $casts = [
         'weight_kg' => 'decimal:2',
-        'unit_price' => 'decimal:2',
-        'total_price' => 'decimal:2',
     ];
 
-    public function invoice()
+    public function batch()
     {
-        return $this->belongsTo(FarmInvoice::class, 'farm_invoice_id');
+        return $this->belongsTo(FarmProductionBatch::class, 'farm_production_batch_id');
     }
 
     public function product()

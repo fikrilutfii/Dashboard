@@ -2,70 +2,76 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FarmInvoice extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'invoice_number', 'farm_customer_id', 'farm_coop_id',
-        'invoice_date', 'due_date', 'total_amount', 'paid_amount',
-        'status', 'payment_method', 'notes',
+        'invoice_number',
+        'farm_sender_id',
+        'farm_customer_id',
+        'invoice_date',
+        'due_date',
+        'total_amount',
+        'paid_amount',
+        'remaining_amount',
+        'status',
+        'payment_method',
+        'notes',
     ];
 
     protected $casts = [
         'invoice_date' => 'date',
-        'due_date'     => 'date',
+        'due_date' => 'date',
         'total_amount' => 'decimal:2',
-        'paid_amount'  => 'decimal:2',
+        'paid_amount' => 'decimal:2',
+        'remaining_amount' => 'decimal:2',
     ];
 
-    public function customer(): BelongsTo
+    public function sender()
+    {
+        return $this->belongsTo(FarmSender::class, 'farm_sender_id');
+    }
+
+    public function customer()
     {
         return $this->belongsTo(FarmCustomer::class, 'farm_customer_id');
     }
 
-    public function coop(): BelongsTo
+    public function items()
     {
-        return $this->belongsTo(FarmCoop::class, 'farm_coop_id');
+        return $this->hasMany(FarmInvoiceItem::class, 'farm_invoice_id');
     }
 
-    public function items(): HasMany
+    public function payments()
     {
-        return $this->hasMany(FarmInvoiceItem::class);
+        return $this->hasMany(FarmInvoicePayment::class, 'farm_invoice_id');
     }
 
-    public function harvestSales(): HasMany
+    public function transportation()
     {
-        return $this->hasMany(FarmHarvestSale::class, 'farm_invoice_id');
+        return $this->hasOne(FarmTransportation::class, 'farm_invoice_id');
     }
 
-    public function getRemainingAmountAttribute(): float
+    // Recalculate paid_amount and status from payments
+    public function recalculatePayments()
     {
-        return max(0, (float)$this->total_amount - (float)$this->paid_amount);
-    }
-
-    public function getStatusLabelAttribute(): string
-    {
-        return match($this->status) {
-            'lunas'      => 'Lunas',
-            'sebagian'   => 'Sebagian',
-            'belum_lunas'=> 'Belum Lunas',
-            default      => ucfirst($this->status),
-        };
-    }
-
-    public function getStatusColorAttribute(): string
-    {
-        return match($this->status) {
-            'lunas'      => 'emerald',
-            'sebagian'   => 'amber',
-            'belum_lunas'=> 'rose',
-            default      => 'zinc',
-        };
+        $totalPaid = $this->payments()->sum('amount');
+        $this->paid_amount = $totalPaid;
+        $this->remaining_amount = max(0, $this->total_amount - $totalPaid);
+        
+        if ($this->remaining_amount <= 0 && $this->total_amount > 0) {
+            $this->status = 'lunas';
+        } elseif ($this->paid_amount > 0) {
+            $this->status = 'sebagian';
+        } else {
+            $this->status = 'belum_lunas';
+        }
+        
+        $this->save();
     }
 }

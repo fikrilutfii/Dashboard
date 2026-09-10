@@ -1,138 +1,176 @@
-<x-farm-layout title="Faktur Penjualan Peternakan" subtitle="Daftar & Pengelolaan Faktur Penjualan Panen Ayam">
-    <x-slot name="headerActions">
-        <a href="{{ route('farm.invoices.create') }}" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 text-sm shadow">
+<x-farm.layout title="Faktur Penjualan" subtitle="Kelola faktur penjualan ayam potong & karkas">
+
+    <x-slot:headerActions>
+        <a href="{{ route('farm.invoices.create') }}" class="ios-btn ios-btn-primary">
             + Buat Faktur Baru
         </a>
-    </x-slot>
+    </x-slot:headerActions>
 
-    {{-- Stat Cards --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <p class="text-xs font-semibold text-gray-500 uppercase">Total Faktur</p>
-            <h4 class="text-xl font-bold text-gray-800 mt-1">{{ number_format($stats['total']) }}</h4>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <p class="text-xs font-semibold text-gray-500 uppercase">Belum Lunas</p>
-            <h4 class="text-xl font-bold text-amber-600 mt-1">{{ number_format($stats['belum_lunas']) }}</h4>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <p class="text-xs font-semibold text-gray-500 uppercase">Faktur Lunas</p>
-            <h4 class="text-xl font-bold text-emerald-600 mt-1">{{ number_format($stats['lunas']) }}</h4>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <p class="text-xs font-semibold text-gray-500 uppercase">Total Sisa Piutang</p>
-            <h4 class="text-xl font-bold text-red-600 mt-1">Rp {{ number_format($stats['outstanding'], 0, ',', '.') }}</h4>
-        </div>
+    <!-- Filter & Search Bar -->
+    <div class="ios-card" style="padding: 16px 20px; margin-bottom: 20px;">
+        <form method="GET" action="{{ route('farm.invoices.index') }}" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 200px;">
+                <input type="text" name="search" value="{{ request('search') }}" class="ios-input" placeholder="Cari No. Faktur atau Nama Customer...">
+            </div>
+
+            <div style="width: 170px;">
+                <select name="status" class="ios-input">
+                    <option value="">Semua Status</option>
+                    <option value="belum_lunas" {{ request('status') === 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
+                    <option value="sebagian" {{ request('status') === 'sebagian' ? 'selected' : '' }}>Sebagian (Cicilan)</option>
+                    <option value="lunas" {{ request('status') === 'lunas' ? 'selected' : '' }}>Lunas</option>
+                </select>
+            </div>
+
+            <div style="width: 190px;">
+                <select name="sender_id" class="ios-input">
+                    <option value="">Semua Pengirim</option>
+                    @foreach($senders as $s)
+                    <option value="{{ $s->id }}" {{ request('sender_id') == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <button type="submit" class="ios-btn ios-btn-secondary">Filter</button>
+            @if(request()->hasAny(['search', 'status', 'sender_id', 'start_date', 'end_date']))
+            <a href="{{ route('farm.invoices.index') }}" class="ios-btn ios-btn-secondary" style="color: #71717a;">Reset</a>
+            @endif
+        </form>
     </div>
 
-    {{-- Card Main --}}
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" x-data="{ openPaymentModal: false, activeInvoiceId: null, activeInvoiceNum: '', activeRemaining: 0 }">
-        {{-- Filter Section --}}
-        <div class="p-4 bg-gray-50 border-b border-gray-200">
-            <form method="GET" action="{{ route('farm.invoices.index') }}" class="flex flex-wrap gap-3 items-center">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari No. Faktur / Pembeli..."
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary-500 w-full sm:w-64">
-
-                <select name="status" class="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-                    <option value="">-- Semua Status --</option>
-                    <option value="belum_lunas" @selected(request('status')=='belum_lunas')>Belum Lunas</option>
-                    <option value="sebagian" @selected(request('status')=='sebagian')>Bayar Sebagian</option>
-                    <option value="lunas" @selected(request('status')=='lunas')>Lunas</option>
-                </select>
-
-                <input type="date" name="date_from" value="{{ request('date_from') }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-                <input type="date" name="date_to" value="{{ request('date_to') }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-
-                <button type="submit" class="bg-primary-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-primary-700 text-sm">Filter</button>
-                @if(request('search') || request('status') || request('date_from') || request('date_to'))
-                    <a href="{{ route('farm.invoices.index') }}" class="text-gray-500 hover:underline text-sm ml-1">Reset</a>
-                @endif
-            </form>
-        </div>
-
-        {{-- Table --}}
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm border-collapse">
+    <!-- Invoice Table -->
+    <div class="ios-card" style="padding: 20px 24px;">
+        <div style="overflow-x: auto;">
+            <table class="ios-table">
                 <thead>
-                    <tr class="bg-gray-100 border-b border-gray-200 text-xs text-gray-600 uppercase font-semibold">
-                        <th class="p-3 text-left">No. Faktur</th>
-                        <th class="p-3 text-left">Tanggal</th>
-                        <th class="p-3 text-left">Pembeli</th>
-                        <th class="p-3 text-left">Kandang</th>
-                        <th class="p-3 text-right">Total Tagihan</th>
-                        <th class="p-3 text-right">Terbayar</th>
-                        <th class="p-3 text-right">Sisa Piutang</th>
-                        <th class="p-3 text-center">Status</th>
-                        <th class="p-3 text-center">Aksi</th>
+                    <tr>
+                        <th>No. Faktur</th>
+                        <th>Tanggal</th>
+                        <th>Pengirim Faktur</th>
+                        <th>Customer</th>
+                        <th style="text-align: right;">Total Faktur</th>
+                        <th style="text-align: right;">Terbayar</th>
+                        <th style="text-align: right;">Sisa Tagihan</th>
+                        <th style="text-align: center;">Status</th>
+                        <th style="text-align: right;">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
+                <tbody>
                     @forelse($invoices as $inv)
-                    @php $remaining = $inv->total_amount - $inv->paid_amount; @endphp
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-3 font-semibold font-mono text-primary-600">
-                            <a href="{{ route('farm.invoices.show', $inv) }}">{{ $inv->invoice_number }}</a>
+                    <tr>
+                        <td>
+                            <a href="{{ route('farm.invoices.show', $inv->id) }}" style="font-weight: 700; color: #09090b; text-decoration: none;">
+                                {{ $inv->invoice_number }}
+                            </a>
                         </td>
-                        <td class="p-3 text-gray-600 text-xs">{{ \Carbon\Carbon::parse($inv->invoice_date)->format('d/m/Y') }}</td>
-                        <td class="p-3 font-medium">{{ $inv->customer->name ?? '-' }}</td>
-                        <td class="p-3 text-xs">{{ $inv->coop->name ?? '-' }}</td>
-                        <td class="p-3 text-right font-mono font-bold">Rp {{ number_format($inv->total_amount, 0, ',', '.') }}</td>
-                        <td class="p-3 text-right font-mono text-green-600">Rp {{ number_format($inv->paid_amount, 0, ',', '.') }}</td>
-                        <td class="p-3 text-right font-mono font-bold {{ $remaining > 0 ? 'text-red-600' : 'text-green-600' }}">Rp {{ number_format($remaining, 0, ',', '.') }}</td>
-                        <td class="p-3 text-center">
+                        <td style="font-size: 12.5px; color: #71717a;">{{ $inv->invoice_date->format('d/m/Y') }}</td>
+                        <td style="font-weight: 600; color: #a37f38; font-size: 12.5px;">{{ $inv->sender->name ?? 'Default' }}</td>
+                        <td style="font-weight: 600; color: #09090b;">{{ $inv->customer->name ?? 'N/A' }}</td>
+                        <td style="text-align: right; font-weight: 700;">Rp {{ number_format($inv->total_amount, 0, ',', '.') }}</td>
+                        <td style="text-align: right; font-weight: 600; color: #10b981;">Rp {{ number_format($inv->paid_amount, 0, ',', '.') }}</td>
+                        <td style="text-align: right; font-weight: 800; color: {{ $inv->remaining_amount > 0 ? '#d97706' : '#10b981' }};">
+                            Rp {{ number_format($inv->remaining_amount, 0, ',', '.') }}
+                        </td>
+                        <td style="text-align: center;">
                             @if($inv->status === 'lunas')
-                                <span class="bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-full font-bold uppercase">Lunas</span>
+                            <span class="badge badge-green"><span class="badge-dot"></span> Lunas</span>
                             @elseif($inv->status === 'sebagian')
-                                <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-bold uppercase">Sebagian</span>
+                            <span class="badge badge-amber"><span class="badge-dot"></span> Sebagian</span>
                             @else
-                                <span class="bg-red-100 text-red-800 text-xs px-2.5 py-1 rounded-full font-bold uppercase">Belum Lunas</span>
+                            <span class="badge badge-red"><span class="badge-dot"></span> Belum Lunas</span>
                             @endif
                         </td>
-                        <td class="p-3 text-center">
-                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                                <a href="{{ route('farm.invoices.show', $inv) }}" class="text-blue-600 hover:underline text-xs border border-blue-200 px-2 py-1 rounded bg-blue-50">Lihat</a>
-                                @if($inv->status !== 'lunas')
-                                <button type="button" @click="openPaymentModal = true; activeInvoiceId = {{ $inv->id }}; activeInvoiceNum = '{{ $inv->invoice_number }}'; activeRemaining = {{ $remaining }};"
-                                    class="text-green-600 hover:underline text-xs border border-green-200 px-2 py-1 rounded bg-green-50">+ Bayar</button>
+                        <td style="text-align: right;">
+                            <div style="display: flex; gap: 6px; justify-content: flex-end;" x-data="{ openPayModal: false }">
+                                @if($inv->remaining_amount > 0)
+                                <button @click="openPayModal = true" class="ios-btn ios-btn-gold" style="padding: 6px 12px; font-size: 11.5px;">
+                                    Catat Bayar
+                                </button>
                                 @endif
-                                <a href="{{ route('farm.invoices.print', $inv) }}" target="_blank" class="text-gray-700 hover:underline text-xs border border-gray-300 px-2 py-1 rounded bg-gray-50">Cetak</a>
-                                <a href="{{ route('farm.invoices.edit', $inv) }}" class="text-amber-600 hover:underline text-xs border border-amber-200 px-2 py-1 rounded bg-amber-50">Edit</a>
+
+                                <a href="{{ route('farm.invoices.export-excel', $inv->id) }}" class="ios-btn ios-btn-secondary" style="padding: 6px 10px; font-size: 11.5px;" title="Export Excel">
+                                    Excel
+                                </a>
+
+                                <a href="{{ route('farm.invoices.show', $inv->id) }}" class="ios-btn ios-btn-secondary" style="padding: 6px 10px; font-size: 11.5px;">
+                                    Detail
+                                </a>
+
+                                <a href="{{ route('farm.invoices.edit', $inv->id) }}" class="ios-btn ios-btn-secondary" style="padding: 6px 10px; font-size: 11.5px;">
+                                    Edit
+                                </a>
+
+                                <!-- Modal Catat Bayar / Cicilan -->
+                                <div x-show="openPayModal" class="modal-backdrop" x-cloak>
+                                    <div class="modal-content" @click.away="openPayModal = false">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                            <div>
+                                                <h3 style="font-size: 17px; font-weight: 800; color: #09090b; margin: 0;">Catat Pembayaran / Cicilan</h3>
+                                                <p style="font-size: 12.5px; color: #71717a; margin: 2px 0 0;">Faktur: {{ $inv->invoice_number }} ({{ $inv->customer->name ?? '' }})</p>
+                                            </div>
+                                            <button @click="openPayModal = false" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #71717a;">&times;</button>
+                                        </div>
+
+                                        <div style="background: #f4f4f6; border-radius: 14px; padding: 14px 16px; margin-bottom: 18px; display: flex; justify-content: space-between;">
+                                            <div>
+                                                <div style="font-size: 11px; color: #71717a; font-weight: 600; text-transform: uppercase;">Total Faktur</div>
+                                                <div style="font-size: 15px; font-weight: 800;">Rp {{ number_format($inv->total_amount, 0, ',', '.') }}</div>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <div style="font-size: 11px; color: #71717a; font-weight: 600; text-transform: uppercase;">Sisa Tagihan</div>
+                                                <div style="font-size: 15px; font-weight: 800; color: #d97706;">Rp {{ number_format($inv->remaining_amount, 0, ',', '.') }}</div>
+                                            </div>
+                                        </div>
+
+                                        <form method="POST" action="{{ route('farm.invoices.payment.store', $inv->id) }}">
+                                            @csrf
+                                            <div style="margin-bottom: 14px;">
+                                                <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Tanggal Bayar</label>
+                                                <input type="date" name="payment_date" value="{{ date('Y-m-d') }}" class="ios-input" required>
+                                            </div>
+
+                                            <div style="margin-bottom: 14px;">
+                                                <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Nominal Pembayaran (Rp)</label>
+                                                <input type="number" name="amount" value="{{ $inv->remaining_amount }}" max="{{ $inv->remaining_amount }}" min="1" step="any" class="ios-input" required>
+                                                <div style="font-size: 11px; color: #71717a; margin-top: 4px;">Isi sesuai nominal cicilan atau biarkan penuh untuk pelunasan.</div>
+                                            </div>
+
+                                            <div style="margin-bottom: 14px;">
+                                                <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Metode Pembayaran</label>
+                                                <select name="payment_method" class="ios-input" required>
+                                                    <option value="Transfer Bank">Transfer Bank</option>
+                                                    <option value="Tunai">Tunai / Cash</option>
+                                                    <option value="Giro / Cek">Giro / Cek</option>
+                                                </select>
+                                            </div>
+
+                                            <div style="margin-bottom: 20px;">
+                                                <label style="display: block; font-size: 12px; font-weight: 700; color: #09090b; margin-bottom: 6px;">Catatan / No Ref (Opsional)</label>
+                                                <input type="text" name="notes" placeholder="Contoh: Transfer BCA Ref #88921" class="ios-input">
+                                            </div>
+
+                                            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                                                <button type="button" @click="openPayModal = false" class="ios-btn ios-btn-secondary">Batal</button>
+                                                <button type="submit" class="ios-btn ios-btn-primary">Simpan Pembayaran</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="9" class="p-6 text-center text-gray-500">Belum ada faktur penjualan.</td></tr>
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: #a1a1aa; padding: 32px;">Belum ada data faktur penjualan</td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        @if($invoices->hasPages())
-        <div class="p-4 border-t border-gray-200">{{ $invoices->links() }}</div>
-        @endif
-
-        {{-- Payment Modal --}}
-        <div x-show="openPaymentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" x-cloak>
-            <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 mx-4">
-                <h3 class="text-lg font-bold text-gray-900 mb-1">Input Pembayaran Faktur</h3>
-                <p class="text-xs text-gray-500 mb-4">No. Faktur: <strong x-text="activeInvoiceNum" class="text-primary-600"></strong></p>
-                <form :action="'{{ url('/farm/invoices') }}/' + activeInvoiceId + '/payment'" method="POST">
-                    @csrf
-                    <div class="mb-4">
-                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Sisa Piutang</label>
-                        <div class="text-xl font-bold text-red-600 font-mono" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(activeRemaining)"></div>
-                    </div>
-                    <div class="mb-5">
-                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nominal Pembayaran (Rp) <span class="text-red-500">*</span></label>
-                        <input type="number" name="amount" required :max="activeRemaining" :value="activeRemaining"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500">
-                    </div>
-                    <div class="flex justify-end gap-2">
-                        <button type="button" @click="openPaymentModal = false" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100">Batal</button>
-                        <button type="submit" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 text-sm">Simpan Pembayaran</button>
-                    </div>
-                </form>
-            </div>
+        <div style="margin-top: 20px;">
+            {{ $invoices->links() }}
         </div>
     </div>
-</x-farm-layout>
+
+</x-farm.layout>
