@@ -136,6 +136,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // 4. Transportasi
         Route::resource('transportations', FarmTransportationController::class);
+        Route::resource('transportation', FarmTransportationController::class);
 
         // 5. Produksi (Operasional RPA)
         Route::resource('production', FarmProductionController::class);
@@ -170,6 +171,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // 8. Master Data
         Route::get('/master-data', [FarmMasterDataController::class, 'index'])->name('master_data.index');
+        Route::get('/master-data/customers-tab', [FarmMasterDataController::class, 'index'])->name('master.customers.index');
+        Route::get('/master-data/suppliers-tab', [FarmMasterDataController::class, 'index'])->name('master.suppliers.index');
+        Route::get('/master-data/coops-tab', [FarmMasterDataController::class, 'index'])->name('master.coops.index');
         
         // Senders
         Route::post('/master-data/senders', [FarmMasterDataController::class, 'storeSender'])->name('master_data.senders.store');
