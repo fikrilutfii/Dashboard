@@ -31,6 +31,7 @@ use App\Http\Controllers\Farm\FarmInvoiceController;
 use App\Http\Controllers\Farm\FarmBillingController;
 use App\Http\Controllers\Farm\FarmTransportationController;
 use App\Http\Controllers\Farm\FarmProductionController;
+use App\Http\Controllers\Farm\FarmOperationalController;
 use App\Http\Controllers\Farm\FarmExpenseController;
 use App\Http\Controllers\Farm\FarmPayrollController;
 use App\Http\Controllers\Farm\FarmMasterDataController;
@@ -138,6 +139,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // 5. Produksi (Operasional RPA)
         Route::resource('production', FarmProductionController::class);
+
+        // 5b. Operasional Kandang (Populasi, Pakan, Kesehatan, Produksi, Panen)
+        Route::resource('operational', FarmOperationalController::class)->parameters(['operational' => 'farmOperationalLog']);
+        Route::post('/operational/batch', [FarmOperationalController::class, 'storeBatch'])->name('operational.batch.store');
+        Route::post('/operational/batch/{farmBatch}/close', [FarmOperationalController::class, 'closeBatch'])->name('operational.batch.close');
+        
+        Route::post('/operational/feed', [FarmOperationalController::class, 'storeFeed'])->name('operational.feed.store');
+        Route::delete('/operational/feed/{farmFeedLog}', [FarmOperationalController::class, 'destroyFeed'])->name('operational.feed.destroy');
+        
+        Route::post('/operational/health', [FarmOperationalController::class, 'storeHealth'])->name('operational.health.store');
+        Route::delete('/operational/health/{farmHealthLog}', [FarmOperationalController::class, 'destroyHealth'])->name('operational.health.destroy');
+
+        Route::post('/operational/vaccine', [FarmOperationalController::class, 'storeVaccine'])->name('operational.vaccine.store');
+        Route::post('/operational/vaccine/{farmVaccineSchedule}/complete', [FarmOperationalController::class, 'completeVaccine'])->name('operational.vaccine.complete');
+        Route::delete('/operational/vaccine/{farmVaccineSchedule}', [FarmOperationalController::class, 'destroyVaccine'])->name('operational.vaccine.destroy');
+
+        Route::post('/operational/production', [FarmOperationalController::class, 'storeProduction'])->name('operational.production.store');
+        Route::delete('/operational/production/{farmProductionLog}', [FarmOperationalController::class, 'destroyProduction'])->name('operational.production.destroy');
+
+        Route::post('/operational/harvest', [FarmOperationalController::class, 'storeHarvest'])->name('operational.harvest.store');
+        Route::delete('/operational/harvest/{farmHarvestLog}', [FarmOperationalController::class, 'destroyHarvest'])->name('operational.harvest.destroy');
 
         // 6. Pengeluaran
         Route::resource('expenses', FarmExpenseController::class);
