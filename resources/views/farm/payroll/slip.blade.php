@@ -86,7 +86,7 @@
             <div>
                 <div>Pengelola RPA,</div>
                 <div style="margin-top: 54px; font-weight: 700; border-top: 1px solid #71717a; padding-top: 4px; min-width: 140px;">
-                    Asfour Broiler
+                    Pemotongan Ayam (RPA)
                 </div>
             </div>
         </div>

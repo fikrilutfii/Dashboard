@@ -1,4 +1,4 @@
-<x-farm.layout title="Dashboard" subtitle="Ringkasan Kinerja Divisi Pemotongan Ayam (Asfour Broiler)">
+<x-farm.layout title="Dashboard" subtitle="Ringkasan Kinerja Divisi Pemotongan Ayam (RPA)">
 
     <!-- Top 4 Financial Metric Cards -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;">

@@ -24,13 +24,42 @@
             $allowed = auth()->user()->allowed_division;
             $canPercetakan = $allowed === 'all' || $allowed === 'percetakan';
             $canKonfeksi = $allowed === 'all' || $allowed === 'konfeksi';
+            $canPemotongan = $allowed === 'all' || $allowed === 'peternakan' || $allowed === 'pemotongan';
             $canPeternakan = $allowed === 'all' || $allowed === 'peternakan';
         @endphp
 
-        <!-- Divisi Peternakan & Pemotongan Ayam (Asfour Broiler) -->
+        <!-- Divisi Pemotongan Ayam (RPA) -->
+        <div class="relative group">
+            @if(!$canPemotongan)
+                <div onclick="showAccessDenied('Pemotongan Ayam')" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm rounded-2xl cursor-pointer border-2 border-dashed border-gray-300">
+                    <div class="bg-red-500 text-white p-3 rounded-full shadow-lg mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <span class="text-sm font-black text-red-600 uppercase tracking-widest">Anda Tidak Memiliki Akses</span>
+                </div>
+            @endif
+            
+            <form method="POST" action="{{ route('division.set') }}">
+                @csrf
+                <input type="hidden" name="division" value="pemotongan">
+                <button type="submit" @disabled(!$canPemotongan) class="w-full text-left p-6 border-2 {{ $canPemotongan ? 'border-amber-100 hover:border-amber-600 hover:bg-amber-50 hover:shadow-xl' : 'border-gray-100 opacity-40' }} rounded-2xl transition-all duration-500 flex items-center">
+                    <div class="p-4 rounded-xl {{ $canPemotongan ? 'bg-amber-100 text-amber-600 group-hover:bg-amber-600 group-hover:text-white' : 'bg-gray-100 text-gray-400' }} transition-all duration-300 flex items-center justify-center w-14 h-14">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-1-4h.01M9 16h.01M9 12h.01M9 8h.01M15 16h.01M15 12h.01M15 8h.01"/></svg>
+                    </div>
+                    <div class="ml-5">
+                        <h3 class="text-xl font-bold text-gray-900">Pemotongan Ayam (RPA)</h3>
+                        <p class="text-sm text-gray-500">Penerimaan Ayam Hidup, Batch Potong, Breakdown Parting, Faktur Penjualan, Transportasi & Penggajian</p>
+                    </div>
+                </button>
+            </form>
+        </div>
+
+        <!-- Divisi Peternakan Ayam (Kandang) -->
         <div class="relative group">
             @if(!$canPeternakan)
-                <div onclick="showAccessDenied('Peternakan / Pemotongan Ayam')" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm rounded-2xl cursor-pointer border-2 border-dashed border-gray-300">
+                <div onclick="showAccessDenied('Peternakan Ayam')" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm rounded-2xl cursor-pointer border-2 border-dashed border-gray-300">
                     <div class="bg-red-500 text-white p-3 rounded-full shadow-lg mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd" />
@@ -43,13 +72,13 @@
             <form method="POST" action="{{ route('division.set') }}">
                 @csrf
                 <input type="hidden" name="division" value="peternakan">
-                <button type="submit" @disabled(!$canPeternakan) class="w-full text-left p-6 border-2 {{ $canPeternakan ? 'border-amber-100 hover:border-amber-600 hover:bg-amber-50 hover:shadow-xl' : 'border-gray-100 opacity-40' }} rounded-2xl transition-all duration-500 flex items-center">
-                    <div class="p-4 rounded-xl {{ $canPeternakan ? 'bg-amber-100 text-amber-600 group-hover:bg-amber-600 group-hover:text-white' : 'bg-gray-100 text-gray-400' }} transition-all duration-300 flex items-center justify-center w-14 h-14">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-1-4h.01M9 16h.01M9 12h.01M9 8h.01M15 16h.01M15 12h.01M15 8h.01"/></svg>
+                <button type="submit" @disabled(!$canPeternakan) class="w-full text-left p-6 border-2 {{ $canPeternakan ? 'border-emerald-100 hover:border-emerald-600 hover:bg-emerald-50 hover:shadow-xl' : 'border-gray-100 opacity-40' }} rounded-2xl transition-all duration-500 flex items-center">
+                    <div class="p-4 rounded-xl {{ $canPeternakan ? 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white' : 'bg-gray-100 text-gray-400' }} transition-all duration-300 flex items-center justify-center w-14 h-14">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                     </div>
                     <div class="ml-5">
-                        <h3 class="text-xl font-bold text-gray-900">Peternakan & Pemotongan Ayam</h3>
-                        <p class="text-sm text-gray-500">Asfour Broiler, Penerimaan Ayam Hidup, Hasil Parting, Faktur, Transportasi & Penggajian</p>
+                        <h3 class="text-xl font-bold text-gray-900">Peternakan Ayam (Kandang)</h3>
+                        <p class="text-sm text-gray-500">Manajemen Kandang Broiler & Layer, Populasi, Pemberian Pakan, FCR, Vaksinasi & Produksi Telur</p>
                     </div>
                 </button>
             </form>

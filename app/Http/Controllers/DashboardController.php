@@ -21,13 +21,17 @@ class DashboardController extends Controller
 
         $division = $request->session()->get('division');
 
-        if ($user->allowed_division !== 'all' && $user->allowed_division !== $division) {
+        if ($user->allowed_division !== 'all' && $user->allowed_division !== $division && !($user->allowed_division === 'peternakan' && ($division === 'pemotongan' || $division === 'peternakan'))) {
             $request->session()->forget('division');
             return redirect()->route('dashboard')->with('error', 'Anda tidak memiliki akses ke divisi tersebut.');
         }
 
-        if ($division === 'peternakan') {
+        if ($division === 'pemotongan') {
             return redirect()->route('farm.dashboard');
+        }
+
+        if ($division === 'peternakan') {
+            return redirect()->route('farm.operational.index');
         }
 
         // Inisialisasi variabel statistik default
@@ -127,20 +131,24 @@ class DashboardController extends Controller
     public function setDivision(Request $request)
     {
         $request->validate([
-            'division' => 'required|in:percetakan,konfeksi,peternakan',
+            'division' => 'required|in:percetakan,konfeksi,pemotongan,peternakan',
         ]);
 
         $user = $request->user();
 
         // Access Control
-        if ($user->allowed_division !== 'all' && $user->allowed_division !== $request->division) {
+        if ($user->allowed_division !== 'all' && $user->allowed_division !== $request->division && !($user->allowed_division === 'peternakan' && ($request->division === 'pemotongan' || $request->division === 'peternakan'))) {
             return back()->with('error_division', $request->division);
         }
 
         $request->session()->put('division', $request->division);
 
-        if ($request->division === 'peternakan') {
+        if ($request->division === 'pemotongan') {
             return redirect()->route('farm.dashboard');
+        }
+
+        if ($request->division === 'peternakan') {
+            return redirect()->route('farm.operational.index');
         }
 
         return redirect()->route('dashboard');

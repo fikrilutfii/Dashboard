@@ -16,7 +16,7 @@
                 <!-- Sender & Invoice Ident -->
                 <div>
                     <div style="font-size: 11px; font-weight: 700; color: #a37f38; text-transform: uppercase; letter-spacing: 0.08em;">Identitas Pengirim Faktur</div>
-                    <div style="font-size: 20px; font-weight: 800; color: #09090b; margin-top: 2px;">{{ $invoice->sender->name ?? 'Asfour Broiler' }}</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #09090b; margin-top: 2px;">{{ $invoice->sender->name ?? 'Pemotongan Ayam (RPA)' }}</div>
                     @if($invoice->sender)
                     <div style="font-size: 12.5px; color: #71717a; margin-top: 4px;">{{ $invoice->sender->address }}</div>
                     <div style="font-size: 12.5px; color: #71717a;">Telp: {{ $invoice->sender->phone ?? '-' }}</div>
