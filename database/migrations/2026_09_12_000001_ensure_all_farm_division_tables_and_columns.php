@@ -172,10 +172,10 @@ return new class extends Migration
         } else {
             Schema::table('farm_invoices', function (Blueprint $table) {
                 if (!Schema::hasColumn('farm_invoices', 'farm_sender_id')) {
-                    $table->foreignId('farm_sender_id')->nullable()->after('invoice_number');
+                    $table->foreignId('farm_sender_id')->nullable();
                 }
                 if (!Schema::hasColumn('farm_invoices', 'remaining_amount')) {
-                    $table->decimal('remaining_amount', 15, 2)->default(0)->after('paid_amount');
+                    $table->decimal('remaining_amount', 15, 2)->default(0);
                 }
             });
         }
@@ -198,16 +198,16 @@ return new class extends Migration
         } else {
             Schema::table('farm_invoice_items', function (Blueprint $table) {
                 if (!Schema::hasColumn('farm_invoice_items', 'farm_product_id')) {
-                    $table->foreignId('farm_product_id')->nullable()->after('farm_invoice_id');
+                    $table->foreignId('farm_product_id')->nullable();
                 }
                 if (!Schema::hasColumn('farm_invoice_items', 'product_code')) {
-                    $table->string('product_code')->nullable()->after('farm_product_id');
+                    $table->string('product_code')->nullable();
                 }
                 if (!Schema::hasColumn('farm_invoice_items', 'weight_kg')) {
-                    $table->decimal('weight_kg', 10, 2)->default(0)->after('item_name');
+                    $table->decimal('weight_kg', 10, 2)->default(0);
                 }
                 if (!Schema::hasColumn('farm_invoice_items', 'qty_ekor')) {
-                    $table->integer('qty_ekor')->default(0)->after('weight_kg');
+                    $table->integer('qty_ekor')->default(0);
                 }
             });
         }

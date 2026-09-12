@@ -35,14 +35,14 @@ CREATE TABLE IF NOT EXISTS `farm_products` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Tambah Kolom ke farm_invoices (abaikan error jika kolom sudah ada)
-ALTER TABLE `farm_invoices` ADD `farm_sender_id` bigint(20) UNSIGNED DEFAULT NULL AFTER `invoice_number`;
-ALTER TABLE `farm_invoices` ADD `remaining_amount` decimal(15,2) NOT NULL DEFAULT 0.00 AFTER `paid_amount`;
+ALTER TABLE `farm_invoices` ADD `farm_sender_id` bigint(20) UNSIGNED DEFAULT NULL;
+ALTER TABLE `farm_invoices` ADD `remaining_amount` decimal(15,2) NOT NULL DEFAULT 0.00;
 
 -- 4. Tambah Kolom ke farm_invoice_items
-ALTER TABLE `farm_invoice_items` ADD `farm_product_id` bigint(20) UNSIGNED DEFAULT NULL AFTER `farm_invoice_id`;
-ALTER TABLE `farm_invoice_items` ADD `product_code` varchar(255) DEFAULT NULL AFTER `farm_product_id`;
-ALTER TABLE `farm_invoice_items` ADD `weight_kg` decimal(10,2) NOT NULL DEFAULT 0.00 AFTER `item_name`;
-ALTER TABLE `farm_invoice_items` ADD `qty_ekor` int(11) NOT NULL DEFAULT 0 AFTER `weight_kg`;
+ALTER TABLE `farm_invoice_items` ADD `farm_product_id` bigint(20) UNSIGNED DEFAULT NULL;
+ALTER TABLE `farm_invoice_items` ADD `product_code` varchar(255) DEFAULT NULL;
+ALTER TABLE `farm_invoice_items` ADD `weight_kg` decimal(10,2) NOT NULL DEFAULT 0.00;
+ALTER TABLE `farm_invoice_items` ADD `qty_ekor` int(11) NOT NULL DEFAULT 0;
 
 -- 5. Buat Tabel farm_production_batches jika belum ada
 CREATE TABLE IF NOT EXISTS `farm_production_batches` (
