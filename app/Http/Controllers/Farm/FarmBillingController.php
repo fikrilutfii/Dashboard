@@ -15,7 +15,7 @@ class FarmBillingController extends Controller
         $today = Carbon::today();
 
         $query = FarmInvoice::with(['customer', 'sender', 'payments'])
-            ->where('remaining_amount', '>', 0);
+            ->whereIn('status', ['belum_lunas', 'sebagian']);
 
         // Filter by Customer
         if ($request->filled('customer_id')) {
@@ -48,7 +48,9 @@ class FarmBillingController extends Controller
         $invoices = $query->orderBy('invoice_date', 'asc')->paginate(20);
 
         // Calculate Aging Summary Metrics across all unpaid invoices
-        $allUnpaid = FarmInvoice::where('remaining_amount', '>', 0)->get();
+        $allUnpaid = FarmInvoice::whereIn('status', ['belum_lunas', 'sebagian'])
+            ->select('id', 'invoice_date', 'total_amount', 'paid_amount')
+            ->get();
 
         $aging0to7 = 0;
         $aging8to14 = 0;
@@ -57,18 +59,22 @@ class FarmBillingController extends Controller
 
         foreach ($allUnpaid as $inv) {
             $days = $today->diffInDays($inv->invoice_date);
+            $remaining = max(0, (float) $inv->total_amount - (float) $inv->paid_amount);
             if ($days <= 7) {
-                $aging0to7 += $inv->remaining_amount;
+                $aging0to7 += $remaining;
             } elseif ($days <= 14) {
-                $aging8to14 += $inv->remaining_amount;
+                $aging8to14 += $remaining;
             } elseif ($days <= 30) {
-                $aging15to30 += $inv->remaining_amount;
+                $aging15to30 += $remaining;
             } else {
-                $agingOver30 += $inv->remaining_amount;
+                $agingOver30 += $remaining;
             }
         }
 
-        $totalReceivables = $allUnpaid->sum('remaining_amount');
+        $totalReceivables = $allUnpaid->sum(function ($inv) {
+            return max(0, (float) $inv->total_amount - (float) $inv->paid_amount);
+        });
+
         $customers = FarmCustomer::orderBy('name')->get();
 
         return view('farm.billing.index', compact(

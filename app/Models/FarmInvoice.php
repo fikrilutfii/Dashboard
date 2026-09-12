@@ -29,8 +29,10 @@ class FarmInvoice extends Model
         'due_date' => 'date',
         'total_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
-        'remaining_amount' => 'decimal:2',
     ];
+
+    // Append remaining_amount as virtual attribute
+    protected $appends = ['remaining_amount'];
 
     public function sender()
     {
@@ -57,21 +59,43 @@ class FarmInvoice extends Model
         return $this->hasOne(FarmTransportation::class, 'farm_invoice_id');
     }
 
+    // Always compute remaining_amount from total_amount - paid_amount
+    // This works whether or not the remaining_amount column exists in the DB
+    public function getRemainingAmountAttribute()
+    {
+        // If the column exists in DB attributes, use it
+        $raw = $this->attributes['remaining_amount'] ?? null;
+        if ($raw !== null && $raw !== '' && (float) $raw > 0) {
+            return (float) $raw;
+        }
+        // Otherwise compute from total_amount - paid_amount
+        return max(0, (float) ($this->attributes['total_amount'] ?? 0) - (float) ($this->attributes['paid_amount'] ?? 0));
+    }
+
     // Recalculate paid_amount and status from payments
     public function recalculatePayments()
     {
         $totalPaid = $this->payments()->sum('amount');
         $this->paid_amount = $totalPaid;
-        $this->remaining_amount = max(0, $this->total_amount - $totalPaid);
-        
-        if ($this->remaining_amount <= 0 && $this->total_amount > 0) {
+
+        $remaining = max(0, $this->total_amount - $totalPaid);
+
+        // Only write remaining_amount if the column exists
+        try {
+            $this->remaining_amount = $remaining;
+        } catch (\Exception $e) {
+            // Column doesn't exist, skip
+        }
+
+        if ($remaining <= 0 && $this->total_amount > 0) {
             $this->status = 'lunas';
         } elseif ($this->paid_amount > 0) {
             $this->status = 'sebagian';
         } else {
             $this->status = 'belum_lunas';
         }
-        
+
         $this->save();
     }
 }
+
