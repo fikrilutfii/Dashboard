@@ -124,7 +124,7 @@
                     <input type="text" name="items[${rowCount}][item_name]" class="w-full border rounded px-2 py-1" placeholder="Nama barang..." required>
                 </td>
                 <td class="p-1 border">
-                    <input type="text" inputmode="decimal" name="items[${rowCount}][quantity]" id="qty-${rowCount}" value="1" pattern="[0-9]+([.,][0-9]{1,3})?" title="Gunakan angka positif hingga 3 desimal, misalnya 1,5 atau 1.5" class="w-full border rounded px-2 py-1 text-center" oninput="calcRow(${rowCount})" required>
+                    <input type="text" inputmode="decimal" name="items[${rowCount}][quantity]" id="qty-${rowCount}" value="1" pattern="[0-9]+([.,][0-9]{1,3})?" title="Jumlah barang" class="w-full border rounded px-2 py-1 text-center" oninput="calcRow(${rowCount})" required>
                 </td>
                 <td class="p-1 border">
                     <input type="text" inputmode="decimal" name="items[${rowCount}][unit_price]" id="price-${rowCount}" pattern="[0-9]+([.,][0-9]{1,2})?" title="Gunakan harga hingga 2 desimal, misalnya 507,20 atau 507.20" class="w-full border rounded px-2 py-1 text-right" placeholder="0" oninput="calcRow(${rowCount})" required>

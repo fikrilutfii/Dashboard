@@ -72,6 +72,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('invoices/{invoice}/print-combined', [InvoiceController::class, 'printCombined'])->name('invoices.print-combined');
     Route::get('invoices/report/print', [InvoiceController::class, 'printReport'])->name('invoices.printReport');
     Route::put('invoices/{invoice}/status', [InvoiceController::class, 'updateStatus'])->name('invoices.update-status');
+    Route::post('invoices/{invoice}/payment', [InvoiceController::class, 'storePayment'])->name('invoices.payment.store');
+    Route::delete('invoices/{invoice}/payment/{payment}', [InvoiceController::class, 'destroyPayment'])->name('invoices.payment.destroy');
 
     Route::resource('purchases', PurchaseController::class);
     Route::put('purchases/{purchase}/status', [PurchaseController::class, 'updateStatus'])->name('purchases.update-status');

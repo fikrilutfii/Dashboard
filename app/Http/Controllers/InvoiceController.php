@@ -6,7 +6,10 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\InvoiceLog;
+use App\Models\InvoicePayment;
+use App\Models\Transaction;
 use App\Models\Product; // Import Product
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,18 +17,19 @@ use Illuminate\Support\Facades\DB;
 class InvoiceController extends Controller
 {
     /**
-     * Display a listing - Simplified Filters
+     * Display a listing - Filters & Metrics
      */
     public function index(Request $request)
     {
-        $query = Invoice::with('customer')->latest();
+        $division = $request->input('division', session('division', 'percetakan'));
+        $query = Invoice::with(['customer', 'payments', 'items'])->latest('invoice_date');
 
         // Division Filter
-        if ($request->has('division') && $request->division != '') {
-            $query->where('division', $request->division);
+        if ($division) {
+            $query->where('division', $division);
         }
 
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = trim($request->search);
             $query->where(function($subQ) use ($search) {
                 $subQ->where('faktur_number', 'like', '%' . $search . '%')
@@ -41,16 +45,75 @@ class InvoiceController extends Controller
             });
         }
 
-        if ($request->has('status') && $request->status != '') {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        if ($request->has('date_filter') && $request->date_filter != '') {
-             $query->whereDate('invoice_date', $request->date_filter);
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $filterDateBy = $request->input('filter_date_by', 'invoice_date');
+
+        if ($startDate || $endDate) {
+            if ($filterDateBy === 'payment_date') {
+                $query->whereHas('payments', function ($pq) use ($startDate, $endDate) {
+                    if ($startDate && $endDate) {
+                        $pq->whereBetween('payment_date', [$startDate, $endDate]);
+                    } elseif ($startDate) {
+                        $pq->whereDate('payment_date', '>=', $startDate);
+                    } elseif ($endDate) {
+                        $pq->whereDate('payment_date', '<=', $endDate);
+                    }
+                });
+            } else {
+                if ($startDate && $endDate) {
+                    $query->whereBetween('invoice_date', [$startDate, $endDate]);
+                } elseif ($startDate) {
+                    $query->whereDate('invoice_date', '>=', $startDate);
+                } elseif ($endDate) {
+                    $query->whereDate('invoice_date', '<=', $endDate);
+                }
+            }
+        } elseif ($request->filled('date_filter')) {
+            $query->whereDate('invoice_date', $request->date_filter);
         }
 
-        $invoices = $query->paginate(10);
-        return view('invoices.index', compact('invoices'));
+        // Calculate Metrics across the filtered scope
+        $metricsQuery = clone $query;
+        $allInvoices = $metricsQuery->get();
+
+        $totalPenjualan = $allInvoices->sum('total_amount');
+        $totalPelunasan = $allInvoices->sum(function($inv) use ($startDate, $endDate, $filterDateBy) {
+            if ($filterDateBy === 'payment_date' && ($startDate || $endDate)) {
+                return $inv->payments->filter(function($p) use ($startDate, $endDate) {
+                    $d = $p->payment_date ? $p->payment_date->format('Y-m-d') : null;
+                    if (!$d) return false;
+                    if ($startDate && $endDate) return $d >= $startDate && $d <= $endDate;
+                    if ($startDate) return $d >= $startDate;
+                    return $d <= $endDate;
+                })->sum('amount');
+            }
+            return (float) $inv->paid_amount;
+        });
+        $totalSisaTagihan = $allInvoices->sum(function($inv) {
+            return max(0, (float)$inv->total_amount - (float)$inv->paid_amount);
+        });
+        $countLunas = $allInvoices->where('status', 'lunas')->count();
+        $countBelumLunas = $allInvoices->where('status', '!=', 'lunas')->count();
+
+        $invoices = $query->paginate(15)->withQueryString();
+
+        return view('invoices.index', compact(
+            'invoices',
+            'division',
+            'totalPenjualan',
+            'totalPelunasan',
+            'totalSisaTagihan',
+            'countLunas',
+            'countBelumLunas',
+            'startDate',
+            'endDate',
+            'filterDateBy'
+        ));
     }
 
     public function create()
@@ -158,11 +221,6 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.index')->with('success', 'Invoice created successfully.');
     }
 
-    public function show(Invoice $invoice)
-    {
-        $invoice->load(['items', 'logs', 'customer']);
-        return view('invoices.show', compact('invoice'));
-    }
 
     public function edit(Invoice $invoice)
     {
@@ -269,7 +327,12 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.index')->with('success', 'Invoice updated successfully.');
     }
 
-    // Toggle Status Method
+    public function show(Invoice $invoice)
+    {
+        $invoice->load(['items', 'logs', 'customer', 'payments']);
+        return view('invoices.show', compact('invoice'));
+    }
+
     // Toggle Status Method
     public function updateStatus(Request $request, Invoice $invoice)
     {
@@ -280,25 +343,140 @@ class InvoiceController extends Controller
         }
 
         DB::transaction(function() use ($invoice, $status) {
-            $invoice->update(['status' => $status]);
+            if ($status === 'lunas') {
+                $remaining = max(0, (float)$invoice->total_amount - (float)$invoice->paid_amount);
+                if ($remaining > 0) {
+                    $payment = InvoicePayment::create([
+                        'invoice_id'       => $invoice->id,
+                        'payment_date'     => now()->toDateString(),
+                        'amount'           => $remaining,
+                        'payment_method'   => $invoice->payment_method === 'credit' ? 'Transfer Bank' : 'Tunai',
+                        'notes'            => 'Pelunasan langsung dari tombol status',
+                    ]);
+
+                    Transaction::create([
+                        'type'           => 'credit',
+                        'amount'         => $remaining,
+                        'category'       => 'pelunasan_faktur',
+                        'reference_type' => InvoicePayment::class,
+                        'reference_id'   => $payment->id,
+                        'description'    => 'Pelunasan Faktur #' . ($invoice->faktur_number ?? $invoice->invoice_number) . ' - ' . ($invoice->customer->name ?? 'Customer'),
+                        'date'           => now()->toDateString(),
+                        'division'       => $invoice->division,
+                        'entity'         => $invoice->entity ?? $invoice->division,
+                    ]);
+                }
+                $invoice->recalculatePayments();
+            } else {
+                foreach ($invoice->payments as $pay) {
+                    Transaction::where('reference_type', InvoicePayment::class)
+                        ->where('reference_id', $pay->id)
+                        ->delete();
+                    $pay->delete();
+                }
+                $invoice->update([
+                    'paid_amount' => 0,
+                    'status'      => 'belum_lunas',
+                ]);
+                $invoice->syncToReceivable();
+            }
 
             InvoiceLog::create([
-                'invoice_id' => $invoice->id,
-                'user_id' => Auth::id(),
-                'action' => 'Status Changed',
+                'invoice_id'  => $invoice->id,
+                'user_id'     => Auth::id(),
+                'action'      => 'Status Changed',
                 'description' => 'Status changed to ' . ($status == 'lunas' ? 'Lunas' : 'Belum Lunas'),
             ]);
-
-            $invoice->load('customer');
-            $invoice->syncToReceivable();
         });
 
-        return back()->with('success', 'Invoice status updated.');
+        return back()->with('success', 'Status faktur berhasil diperbarui dan disinkronkan ke keuangan.');
+    }
+
+    public function storePayment(Request $request, Invoice $invoice)
+    {
+        $remaining = max(0, (float)$invoice->total_amount - (float)$invoice->paid_amount);
+
+        $validated = $request->validate([
+            'payment_date'     => 'required|date',
+            'amount'           => 'required|numeric|min:1|max:' . ($remaining > 0 ? $remaining : $invoice->total_amount),
+            'payment_method'   => 'required|string',
+            'reference_number' => 'nullable|string|max:100',
+            'notes'            => 'nullable|string|max:500',
+        ]);
+
+        DB::transaction(function () use ($invoice, $validated) {
+            $payment = InvoicePayment::create([
+                'invoice_id'       => $invoice->id,
+                'payment_date'     => $validated['payment_date'],
+                'amount'           => $validated['amount'],
+                'payment_method'   => $validated['payment_method'],
+                'reference_number' => $validated['reference_number'] ?? null,
+                'notes'            => $validated['notes'] ?? null,
+            ]);
+
+            $invoice->recalculatePayments();
+
+            Transaction::create([
+                'type'           => 'credit',
+                'amount'         => $validated['amount'],
+                'category'       => 'pelunasan_faktur',
+                'reference_type' => InvoicePayment::class,
+                'reference_id'   => $payment->id,
+                'description'    => 'Pelunasan Faktur #' . ($invoice->faktur_number ?? $invoice->invoice_number) . ' - ' . ($invoice->customer->name ?? 'Customer') . (!empty($validated['notes']) ? ' (' . $validated['notes'] . ')' : ''),
+                'date'           => $validated['payment_date'],
+                'division'       => $invoice->division,
+                'entity'         => $invoice->entity ?? $invoice->division,
+            ]);
+
+            InvoiceLog::create([
+                'invoice_id'  => $invoice->id,
+                'user_id'     => Auth::id(),
+                'action'      => 'Payment Recorded',
+                'description' => 'Pelunasan sebesar Rp ' . number_format($validated['amount'], 0, ',', '.') . ' dicatat (' . $validated['payment_method'] . ') pada tanggal ' . Carbon::parse($validated['payment_date'])->format('d/m/Y'),
+            ]);
+        });
+
+        return back()->with('success', 'Pelunasan faktur berhasil dicatat dan masuk ke Laporan Keuangan.');
+    }
+
+    public function destroyPayment(Invoice $invoice, InvoicePayment $payment)
+    {
+        if ($payment->invoice_id !== $invoice->id) {
+            abort(404);
+        }
+
+        DB::transaction(function () use ($invoice, $payment) {
+            Transaction::where('reference_type', InvoicePayment::class)
+                ->where('reference_id', $payment->id)
+                ->delete();
+
+            $amount = $payment->amount;
+            $payment->delete();
+
+            $invoice->recalculatePayments();
+
+            InvoiceLog::create([
+                'invoice_id'  => $invoice->id,
+                'user_id'     => Auth::id(),
+                'action'      => 'Payment Deleted',
+                'description' => 'Pembayaran pelunasan sebesar Rp ' . number_format($amount, 0, ',', '.') . ' dibatalkan/dihapus.',
+            ]);
+        });
+
+        return back()->with('success', 'Riwayat pembayaran berhasil dihapus.');
     }
 
     public function destroy(Invoice $invoice)
     {
         DB::transaction(function() use ($invoice) {
+            // Delete associated transactions & payments
+            foreach ($invoice->payments as $pay) {
+                Transaction::where('reference_type', InvoicePayment::class)
+                    ->where('reference_id', $pay->id)
+                    ->delete();
+                $pay->delete();
+            }
+
             // Revert stock
             foreach ($invoice->items as $oldItem) {
                 $oldProduct = Product::where('code', $oldItem->product_code)->first();

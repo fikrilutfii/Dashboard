@@ -151,7 +151,7 @@
             row.id = `row-${rowCount}`;
 
             const productCode = data ? data.product_code : '';
-            const qty = data ? data.quantity : 1;
+            const qty = data ? (parseFloat(data.quantity) || 1) : 1;
             const price = data ? data.unit_price : '';
             const name = data ? data.item_name : '';
             
@@ -164,7 +164,7 @@
                     <input type="text" name="items[${rowCount}][product_name]" id="name-${rowCount}" class="w-full border rounded px-2 py-1" value="${name}" required>
                 </td>
                 <td class="p-1 border">
-                    <input type="text" inputmode="decimal" name="items[${rowCount}][quantity]" id="qty-${rowCount}" class="w-full border rounded px-2 py-1 text-center" value="${qty}" pattern="[0-9]+([.,][0-9]{1,3})?" title="Gunakan Qty hingga 3 desimal, misalnya 1,5 atau 1.5" oninput="calculateRow(${rowCount})" required>
+                    <input type="text" inputmode="decimal" name="items[${rowCount}][quantity]" id="qty-${rowCount}" class="w-full border rounded px-2 py-1 text-center" value="${qty}" pattern="[0-9]+([.,][0-9]{1,3})?" title="Jumlah barang" oninput="calculateRow(${rowCount})" required>
                 </td>
                 <td class="p-1 border">
                     <input type="text" inputmode="decimal" name="items[${rowCount}][unit_price]" id="price-${rowCount}" class="w-full border rounded px-2 py-1 text-right" value="${price}" pattern="[0-9]+([.,][0-9]{1,2})?" title="Gunakan harga hingga 2 desimal, misalnya 507,20 atau 507.20" oninput="calculateRow(${rowCount})" required>

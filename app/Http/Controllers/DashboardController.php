@@ -57,6 +57,7 @@ class DashboardController extends Controller
             // pada menu Tagihan Perusahaan.
             $tagihanPercetakan = \App\Models\CompanyReceivable::where('division', 'percetakan')
                 ->whereIn('status', ['belum_lunas', 'sebagian'])
+                ->whereNull('kasbon_id')
                 ->sum('remaining_amount');
 
             // 3. Tagihan Percetakan Bulan Ini -> sama dengan kartu
@@ -64,6 +65,7 @@ class DashboardController extends Controller
             $tagihanPercetakanBulanIni = \App\Models\CompanyReceivable::where('division', 'percetakan')
                 ->whereIn('status', ['belum_lunas', 'sebagian'])
                 ->where('type', 'installment')
+                ->whereNull('kasbon_id')
                 ->sum('monthly_amount');
 
             // 3. Total Pembayaran Percetakan (Seluruhnya) -> Company Debt (Sisa Hutang Seluruhnya)
@@ -79,6 +81,7 @@ class DashboardController extends Controller
             // Pemasukan Percetakan
             $pemasukanPercetakanBulanIni = Transaction::where('type', 'credit')
                 ->where('division', 'percetakan')
+                ->where('category', '!=', 'kasbon')
                 ->whereMonth('date', $now->month)
                 ->whereYear('date', $now->year)
                 ->sum('amount');
@@ -86,6 +89,7 @@ class DashboardController extends Controller
             // 5. Keuntungan Percetakan (Bulan Ini)
             $pengeluaranPercetakanBulanIni = Transaction::where('type', 'debit')
                 ->where('division', 'percetakan')
+                ->where('category', '!=', 'kasbon')
                 ->whereMonth('date', $now->month)
                 ->whereYear('date', $now->year)
                 ->sum('amount');
@@ -94,10 +98,12 @@ class DashboardController extends Controller
             // 6. Keuntungan Konveksi (Minggu Ini)
             $pemasukanKonveksiMingguIni = Transaction::where('type', 'credit')
                 ->where('division', 'konfeksi')
+                ->where('category', '!=', 'kasbon')
                 ->whereBetween('date', [$startOfWeek, $now])
                 ->sum('amount');
             $pengeluaranKonveksiMingguIni = Transaction::where('type', 'debit')
                 ->where('division', 'konfeksi')
+                ->where('category', '!=', 'kasbon')
                 ->whereBetween('date', [$startOfWeek, $now])
                 ->sum('amount');
             $keuntunganKonveksiMingguIni = $pemasukanKonveksiMingguIni - $pengeluaranKonveksiMingguIni;
@@ -105,11 +111,13 @@ class DashboardController extends Controller
             // 7. Keuntungan Konveksi (Bulan Ini)
             $pemasukanKonveksiBulanIni = Transaction::where('type', 'credit')
                 ->where('division', 'konfeksi')
+                ->where('category', '!=', 'kasbon')
                 ->whereMonth('date', $now->month)
                 ->whereYear('date', $now->year)
                 ->sum('amount');
             $pengeluaranKonveksiBulanIni = Transaction::where('type', 'debit')
                 ->where('division', 'konfeksi')
+                ->where('category', '!=', 'kasbon')
                 ->whereMonth('date', $now->month)
                 ->whereYear('date', $now->year)
                 ->sum('amount');

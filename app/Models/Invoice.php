@@ -58,6 +58,33 @@ class Invoice extends Model
         return $this->hasMany(InvoiceLog::class);
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(InvoicePayment::class)->orderBy('payment_date', 'desc');
+    }
+
+    public function getRemainingAmountAttribute(): float
+    {
+        return max(0, (float) $this->total_amount - (float) $this->paid_amount);
+    }
+
+    public function recalculatePayments(): void
+    {
+        $totalPaid = (float) $this->payments()->sum('amount');
+        $this->paid_amount = $totalPaid;
+        
+        if ($totalPaid >= (float) $this->total_amount && (float) $this->total_amount > 0) {
+            $this->status = 'lunas';
+        } elseif ($totalPaid > 0) {
+            $this->status = 'sebagian';
+        } else {
+            $this->status = 'belum_lunas';
+        }
+        
+        $this->save();
+        $this->syncToReceivable();
+    }
+
     public function isPaid(): bool
     {
         return $this->status === 'lunas';

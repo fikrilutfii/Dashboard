@@ -10,9 +10,31 @@ use Illuminate\Support\Facades\DB;
 
 class FinanceReportService
 {
+    /**
+     * Exclude kasbon-related transactions from a query.
+     * Kasbon is an employee advance and must NOT appear in general financial reports.
+     */
+    private function excludeKasbon($query)
+    {
+        return $query->where('category', '!=', 'kasbon')
+                     ->where(function($q) {
+                         $q->whereNull('reference_type')
+                           ->orWhere('reference_type', 'not like', '%Kasbon%');
+                     });
+    }
+
+    /**
+     * Exclude kasbon from CompanyReceivable queries.
+     */
+    private function excludeKasbonReceivable($query)
+    {
+        return $query->whereNull('kasbon_id');
+    }
+
     public function getSaldoGlobal($division = null, $entity = null)
     {
         $query = Transaction::query();
+        $query = $this->excludeKasbon($query);
         if ($division) $query->where('division', $division);
         if ($entity) $query->where('entity', $entity);
 
@@ -30,6 +52,7 @@ class FinanceReportService
         $endDate = $filters['end_date'] ?? null;
 
         $query = Transaction::query();
+        $query = $this->excludeKasbon($query);
         if ($division) $query->where('division', $division);
         if ($entity) $query->where('entity', $entity);
         if ($startDate) $query->whereDate('date', '>=', $startDate);
@@ -39,13 +62,14 @@ class FinanceReportService
         $totalPembayaran = (clone $query)->where('type', 'debit')->sum('amount');
         $arusKasBersih = $totalPemasukan - $totalPembayaran;
 
-        // Company Obligations
+        // Company Obligations (exclude kasbon)
         $hutangQuery = CompanyDebt::where('status', 'belum_lunas');
         if ($division) $hutangQuery->where('division', $division);
         if ($entity) $hutangQuery->where('entity', $entity);
         $totalHutang = $hutangQuery->sum('amount');
 
         $tagihanQuery = CompanyReceivable::whereIn('status', ['belum_lunas', 'sebagian']);
+        $tagihanQuery = $this->excludeKasbonReceivable($tagihanQuery);
         if ($division) $tagihanQuery->where('division', $division);
         if ($entity) $tagihanQuery->where('entity', $entity);
         $totalTagihan = $tagihanQuery->sum('remaining_amount');
@@ -63,7 +87,7 @@ class FinanceReportService
     {
         $division = $filters['division'] ?? null;
         $entity = $filters['entity'] ?? null;
-        
+
         // 1. Line Chart: 30-day Tren (Pemasukan vs Pembayaran)
         $endDate = Carbon::now();
         $startDate = Carbon::now()->subDays(29);
@@ -74,6 +98,7 @@ class FinanceReportService
             DB::raw('SUM(CASE WHEN type = "debit" THEN amount ELSE 0 END) as expense')
         )
         ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+        ->where('category', '!=', 'kasbon')
         ->when($division, fn($q) => $q->where('division', $division))
         ->when($entity, fn($q) => $q->where('entity', $entity))
         ->groupBy('day')
@@ -98,6 +123,7 @@ class FinanceReportService
             DB::raw('SUM(amount) as total')
         )
         ->where('type', 'debit')
+        ->where('category', '!=', 'kasbon')
         ->whereBetween('date', [$filterStart, $filterEnd])
         ->when($division, fn($q) => $q->where('division', $division))
         ->when($entity, fn($q) => $q->where('entity', $entity))
@@ -130,6 +156,7 @@ class FinanceReportService
         $endDate = $filters['end_date'] ?? null;
 
         $totalExpense = Transaction::where('type', 'debit')
+            ->where('category', '!=', 'kasbon')
             ->when($startDate, fn($q) => $q->whereDate('date', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('date', '<=', $endDate))
             ->when($division, fn($q) => $q->where('division', $division))
@@ -141,6 +168,7 @@ class FinanceReportService
             DB::raw('SUM(amount) as total')
         )
         ->where('type', 'debit')
+        ->where('category', '!=', 'kasbon')
         ->when($startDate, fn($q) => $q->whereDate('date', '>=', $startDate))
         ->when($endDate, fn($q) => $q->whereDate('date', '<=', $endDate))
         ->when($division, fn($q) => $q->where('division', $division))
@@ -190,6 +218,7 @@ class FinanceReportService
             DB::raw('SUM(CASE WHEN type = "debit" THEN amount ELSE 0 END) as expense')
         )
         ->whereBetween('date', [$start, $end])
+        ->where('category', '!=', 'kasbon')
         ->when($division, fn($q) => $q->where('division', $division))
         ->when($entity, fn($q) => $q->where('entity', $entity))
         ->first();
@@ -211,6 +240,7 @@ class FinanceReportService
         $category = $filters['category'] ?? null;
 
         $query = Transaction::query()->orderBy('date', 'asc')->orderBy('id', 'asc');
+        $query = $this->excludeKasbon($query);
 
         if ($division) $query->where('division', $division);
         if ($entity) $query->where('entity', $entity);
@@ -219,22 +249,21 @@ class FinanceReportService
         if ($type) $query->where('type', $type);
         if ($category) $query->where('category', $category);
 
-        // Untuk "Saldo Berjalan", kita hitung saldo awal sebelum tanggal filter
+        // Saldo Awal sebelum tanggal filter
         $saldoAwal = 0;
         if ($startDate) {
-            $kreditSebelum = Transaction::whereDate('date', '<', $startDate)
+            $baseQuery = Transaction::whereDate('date', '<', $startDate)
+                ->where('category', '!=', 'kasbon')
                 ->when($division, fn($q) => $q->where('division', $division))
-                ->when($entity, fn($q) => $q->where('entity', $entity))
-                ->where('type', 'credit')->sum('amount');
-            $debitSebelum = Transaction::whereDate('date', '<', $startDate)
-                ->when($division, fn($q) => $q->where('division', $division))
-                ->when($entity, fn($q) => $q->where('entity', $entity))
-                ->where('type', 'debit')->sum('amount');
+                ->when($entity, fn($q) => $q->where('entity', $entity));
+
+            $kreditSebelum = (clone $baseQuery)->where('type', 'credit')->sum('amount');
+            $debitSebelum  = (clone $baseQuery)->where('type', 'debit')->sum('amount');
             $saldoAwal = $kreditSebelum - $debitSebelum;
         }
 
         $transactions = $query->get();
-        
+
         $saldo = $saldoAwal;
         foreach ($transactions as $trx) {
             if ($trx->type == 'credit') {
