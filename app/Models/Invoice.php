@@ -70,6 +70,9 @@ class Invoice extends Model
 
     public function recalculatePayments(): void
     {
+        if (!\Illuminate\Support\Facades\Schema::hasTable('invoice_payments')) {
+            return;
+        }
         $totalPaid = (float) $this->payments()->sum('amount');
         $this->paid_amount = $totalPaid;
         

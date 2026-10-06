@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+use Illuminate\Support\Facades\Schema;
+
 class InvoiceController extends Controller
 {
     /**
@@ -22,7 +24,14 @@ class InvoiceController extends Controller
     public function index(Request $request)
     {
         $division = $request->input('division', session('division', 'percetakan'));
-        $query = Invoice::with(['customer', 'payments', 'items'])->latest('invoice_date');
+        $hasPaymentsTable = Schema::hasTable('invoice_payments');
+        
+        $withRelations = ['customer', 'items'];
+        if ($hasPaymentsTable) {
+            $withRelations[] = 'payments';
+        }
+
+        $query = Invoice::with($withRelations)->latest('invoice_date');
 
         // Division Filter
         if ($division) {
@@ -54,7 +63,7 @@ class InvoiceController extends Controller
         $filterDateBy = $request->input('filter_date_by', 'invoice_date');
 
         if ($startDate || $endDate) {
-            if ($filterDateBy === 'payment_date') {
+            if ($filterDateBy === 'payment_date' && $hasPaymentsTable) {
                 $query->whereHas('payments', function ($pq) use ($startDate, $endDate) {
                     if ($startDate && $endDate) {
                         $pq->whereBetween('payment_date', [$startDate, $endDate]);
@@ -82,8 +91,8 @@ class InvoiceController extends Controller
         $allInvoices = $metricsQuery->get();
 
         $totalPenjualan = $allInvoices->sum('total_amount');
-        $totalPelunasan = $allInvoices->sum(function($inv) use ($startDate, $endDate, $filterDateBy) {
-            if ($filterDateBy === 'payment_date' && ($startDate || $endDate)) {
+        $totalPelunasan = $allInvoices->sum(function($inv) use ($startDate, $endDate, $filterDateBy, $hasPaymentsTable) {
+            if ($filterDateBy === 'payment_date' && ($startDate || $endDate) && $hasPaymentsTable && $inv->relationLoaded('payments')) {
                 return $inv->payments->filter(function($p) use ($startDate, $endDate) {
                     $d = $p->payment_date ? $p->payment_date->format('Y-m-d') : null;
                     if (!$d) return false;
@@ -329,7 +338,11 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
-        $invoice->load(['items', 'logs', 'customer', 'payments']);
+        $relations = ['items', 'logs', 'customer'];
+        if (Schema::hasTable('invoice_payments')) {
+            $relations[] = 'payments';
+        }
+        $invoice->load($relations);
         return view('invoices.show', compact('invoice'));
     }
 
