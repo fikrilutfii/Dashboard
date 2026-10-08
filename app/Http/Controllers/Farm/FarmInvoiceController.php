@@ -24,13 +24,16 @@ class FarmInvoiceController extends Controller
     {
         $query = FarmInvoice::with(['customer', 'sender', 'payments', 'items']);
 
-        // Search by Invoice Number or Customer Name
+        // Search by Invoice Number, Customer Name, or Item Name
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('invoice_number', 'like', "%{$search}%")
                   ->orWhereHas('customer', function($c) use ($search) {
                       $c->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('items', function($i) use ($search) {
+                      $i->where('item_name', 'like', "%{$search}%");
                   });
             });
         }
@@ -65,7 +68,10 @@ class FarmInvoiceController extends Controller
 
         // Auto generate Invoice Number (e.g. INV-RPA-202609-0001)
         $monthYear = Carbon::now()->format('Ym');
-        $latest = FarmInvoice::where('invoice_number', 'like', "INV-RPA-{$monthYear}-%")->latest('id')->first();
+        $latest = FarmInvoice::where('invoice_number', 'like', "INV-RPA-{$monthYear}-%")
+            ->orderBy('invoice_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->first();
         $nextNumber = 1;
         if ($latest && preg_match('/INV-RPA-\d+-(\d+)/', $latest->invoice_number, $matches)) {
             $nextNumber = intval($matches[1]) + 1;

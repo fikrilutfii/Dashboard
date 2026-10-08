@@ -124,13 +124,13 @@
             </a>
 
             <!-- Transportasi -->
-            <a href="{{ route('farm.transportation.index') }}" 
+            <a href="{{ route('farm.transportations.index') }}" 
                class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group relative mt-1
-               {{ request()->routeIs('farm.transportation.*') ? 'bg-amber-600/10 text-amber-400 font-semibold' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white' }}
+               {{ request()->routeIs('farm.transportations.*') ? 'bg-amber-600/10 text-amber-400 font-semibold' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white' }}
                "
                :class="sidebarExpanded ? '' : 'justify-center'"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 flex-shrink-0 transition-colors {{ request()->routeIs('farm.transportation.*') ? 'text-amber-400' : 'text-zinc-500 group-hover:text-zinc-300' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 flex-shrink-0 transition-colors {{ request()->routeIs('farm.transportations.*') ? 'text-amber-400' : 'text-zinc-500 group-hover:text-zinc-300' }}">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                 </svg>
                 <span class="ml-3 font-medium whitespace-nowrap" x-show="sidebarExpanded">Transportasi</span>

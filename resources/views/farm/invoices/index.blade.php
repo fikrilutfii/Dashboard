@@ -10,7 +10,7 @@
     <div class="ios-card" style="padding: 16px 20px; margin-bottom: 20px;">
         <form method="GET" action="{{ route('farm.invoices.index') }}" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
             <div style="flex: 1; min-width: 200px;">
-                <input type="text" name="search" value="{{ request('search') }}" class="ios-input" placeholder="Cari No. Faktur atau Nama Customer...">
+                <input type="text" name="search" value="{{ request('search') }}" class="ios-input" placeholder="Cari No. Faktur, Nama Customer, atau Nama Barang...">
             </div>
 
             <div style="width: 170px;">
