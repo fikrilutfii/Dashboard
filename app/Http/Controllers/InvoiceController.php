@@ -31,7 +31,7 @@ class InvoiceController extends Controller
             $withRelations[] = 'payments';
         }
 
-        $query = Invoice::with($withRelations)->latest('invoice_date');
+        $query = Invoice::with($withRelations)->orderBy('invoice_date', 'desc')->orderBy('id', 'desc');
 
         // Division Filter
         if ($division) {

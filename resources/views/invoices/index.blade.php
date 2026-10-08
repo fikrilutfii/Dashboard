@@ -48,8 +48,8 @@
                         <!-- Search -->
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1">Cari</label>
-                            <input type="text" name="search" placeholder="No Invoice / Customer" value="{{ request('search') }}"
-                                class="border rounded px-2 py-1.5 text-sm w-44">
+                            <input type="text" name="search" placeholder="No Invoice / Customer / Nama Barang" value="{{ request('search') }}"
+                                class="border rounded px-2 py-1.5 text-sm w-56">
                         </div>
 
                         <!-- Status -->
