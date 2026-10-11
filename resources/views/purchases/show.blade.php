@@ -71,6 +71,11 @@
                     @method('PUT')
                     <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm font-semibold">Lunasi Pembayaran Sekarang</button>
                 </form>
+                @else
+                <form action="{{ route('purchases.revert-status', $purchase) }}" method="POST" class="action-confirm inline-block" data-title="Batalkan Status Lunas?" data-text="Kembalikan status pembelian ini ke Belum Lunas dan batalkan pencatatan pengeluaran kas?" data-icon="warning" data-confirm-text="Ya, Batalkan Lunas" data-confirm-color="#f59e0b">
+                    @csrf
+                    <button type="submit" class="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 text-sm font-semibold">Reset ke Belum Lunas</button>
+                </form>
                 @endif
             </div>
 

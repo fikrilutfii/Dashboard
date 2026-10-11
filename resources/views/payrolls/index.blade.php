@@ -99,6 +99,16 @@
                                                 @csrf
                                                 <button type="submit" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-lg hover:bg-emerald-100 border border-emerald-100 whitespace-nowrap">Lunas</button>
                                             </form>
+                                        @else
+                                            <form action="{{ route('payrolls.revert-lunas', $payroll) }}" method="POST" class="action-confirm inline"
+                                                data-title="Batalkan Status Lunas Gaji?"
+                                                data-text="Kembalikan status gaji {{ $payroll->employee->name ?? 'karyawan' }} ke Belum Lunas dan batalkan pencatatan pengeluaran kas?"
+                                                data-icon="warning"
+                                                data-confirm-text="Ya, Batalkan Lunas"
+                                                data-confirm-color="#f59e0b">
+                                                @csrf
+                                                <button type="submit" class="px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 border border-amber-200 whitespace-nowrap">Batal Lunas</button>
+                                            </form>
                                         @endif
                                         <a href="{{ route('payrolls.edit', $payroll) }}" class="px-2.5 py-1 bg-zinc-100 text-zinc-600 text-xs font-semibold rounded-lg hover:bg-zinc-200">Edit</a>
                                         @if(Auth::user()->isAdmin())

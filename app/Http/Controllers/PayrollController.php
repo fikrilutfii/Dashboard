@@ -343,6 +343,19 @@ class PayrollController extends Controller
         return back()->with('success', 'Gaji ' . $payroll->employee->name . ' ditandai Lunas.');
     }
 
+    public function revertLunas(Payroll $payroll)
+    {
+        $payroll->update(['status' => 'belum_lunas']);
+        $payroll->load('employee');
+        $payroll->syncToDebt();
+
+        Transaction::where('reference_type', Payroll::class)
+            ->where('reference_id', $payroll->id)
+            ->delete();
+
+        return back()->with('success', 'Status gaji ' . $payroll->employee->name . ' berhasil dibatalkan dan dikembalikan ke Belum Lunas.');
+    }
+
     // ─── PRINT ───────────────────────────────────────────────────────────
     public function print(Request $request)
     {

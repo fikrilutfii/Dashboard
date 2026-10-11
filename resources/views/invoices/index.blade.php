@@ -165,7 +165,12 @@
                                         | <a href="javascript:void(0)" onclick="confirmPrint('{{ route('invoices.print', $invoice) }}')" class="text-gray-600 hover:underline">Print SJ</a>
                                         | <a href="javascript:void(0)" onclick="confirmPrint('{{ route('invoices.print-combined', $invoice) }}')" class="text-blue-600 hover:underline">Gabung</a>
                                         | <a href="javascript:void(0)" onclick="confirmPrint('{{ route('invoices.export', $invoice) }}', true)" class="text-green-600 hover:underline font-semibold">Excel</a>
-                                        | <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus faktur ini? Stok barang akan dikembalikan.');">
+                                        | <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" class="action-confirm inline-block"
+                                            data-title="Hapus Faktur Ini?"
+                                            data-text="Apakah Anda yakin ingin menghapus faktur ini? Stok barang akan dikembalikan ke gudang."
+                                            data-icon="warning"
+                                            data-confirm-text="Ya, Hapus Faktur"
+                                            data-confirm-color="#ef4444">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="text-red-600 hover:underline">Hapus</button>
                                         </form>

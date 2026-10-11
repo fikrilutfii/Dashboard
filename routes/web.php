@@ -47,6 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Customer Billing Reports
     Route::get('/reports/billing', [CustomerBillingReportController::class, 'index'])->name('reports.billing');
     Route::get('/reports/billing/{customer}', [CustomerBillingReportController::class, 'show'])->name('reports.billing.show');
+    Route::post('/reports/billing/{customer}/settle', [CustomerBillingReportController::class, 'batchSettle'])->name('reports.billing.settle');
     Route::get('/reports/billing/{customer}/print', [CustomerBillingReportController::class, 'print'])->name('reports.billing.print');
     Route::get('/reports/billing/{customer}/export-pdf', [CustomerBillingReportController::class, 'exportPdf'])->name('reports.billing.pdf');
     Route::get('/reports/billing/{customer}/export-excel', [CustomerBillingReportController::class, 'exportExcel'])->name('reports.billing.excel');
@@ -74,10 +75,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('invoices/report/print', [InvoiceController::class, 'printReport'])->name('invoices.printReport');
     Route::put('invoices/{invoice}/status', [InvoiceController::class, 'updateStatus'])->name('invoices.update-status');
     Route::post('invoices/{invoice}/payment', [InvoiceController::class, 'storePayment'])->name('invoices.payment.store');
+    Route::put('invoices/{invoice}/payment/{payment}', [InvoiceController::class, 'updatePayment'])->name('invoices.payment.update');
     Route::delete('invoices/{invoice}/payment/{payment}', [InvoiceController::class, 'destroyPayment'])->name('invoices.payment.destroy');
 
     Route::resource('purchases', PurchaseController::class);
     Route::put('purchases/{purchase}/status', [PurchaseController::class, 'updateStatus'])->name('purchases.update-status');
+    Route::post('purchases/{purchase}/revert-status', [PurchaseController::class, 'revertStatus'])->name('purchases.revert-status');
     
     // Expenses
     Route::resource('expenses', ExpenseController::class);
@@ -93,10 +96,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Hutang & Piutang Perusahaan
     Route::resource('company-debts', CompanyDebtController::class);
     Route::post('/company-debts/{companyDebt}/mark-lunas', [CompanyDebtController::class, 'markLunas'])->name('company-debts.mark-lunas');
+    Route::post('/company-debts/{companyDebt}/revert-lunas', [CompanyDebtController::class, 'revertLunas'])->name('company-debts.revert-lunas');
     Route::post('/company-debts/{companyDebt}/payment', [CompanyDebtController::class, 'recordPayment'])->name('company-debts.payment');
     
     Route::resource('company-receivables', CompanyReceivableController::class);
     Route::post('/company-receivables/{companyReceivable}/mark-lunas', [CompanyReceivableController::class, 'markLunas'])->name('company-receivables.mark-lunas');
+    Route::post('/company-receivables/{companyReceivable}/revert-lunas', [CompanyReceivableController::class, 'revertLunas'])->name('company-receivables.revert-lunas');
     Route::post('/company-receivables/{companyReceivable}/record-payment', [CompanyReceivableController::class, 'recordPayment'])->name('company-receivables.record-payment');
 
     // Employees, Absensi & Penggajian (Konfeksi)
@@ -113,6 +118,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/payrolls/print', [PayrollController::class, 'print'])->name('payrolls.print');
     Route::get('/payrolls/{payroll}/slip', [PayrollController::class, 'printSlip'])->name('payrolls.slip');
     Route::post('/payrolls/{payroll}/mark-lunas', [PayrollController::class, 'markLunas'])->name('payrolls.mark-lunas');
+    Route::post('/payrolls/{payroll}/revert-lunas', [PayrollController::class, 'revertLunas'])->name('payrolls.revert-lunas');
     Route::resource('payrolls', PayrollController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 
     // API for Payroll Calculation

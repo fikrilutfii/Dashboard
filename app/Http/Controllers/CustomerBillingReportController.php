@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\InvoicePayment;
+use App\Models\InvoiceLog;
+use App\Models\Transaction;
 use App\Exports\CustomerBillingExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -113,10 +117,103 @@ class CustomerBillingReportController extends Controller
         $invoices = $query->orderBy('invoice_date', 'asc')->get();
         
         $totalOutstanding = $invoices->sum(function ($inv) {
-            return $inv->total_amount - $inv->paid_amount;
+            return max(0, $inv->total_amount - $inv->paid_amount);
         });
 
-        return view('reports.billing.show', compact('customer', 'invoices', 'totalOutstanding', 'division', 'itemSearch', 'startDate', 'endDate'));
+        // Recent payments for this customer
+        $recentPayments = InvoicePayment::whereIn('invoice_id', function($q) use ($customer, $division) {
+            $q->select('id')->from('invoices')->where('customer_id', $customer->id)
+              ->when($division, fn($d) => $d->where('division', $division));
+        })->with('invoice')->latest('payment_date')->take(10)->get();
+
+        return view('reports.billing.show', compact('customer', 'invoices', 'totalOutstanding', 'division', 'itemSearch', 'startDate', 'endDate', 'recentPayments'));
+    }
+
+    public function batchSettle(Request $request, Customer $customer)
+    {
+        $division = session('division');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $itemSearch = $request->input('item_search');
+
+        $validated = $request->validate([
+            'payment_date'     => 'required|date',
+            'payment_method'   => 'required|string',
+            'amount'           => 'required|numeric|min:1',
+            'reference_number' => 'nullable|string|max:100',
+            'notes'            => 'nullable|string|max:500',
+        ]);
+
+        $query = $customer->invoices();
+        $this->applyInvoiceFilter($query, $division, $itemSearch, $startDate, $endDate);
+        $invoices = $query->orderBy('invoice_date', 'asc')->orderBy('id', 'asc')->get();
+
+        if ($invoices->isEmpty()) {
+            return back()->with('error', 'Tidak ada faktur yang belum lunas pada periode yang dipilih.');
+        }
+
+        $totalOutstanding = $invoices->sum(function ($inv) {
+            return max(0, (float)$inv->total_amount - (float)$inv->paid_amount);
+        });
+
+        if ($validated['amount'] > $totalOutstanding) {
+            return back()->with('error', 'Jumlah pelunasan (Rp ' . number_format($validated['amount'], 0, ',', '.') . ') melebihi total sisa tagihan periode ini (Rp ' . number_format($totalOutstanding, 0, ',', '.') . ').');
+        }
+
+        $remainingToPay = (float)$validated['amount'];
+        $settledCount = 0;
+        $totalAllocated = 0;
+
+        DB::transaction(function () use ($invoices, $validated, &$remainingToPay, &$settledCount, &$totalAllocated) {
+            foreach ($invoices as $inv) {
+                if ($remainingToPay <= 0) {
+                    break;
+                }
+
+                $invRemaining = max(0, (float)$inv->total_amount - (float)$inv->paid_amount);
+                if ($invRemaining <= 0) {
+                    continue;
+                }
+
+                $allocAmount = min($remainingToPay, $invRemaining);
+
+                $payment = InvoicePayment::create([
+                    'invoice_id'       => $inv->id,
+                    'payment_date'     => $validated['payment_date'],
+                    'amount'           => $allocAmount,
+                    'payment_method'   => $validated['payment_method'],
+                    'reference_number' => $validated['reference_number'] ?? null,
+                    'notes'            => 'Pelunasan Tagihan Klien Periode' . (!empty($validated['notes']) ? ': ' . $validated['notes'] : ''),
+                ]);
+
+                $inv->recalculatePayments();
+
+                Transaction::create([
+                    'type'           => 'credit',
+                    'amount'         => $allocAmount,
+                    'category'       => 'pelunasan_faktur',
+                    'reference_type' => InvoicePayment::class,
+                    'reference_id'   => $payment->id,
+                    'description'    => 'Pelunasan Tagihan Periode Faktur #' . ($inv->faktur_number ?? $inv->invoice_number) . ' - ' . ($inv->customer->name ?? 'Customer') . (!empty($validated['notes']) ? ' (' . $validated['notes'] . ')' : ''),
+                    'date'           => $validated['payment_date'],
+                    'division'       => $inv->division,
+                    'entity'         => $inv->entity ?? $inv->division,
+                ]);
+
+                InvoiceLog::create([
+                    'invoice_id'  => $inv->id,
+                    'user_id'     => Auth::id(),
+                    'action'      => 'Periodic Settlement Payment',
+                    'description' => 'Pelunasan tagihan periode sebesar Rp ' . number_format($allocAmount, 0, ',', '.') . ' dicatat (' . $validated['payment_method'] . ') pada tanggal ' . Carbon::parse($validated['payment_date'])->format('d/m/Y'),
+                ]);
+
+                $remainingToPay -= $allocAmount;
+                $totalAllocated += $allocAmount;
+                $settledCount++;
+            }
+        });
+
+        return back()->with('success', 'Pelunasan tagihan klien per periode berhasil diproses sebesar Rp ' . number_format($totalAllocated, 0, ',', '.') . ' untuk ' . $settledCount . ' faktur.');
     }
 
     public function print(Request $request, Customer $customer)

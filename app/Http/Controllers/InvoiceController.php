@@ -445,6 +445,63 @@ class InvoiceController extends Controller
         return back()->with('success', 'Pelunasan faktur berhasil dicatat dan masuk ke Laporan Keuangan.');
     }
 
+    public function updatePayment(Request $request, Invoice $invoice, InvoicePayment $payment)
+    {
+        if ($payment->invoice_id !== $invoice->id) {
+            abort(404);
+        }
+
+        $otherPayments = $invoice->payments()->where('id', '!=', $payment->id)->sum('amount');
+        $maxAllowed = max(0, (float)$invoice->total_amount - (float)$otherPayments);
+
+        $validated = $request->validate([
+            'payment_date'     => 'required|date',
+            'amount'           => 'required|numeric|min:1|max:' . ($maxAllowed > 0 ? $maxAllowed : $payment->amount),
+            'payment_method'   => 'required|string',
+            'reference_number' => 'nullable|string|max:100',
+            'notes'            => 'nullable|string|max:500',
+        ]);
+
+        DB::transaction(function () use ($invoice, $payment, $validated) {
+            $oldAmount = $payment->amount;
+
+            $payment->update([
+                'payment_date'     => $validated['payment_date'],
+                'amount'           => $validated['amount'],
+                'payment_method'   => $validated['payment_method'],
+                'reference_number' => $validated['reference_number'] ?? null,
+                'notes'            => $validated['notes'] ?? null,
+            ]);
+
+            $invoice->recalculatePayments();
+
+            Transaction::updateOrCreate(
+                [
+                    'reference_type' => InvoicePayment::class,
+                    'reference_id'   => $payment->id,
+                ],
+                [
+                    'type'           => 'credit',
+                    'amount'         => $validated['amount'],
+                    'category'       => 'pelunasan_faktur',
+                    'description'    => 'Pelunasan Faktur #' . ($invoice->faktur_number ?? $invoice->invoice_number) . ' - ' . ($invoice->customer->name ?? 'Customer') . (!empty($validated['notes']) ? ' (' . $validated['notes'] . ')' : ''),
+                    'date'           => $validated['payment_date'],
+                    'division'       => $invoice->division,
+                    'entity'         => $invoice->entity ?? $invoice->division,
+                ]
+            );
+
+            InvoiceLog::create([
+                'invoice_id'  => $invoice->id,
+                'user_id'     => Auth::id(),
+                'action'      => 'Payment Updated',
+                'description' => 'Pembayaran pelunasan diperbarui dari Rp ' . number_format($oldAmount, 0, ',', '.') . ' menjadi Rp ' . number_format($validated['amount'], 0, ',', '.') . ' (' . $validated['payment_method'] . ') pada tanggal ' . Carbon::parse($validated['payment_date'])->format('d/m/Y'),
+            ]);
+        });
+
+        return back()->with('success', 'Riwayat pembayaran berhasil diperbarui.');
+    }
+
     public function destroyPayment(Invoice $invoice, InvoicePayment $payment)
     {
         if ($payment->invoice_id !== $invoice->id) {

@@ -182,6 +182,30 @@ class CompanyDebtController extends Controller
         return back()->with('success', 'Pembayaran ditandai Lunas dan tercatat di kas.');
     }
 
+    public function revertLunas(CompanyDebt $companyDebt)
+    {
+        DB::transaction(function () use ($companyDebt) {
+            $companyDebt->update([
+                'status' => 'belum_lunas',
+                'remaining_amount' => $companyDebt->total_amount,
+            ]);
+
+            \App\Models\Transaction::where('reference_type', CompanyDebt::class)
+                ->where('reference_id', $companyDebt->id)
+                ->where('type', 'debit')
+                ->where('category', 'pembayaran_perusahaan')
+                ->delete();
+
+            if ($companyDebt->purchase_id && $companyDebt->purchase) {
+                $companyDebt->purchase->update(['status' => 'belum_lunas']);
+            } elseif ($companyDebt->payroll_id && $companyDebt->payroll) {
+                $companyDebt->payroll->update(['status' => 'belum_lunas']);
+            }
+        });
+
+        return back()->with('success', 'Status pembayaran berhasil dibatalkan dan dikembalikan ke Belum Lunas.');
+    }
+
     public function recordPayment(Request $request, CompanyDebt $companyDebt)
     {
         $validated = $request->validate([

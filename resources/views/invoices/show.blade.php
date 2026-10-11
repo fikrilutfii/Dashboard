@@ -129,7 +129,7 @@
                                         <th class="border p-2 text-left">Referensi</th>
                                         <th class="border p-2 text-left">Catatan</th>
                                         <th class="border p-2 text-right">Jumlah</th>
-                                        <th class="border p-2 text-center">Hapus</th>
+                                        <th class="border p-2 text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -140,13 +140,20 @@
                                         <td class="border p-2 font-mono text-xs">{{ $payment->reference_number ?? '-' }}</td>
                                         <td class="border p-2 text-gray-600 text-xs">{{ $payment->notes ?? '-' }}</td>
                                         <td class="border p-2 text-right font-bold font-mono text-green-700">Rp {{ number_format($payment->amount, 0, ',', '.') }}</td>
-                                        <td class="border p-2 text-center">
-                                            <form action="{{ route('invoices.payment.destroy', [$invoice, $payment]) }}" method="POST"
-                                                class="action-confirm inline-block"
-                                                data-title="Hapus Pembayaran?" data-text="Hapus pelunasan sebesar Rp {{ number_format($payment->amount, 0, ',', '.') }}?" data-icon="warning" data-confirm-text="Ya, Hapus" data-confirm-color="#ef4444">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="text-red-500 hover:text-red-700 text-xs font-bold">Hapus</button>
-                                            </form>
+                                        <td class="border p-2 text-center whitespace-nowrap">
+                                            <div class="flex items-center justify-center gap-1.5">
+                                                <button type="button"
+                                                    onclick="openEditPaymentModal({{ $payment->id }}, '{{ $payment->payment_date->format('Y-m-d') }}', '{{ $payment->payment_method }}', {{ (float)$payment->amount }}, '{{ addslashes($payment->reference_number ?? '') }}', '{{ addslashes($payment->notes ?? '') }}', {{ max(0, (float)$invoice->total_amount - (float)($invoice->payments->where('id', '!=', $payment->id)->sum('amount'))) }})"
+                                                    class="px-2 py-1 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded text-xs font-bold border border-amber-200">
+                                                    Edit
+                                                </button>
+                                                <form action="{{ route('invoices.payment.destroy', [$invoice, $payment]) }}" method="POST"
+                                                    class="action-confirm inline-block"
+                                                    data-title="Batalkan & Hapus Pembayaran?" data-text="Hapus pelunasan sebesar Rp {{ number_format($payment->amount, 0, ',', '.') }}? Status faktur akan disesuaikan kembali." data-icon="warning" data-confirm-text="Ya, Hapus" data-confirm-color="#ef4444">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="px-2 py-1 bg-red-50 text-red-600 hover:bg-red-100 rounded text-xs font-bold border border-red-200">Hapus</button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                     @endforeach
@@ -270,4 +277,93 @@
         </div>
     </div>
 
+    <!-- Edit Payment Modal -->
+    <div id="editPaymentModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b">
+                <div>
+                    <h3 class="font-bold text-lg text-gray-800">Edit Riwayat Pembayaran</h3>
+                    <p class="text-xs text-gray-400">Ubah data pelunasan faktur</p>
+                </div>
+                <button type="button" onclick="closeEditPaymentModal()" class="text-gray-400 hover:text-gray-600 text-lg font-bold">&times;</button>
+            </div>
+            <form id="editPaymentForm" method="POST" class="action-confirm"
+                data-title="Konfirmasi Perubahan Pembayaran"
+                data-text="Simpan perubahan pembayaran ini? Status faktur dan buku kas keuangan akan disinkronkan."
+                data-icon="question"
+                data-confirm-text="Ya, Simpan Perubahan"
+                data-confirm-color="#2563eb">
+                @csrf
+                @method('PUT')
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Tanggal Pembayaran <span class="text-red-500">*</span></label>
+                        <input type="date" name="payment_date" id="edit_payment_date" required
+                            class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">
+                            Jumlah Pembayaran (Rp) <span class="text-red-500">*</span>
+                            <span class="text-xs font-normal text-gray-400">(Maks: Rp <span id="edit_max_amount_display">0</span>)</span>
+                        </label>
+                        <input type="number" step="any" name="amount" id="edit_payment_amount" min="1" required
+                            class="w-full border rounded px-3 py-2 font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Metode Pembayaran <span class="text-red-500">*</span></label>
+                        <select name="payment_method" id="edit_payment_method" required class="w-full border rounded px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500">
+                            <option value="Transfer Bank">Transfer Bank</option>
+                            <option value="Transfer BCA">Transfer BCA</option>
+                            <option value="Transfer Mandiri">Transfer Mandiri</option>
+                            <option value="Transfer BRI">Transfer BRI</option>
+                            <option value="Transfer BNI">Transfer BNI</option>
+                            <option value="Tunai">Tunai / Cash</option>
+                            <option value="Cek/Giro">Cek/Giro</option>
+                            <option value="QRIS">QRIS</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">No. Referensi / Bukti <span class="text-gray-400 font-normal">(Opsional)</span></label>
+                        <input type="text" name="reference_number" id="edit_reference_number" placeholder="Contoh: TRF-20241001"
+                            class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Catatan <span class="text-gray-400 font-normal">(Opsional)</span></label>
+                        <textarea name="notes" id="edit_payment_notes" rows="2" placeholder="Catatan tambahan..."
+                            class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    </div>
+                    <div class="flex gap-3 pt-2">
+                        <button type="button" onclick="closeEditPaymentModal()"
+                            class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded">
+                            Batal
+                        </button>
+                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow">
+                            Simpan Perubahan
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openEditPaymentModal(id, date, method, amount, ref, notes, maxAmount) {
+            const form = document.getElementById('editPaymentForm');
+            form.action = "{{ url('invoices/' . $invoice->id . '/payment') }}/" + id;
+            document.getElementById('edit_payment_date').value = date;
+            document.getElementById('edit_payment_method').value = method;
+            document.getElementById('edit_payment_amount').value = amount;
+            document.getElementById('edit_payment_amount').max = maxAmount;
+            document.getElementById('edit_max_amount_display').innerText = new Intl.NumberFormat('id-ID').format(maxAmount);
+            document.getElementById('edit_reference_number').value = ref;
+            document.getElementById('edit_payment_notes').value = notes;
+            
+            document.getElementById('editPaymentModal').classList.remove('hidden');
+        }
+
+        function closeEditPaymentModal() {
+            document.getElementById('editPaymentModal').classList.add('hidden');
+        }
+    </script>
 </x-app-layout>

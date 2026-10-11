@@ -128,9 +128,16 @@
                                             class="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-lg hover:bg-indigo-100 border border-indigo-100">
                                             Bayar
                                         </button>
-                                        <form action="{{ route('company-debts.mark-lunas', $debt) }}" method="POST" class="action-confirm inline" data-title="Konfirmasi Pelunasan" data-text="Lunasi pembayaran ini?" data-icon="question" data-confirm-text="Ya, Lunasi" data-confirm-color="#3b82f6">
+                                        <form action="{{ route('company-debts.mark-lunas', $debt) }}" method="POST" class="action-confirm inline" data-title="Konfirmasi Pelunasan" data-text="Lunasi pembayaran hutang ini? Saldo kas akan terpotong otomatis." data-icon="question" data-confirm-text="Ya, Lunasi" data-confirm-color="#3b82f6">
                                             @csrf
                                             <button type="submit" class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-lg hover:bg-emerald-100 border border-emerald-100">Lunasi</button>
+                                        </form>
+                                    @else
+                                        <form action="{{ route('company-debts.revert-lunas', $debt) }}" method="POST" class="action-confirm inline" data-title="Batalkan Status Lunas?" data-text="Kembalikan pembayaran hutang {{ $debt->name }} ke Belum Lunas dan batalkan pencatatan pengeluaran kas?" data-icon="warning" data-confirm-text="Ya, Batalkan Lunas" data-confirm-color="#f59e0b">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors border border-amber-200">
+                                                Batal Lunas
+                                            </button>
                                         </form>
                                     @endif
                                     @if($debt->purchase_id)
@@ -169,7 +176,12 @@
             <h3 class="text-xl font-bold text-zinc-800 mb-1">Catat Pembayaran</h3>
             <p id="modalDebtName" class="text-sm text-zinc-500 mb-6"></p>
 
-            <form id="paymentForm" method="POST">
+            <form id="paymentForm" method="POST" class="action-confirm"
+                data-title="Konfirmasi Pembayaran Hutang"
+                data-text="Simpan pencatatan pembayaran hutang ini? Saldo kas akan terpotong."
+                data-icon="question"
+                data-confirm-text="Ya, Simpan Pembayaran"
+                data-confirm-color="#4f46e5">
                 @csrf
                 <div class="space-y-5">
                     <div>

@@ -160,7 +160,12 @@
                                     <p class="text-sm text-gray-500 mb-4">Karyawan: <span id="modalEmployeeName" class="font-bold"></span></p>
                                     <p class="text-sm text-gray-500 mb-4">Sisa Pinjaman: <span id="modalRemaining" class="font-bold"></span></p>
                                     
-                                    <form id="repayForm" method="POST">
+                                    <form id="repayForm" method="POST" class="action-confirm"
+                                        data-title="Konfirmasi Pembayaran Cicilan"
+                                        data-text="Catat pembayaran cicilan kasbon ini? Penerimaan kas akan tercatat di laporan keuangan."
+                                        data-icon="question"
+                                        data-confirm-text="Ya, Simpan Pembayaran"
+                                        data-confirm-color="#16a34a">
                                         @csrf
                                         <div id="monthlyOption" class="hidden mb-4 border-b pb-4">
                                             <label class="block text-gray-700 text-sm font-bold mb-2">Pilih Jumlah Bulan</label>

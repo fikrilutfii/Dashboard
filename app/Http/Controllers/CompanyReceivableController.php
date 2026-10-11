@@ -182,6 +182,36 @@ class CompanyReceivableController extends Controller
         return back()->with('success', 'Tagihan ditandai Lunas dan tercatat di kas.');
     }
 
+    public function revertLunas(CompanyReceivable $companyReceivable)
+    {
+        DB::transaction(function () use ($companyReceivable) {
+            $companyReceivable->update([
+                'status' => 'belum_lunas',
+                'remaining_amount' => $companyReceivable->total_amount,
+            ]);
+
+            \App\Models\Transaction::where('reference_type', CompanyReceivable::class)
+                ->where('reference_id', $companyReceivable->id)
+                ->where('type', 'credit')
+                ->where('category', 'tagihan_perusahaan')
+                ->delete();
+
+            if ($companyReceivable->invoice_id && $companyReceivable->invoice) {
+                $companyReceivable->invoice->update([
+                    'paid_amount' => 0,
+                    'status' => 'belum_lunas',
+                ]);
+            } elseif ($companyReceivable->kasbon_id && $companyReceivable->kasbon) {
+                $companyReceivable->kasbon->update([
+                    'remaining_amount' => $companyReceivable->kasbon->amount,
+                    'status' => 'aktif',
+                ]);
+            }
+        });
+
+        return back()->with('success', 'Status tagihan berhasil dibatalkan dan dikembalikan ke Belum Lunas.');
+    }
+
     public function recordPayment(Request $request, CompanyReceivable $companyReceivable)
     {
         $validated = $request->validate([

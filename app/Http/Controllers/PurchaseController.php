@@ -271,6 +271,23 @@ class PurchaseController extends Controller
         return back()->with('success', 'Hutang lunas.');
     }
 
+    public function revertStatus(Purchase $purchase)
+    {
+        DB::transaction(function () use ($purchase) {
+            $purchase->update(['status' => 'belum_lunas']);
+            $purchase->load('supplier');
+            $purchase->syncToDebt();
+
+            // Delete Transaction (Debit)
+            Transaction::where('reference_type', Purchase::class)
+                ->where('reference_id', $purchase->id)
+                ->where('category', 'purchase_payment')
+                ->delete();
+        });
+
+        return back()->with('success', 'Status pembelian berhasil dibatalkan dan dikembalikan ke Belum Lunas.');
+    }
+
     private function normalizeItemNumbers(Request $request): void
     {
         $items = $request->input('items', []);

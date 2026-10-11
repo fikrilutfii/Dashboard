@@ -123,26 +123,51 @@
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2 flex-wrap">
-                                    @if($receivable->status != 'paid')
+                                    @if($receivable->status != 'lunas')
                                         <!-- Quick Payment Form -->
                                         <div x-data="{ open: false }" class="relative">
                                             <button @click="open = !open" class="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors border border-amber-100">
                                                 Catat Pembayaran
                                             </button>
                                             <div x-show="open" @click.away="open = false" class="absolute right-0 top-8 z-50 bg-white shadow-xl border border-zinc-100 rounded-xl p-4 w-56">
-                                                <form action="{{ route('company-receivables.record-payment', $receivable) }}" method="POST" class="space-y-3">
+                                                <form action="{{ route('company-receivables.record-payment', $receivable) }}" method="POST"
+                                                    class="action-confirm space-y-3"
+                                                    data-title="Konfirmasi Pembayaran Tagihan"
+                                                    data-text="Catat pembayaran tagihan untuk {{ $receivable->name }}?"
+                                                    data-icon="question"
+                                                    data-confirm-text="Ya, Simpan"
+                                                    data-confirm-color="#059669">
                                                     @csrf
                                                     <p class="text-xs font-semibold text-zinc-600">Sisa: Rp {{ number_format($receivable->remaining_amount, 0, ',', '.') }}</p>
-                                                    <input type="number" name="payment_amount" max="{{ $receivable->remaining_amount }}" min="1" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-sm" placeholder="Jumlah bayar">
+                                                    <input type="number" name="payment_amount" max="{{ $receivable->remaining_amount }}" min="1" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-sm" placeholder="Jumlah bayar" required>
                                                     <button type="submit" class="w-full py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700">Simpan</button>
                                                 </form>
                                             </div>
                                         </div>
 
-                                        <form action="{{ route('company-receivables.mark-lunas', $receivable) }}" method="POST">
+                                        <form action="{{ route('company-receivables.mark-lunas', $receivable) }}" method="POST"
+                                            class="action-confirm inline"
+                                            data-title="Konfirmasi Pelunasan Tagihan"
+                                            data-text="Tandai tagihan {{ $receivable->name }} sebesar Rp {{ number_format($receivable->remaining_amount, 0, ',', '.') }} sebagai LUNAS?"
+                                            data-icon="question"
+                                            data-confirm-text="Ya, Tandai Lunas"
+                                            data-confirm-color="#059669">
                                             @csrf
                                             <button type="submit" class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-100">
                                                 Tandai Lunas
+                                            </button>
+                                        </form>
+                                    @else
+                                        <form action="{{ route('company-receivables.revert-lunas', $receivable) }}" method="POST"
+                                            class="action-confirm inline"
+                                            data-title="Batalkan Status Lunas?"
+                                            data-text="Kembalikan tagihan {{ $receivable->name }} ke Belum Lunas dan batalkan pencatatan penerimaan kas?"
+                                            data-icon="warning"
+                                            data-confirm-text="Ya, Batalkan Lunas"
+                                            data-confirm-color="#f59e0b">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors border border-amber-200">
+                                                Batal Lunas
                                             </button>
                                         </form>
                                     @endif
