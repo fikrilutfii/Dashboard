@@ -88,11 +88,16 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                                        <a href="{{ route('payrolls.slip', $payroll) }}" target="_blank" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-lg hover:bg-indigo-100 border border-indigo-100 whitespace-nowrap">📄 Slip</a>
+                                        <a href="{{ route('payrolls.slip', $payroll) }}" target="_blank" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-lg hover:bg-indigo-100 border border-indigo-100 whitespace-nowrap">Slip Gaji</a>
                                         @if(!$isLunas)
-                                            <form action="{{ route('payrolls.mark-lunas', $payroll) }}" method="POST">
+                                            <form action="{{ route('payrolls.mark-lunas', $payroll) }}" method="POST" class="action-confirm inline"
+                                                data-title="Konfirmasi Pelunasan Gaji"
+                                                data-text="Tandai pembayaran gaji {{ $payroll->employee->name ?? 'karyawan' }} sebesar Rp {{ number_format($payroll->net_salary, 0, ',', '.') }} sebagai LUNAS?"
+                                                data-icon="question"
+                                                data-confirm-text="Ya, Lunasi"
+                                                data-confirm-color="#16a34a">
                                                 @csrf
-                                                <button type="submit" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-lg hover:bg-emerald-100 border border-emerald-100 whitespace-nowrap">✓ Lunas</button>
+                                                <button type="submit" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-lg hover:bg-emerald-100 border border-emerald-100 whitespace-nowrap">Lunas</button>
                                             </form>
                                         @endif
                                         <a href="{{ route('payrolls.edit', $payroll) }}" class="px-2.5 py-1 bg-zinc-100 text-zinc-600 text-xs font-semibold rounded-lg hover:bg-zinc-200">Edit</a>

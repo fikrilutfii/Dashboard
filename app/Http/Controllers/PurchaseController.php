@@ -155,10 +155,6 @@ class PurchaseController extends Controller
 
     public function edit(Purchase $purchase)
     {
-        if ($purchase->status == 'lunas') {
-            return redirect()->back()->with('error', 'Cannot edit paid purchase.');
-        }
-
         $suppliers = Supplier::all();
         $purchase->load('items');
         return view('purchases.edit', compact('purchase', 'suppliers'));
@@ -175,10 +171,6 @@ class PurchaseController extends Controller
                 DB::statement('ALTER TABLE purchases MODIFY purchase_number VARCHAR(255) NULL');
             }
         } catch (\Exception $e) {}
-
-        if ($purchase->status == 'lunas') {
-             return redirect()->back()->with('error', 'Cannot edit paid purchase.');
-        }
 
         $this->normalizeItemNumbers($request);
 

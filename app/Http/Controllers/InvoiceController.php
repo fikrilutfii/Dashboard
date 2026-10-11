@@ -233,10 +233,6 @@ class InvoiceController extends Controller
 
     public function edit(Invoice $invoice)
     {
-        if ($invoice->status == 'lunas') {
-            return redirect()->back()->with('error', 'Cannot edit paid invoice.');
-        }
-
         $customers = Customer::all();
         $products = Product::all();
         return view('invoices.edit', compact('invoice', 'customers', 'products'));
@@ -253,10 +249,6 @@ class InvoiceController extends Controller
                 DB::statement('ALTER TABLE invoices MODIFY invoice_number VARCHAR(255) NULL');
             }
         } catch (\Exception $e) {}
-
-        if ($invoice->status == 'lunas') {
-             return redirect()->back()->with('error', 'Cannot edit paid invoice.');
-        }
 
         $this->normalizeItemNumbers($request);
 
@@ -323,6 +315,7 @@ class InvoiceController extends Controller
 
             $invoice->update(['total_amount' => $totalAmount]);
             $invoice->load('customer');
+            $invoice->recalculatePayments();
             $invoice->syncToReceivable();
 
             InvoiceLog::create([

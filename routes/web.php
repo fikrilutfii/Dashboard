@@ -63,7 +63,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/reports/stock', [ProductController::class, 'stockReport'])->name('reports.stock');
     Route::post('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('products.adjust-stock');
 
-    // API for Product Lookup
+    // API for Product Lookup & Search
+    Route::get('/api/products/search', [ProductController::class, 'search'])->name('products.search');
     Route::get('/api/products/{code}', [ProductController::class, 'getByCode'])->name('products.lookup');
     Route::post('/products/import-csv', [ProductController::class, 'importCsv'])->name('products.import-csv');
 

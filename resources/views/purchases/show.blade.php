@@ -61,14 +61,15 @@
             </div>
 
             <!-- Actions -->
-            <div class="flex justify-end gap-3">
-                <a href="{{ route('purchases.index', ['division' => $purchase->division]) }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Kembali</a>
+            <div class="flex justify-end items-center gap-3">
+                <a href="{{ route('purchases.index', ['division' => $purchase->division]) }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm">Kembali</a>
+                <a href="{{ route('purchases.edit', $purchase) }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded text-sm font-semibold">Edit Pembelian</a>
                 
                 @if($purchase->status == 'belum_lunas')
-                <form action="{{ route('purchases.update-status', $purchase) }}" method="POST" class="action-confirm inline-block" data-title="Konfirmasi Pelunasan" data-text="Konfirmasi pelunasan pembayaran ini?" data-icon="question" data-confirm-text="Ya, Lunasi" data-confirm-color="#3b82f6">
+                <form action="{{ route('purchases.update-status', $purchase) }}" method="POST" class="action-confirm inline-block" data-title="Konfirmasi Pelunasan Pembelian" data-text="Apakah Anda yakin ingin melunasi pembayaran pembelian ini sekarang? Saldo kas akan terpotong otomatis." data-icon="question" data-confirm-text="Ya, Lunasi Sekarang" data-confirm-color="#16a34a">
                     @csrf
                     @method('PUT')
-                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Lunasi Pembayaran Sekarang</button>
+                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm font-semibold">Lunasi Pembayaran Sekarang</button>
                 </form>
                 @endif
             </div>

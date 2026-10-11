@@ -25,9 +25,7 @@
                             <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="bg-gray-800 text-white px-4 py-2 rounded text-sm">Print SJ</a>
                             <a href="{{ route('invoices.print-combined', $invoice) }}" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded text-sm">Print Gabungan</a>
                             <a href="{{ route('invoices.print-excel', $invoice) }}" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">Print Faktur</a>
-                            @if($invoice->status != 'lunas')
-                                <a href="{{ route('invoices.edit', $invoice) }}" class="bg-yellow-500 text-white px-4 py-2 rounded text-sm">Edit Invoice</a>
-                            @endif
+                            <a href="{{ route('invoices.edit', $invoice) }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded text-sm font-semibold">Edit Invoice</a>
                         </div>
                     </div>
 
@@ -83,20 +81,30 @@
                                 </button>
                             @endif
 
-                            @if($invoice->status == 'belum_lunas')
+                            @if($invoice->status != 'lunas')
                                 <form action="{{ route('invoices.update-status', $invoice) }}" method="POST"
                                     class="action-confirm inline-block"
-                                    data-title="Tandai Lunas?" data-text="Tandai invoice ini sebagai LUNAS penuh?" data-icon="question" data-confirm-text="Ya, Lunas" data-confirm-color="#3b82f6">
+                                    data-title="Konfirmasi Pelunasan Faktur" 
+                                    data-text="Apakah Anda yakin ingin menandai Faktur #{{ $invoice->faktur_number }} ini sebagai LUNAS? Saldo dan transaksi pelunasan akan dicatat otomatis." 
+                                    data-icon="question" 
+                                    data-confirm-text="Ya, Tandai Lunas" 
+                                    data-confirm-color="#16a34a">
                                     @csrf @method('PUT')
                                     <input type="hidden" name="status" value="lunas">
                                     <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-5 rounded shadow text-sm">
                                         Tandai LUNAS
                                     </button>
                                 </form>
-                            @else
+                            @endif
+
+                            @if($invoice->status != 'belum_lunas')
                                 <form action="{{ route('invoices.update-status', $invoice) }}" method="POST"
                                     class="action-confirm inline-block"
-                                    data-title="Batal Lunas?" data-text="Kembalikan status ke BELUM LUNAS? Semua riwayat pembayaran akan dihapus." data-icon="warning" data-confirm-text="Ya, Batal Lunas" data-confirm-color="#f59e0b">
+                                    data-title="Batalkan Status Lunas?" 
+                                    data-text="Kembalikan status faktur ini ke BELUM LUNAS? Riwayat pembayaran terkait akan dihapus/direset sehingga faktur dapat diperbaiki." 
+                                    data-icon="warning" 
+                                    data-confirm-text="Ya, Batal Lunas" 
+                                    data-confirm-color="#ef4444">
                                     @csrf @method('PUT')
                                     <input type="hidden" name="status" value="belum_lunas">
                                     <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-5 rounded shadow text-sm">
@@ -214,7 +222,7 @@
                 Faktur: <strong>{{ $invoice->faktur_number }}</strong> &mdash; Sisa:
                 <strong class="text-red-600">Rp {{ number_format(max(0, $invoice->total_amount - ($invoice->paid_amount ?? 0)), 0, ',', '.') }}</strong>
             </p>
-            <form action="{{ route('invoices.payment.store', $invoice) }}" method="POST">
+            <form action="{{ route('invoices.payment.store', $invoice) }}" method="POST" class="action-confirm" data-title="Konfirmasi Pembayaran" data-text="Simpan catatan pelunasan faktur ini? Status faktur dan pencatatan kas akan diperbarui." data-icon="question" data-confirm-text="Ya, Simpan" data-confirm-color="#2563eb">
                 @csrf
                 <div class="space-y-4">
                     <div>

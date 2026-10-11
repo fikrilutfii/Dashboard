@@ -161,9 +161,7 @@
                                     </td>
                                     <td class="border p-2 text-center whitespace-nowrap space-x-1 text-xs">
                                         <a href="{{ route('invoices.show', $invoice) }}" class="text-blue-600 hover:underline">Lihat</a>
-                                        @if($invoice->status != 'lunas')
-                                            | <a href="{{ route('invoices.edit', $invoice) }}" class="text-yellow-600 hover:underline">Edit</a>
-                                        @endif
+                                        | <a href="{{ route('invoices.edit', $invoice) }}" class="text-yellow-600 hover:underline">Edit</a>
                                         | <a href="javascript:void(0)" onclick="confirmPrint('{{ route('invoices.print', $invoice) }}')" class="text-gray-600 hover:underline">Print SJ</a>
                                         | <a href="javascript:void(0)" onclick="confirmPrint('{{ route('invoices.print-combined', $invoice) }}')" class="text-blue-600 hover:underline">Gabung</a>
                                         | <a href="javascript:void(0)" onclick="confirmPrint('{{ route('invoices.export', $invoice) }}', true)" class="text-green-600 hover:underline font-semibold">Excel</a>
