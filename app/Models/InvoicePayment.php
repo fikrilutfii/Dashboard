@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class InvoicePayment extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\LogsActivity;
 
     protected $fillable = [
         'invoice_id',

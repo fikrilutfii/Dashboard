@@ -58,6 +58,31 @@ class Invoice extends Model
         return $this->hasMany(InvoiceLog::class);
     }
 
+    public function getLogCreatedDescription(): string
+    {
+        $faktur = $this->faktur_number ?: ($this->invoice_number ?: "#{$this->id}");
+        $customer = $this->customer?->name ?? 'Pelanggan';
+        $total = number_format($this->total_amount ?? 0, 0, ',', '.');
+        return "Membuat Faktur {$faktur} untuk {$customer} (Total: Rp {$total})";
+    }
+
+    public function getLogUpdatedDescription(array $diffList): string
+    {
+        $faktur = $this->faktur_number ?: ($this->invoice_number ?: "#{$this->id}");
+        $parts = [];
+        foreach ($diffList as $d) {
+            $parts[] = "{$d['label']} ({$d['old']} → {$d['new']})";
+        }
+        $detail = !empty($parts) ? implode(', ', array_slice($parts, 0, 3)) : 'Perubahan data';
+        return "Mengubah Faktur {$faktur}: {$detail}";
+    }
+
+    public function getLogDeletedDescription(): string
+    {
+        $faktur = $this->faktur_number ?: ($this->invoice_number ?: "#{$this->id}");
+        return "Menghapus Faktur {$faktur}";
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(InvoicePayment::class)->orderBy('payment_date', 'desc');

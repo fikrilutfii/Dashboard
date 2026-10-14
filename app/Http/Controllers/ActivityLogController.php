@@ -37,12 +37,31 @@ class ActivityLogController extends Controller
 
         // Filter Modul
         if ($module = $request->input('module')) {
-            $query->where('subject_type', 'like', "%{$module}%");
+            if ($module === 'Auth') {
+                $query->where(function($q) {
+                    $q->whereNull('subject_type')
+                      ->orWhere('activity', 'like', '%login%')
+                      ->orWhere('activity', 'like', '%logout%');
+                });
+            } else {
+                $query->where('subject_type', 'like', "%{$module}%");
+            }
         }
 
-        $logs = $query->paginate(50)->withQueryString();
-        $users = \App\Models\User::all();
+        // Filter Aksi (Create, Update, Delete, Login)
+        if ($action = $request->input('action')) {
+            $query->where('activity', 'like', "%{$action}%");
+        }
 
-        return view('activity-logs.index', compact('logs', 'users'));
+        $logs = $query->paginate(25)->withQueryString();
+        $users = \App\Models\User::orderBy('name')->get();
+
+        // Metric Statistics
+        $totalLogsCount = ActivityLog::count();
+        $todayLogsCount = ActivityLog::whereDate('created_at', today())->count();
+        $crudCount = ActivityLog::whereIn('activity', ['TAMBAH', 'UBAH', 'HAPUS', 'Created', 'Updated', 'Deleted', 'CREATE', 'UPDATE', 'DELETE'])->count();
+        $authCount = ActivityLog::whereIn('activity', ['LOGIN', 'LOGOUT', 'login', 'logout'])->count();
+
+        return view('activity-logs.index', compact('logs', 'users', 'totalLogsCount', 'todayLogsCount', 'crudCount', 'authCount'));
     }
 }

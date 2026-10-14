@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Expense extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\LogsActivity;
 
     protected $fillable = [
         'date',

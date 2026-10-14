@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CompanyReceivable extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\LogsActivity;
 
     public function invoice(): BelongsTo
     {

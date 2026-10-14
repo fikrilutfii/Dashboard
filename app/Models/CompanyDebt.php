@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CompanyDebt extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\LogsActivity;
 
     public function purchase(): BelongsTo
     {
