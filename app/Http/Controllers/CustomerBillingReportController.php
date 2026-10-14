@@ -216,6 +216,97 @@ class CustomerBillingReportController extends Controller
         return back()->with('success', 'Pelunasan tagihan klien per periode berhasil diproses sebesar Rp ' . number_format($totalAllocated, 0, ',', '.') . ' untuk ' . $settledCount . ' faktur.');
     }
 
+    public function bulkSettle(Request $request)
+    {
+        $division = session('division');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $itemSearch = $request->input('item_search');
+
+        $validated = $request->validate([
+            'customer_ids'     => 'required|array|min:1',
+            'customer_ids.*'   => 'exists:customers,id',
+            'payment_date'     => 'required|date',
+            'payment_method'   => 'required|string',
+            'reference_number' => 'nullable|string|max:100',
+            'notes'            => 'nullable|string|max:500',
+        ]);
+
+        $customers = Customer::whereIn('id', $validated['customer_ids'])->get();
+        if ($customers->isEmpty()) {
+            return back()->with('error', 'Tidak ada klien yang dipilih.');
+        }
+
+        $totalAllocated = 0;
+        $settledInvoicesCount = 0;
+        $settledCustomersCount = 0;
+
+        DB::transaction(function () use ($customers, $division, $itemSearch, $startDate, $endDate, $validated, &$totalAllocated, &$settledInvoicesCount, &$settledCustomersCount) {
+            foreach ($customers as $customer) {
+                $query = $customer->invoices();
+                $this->applyInvoiceFilter($query, $division, $itemSearch, $startDate, $endDate);
+                $invoices = $query->orderBy('invoice_date', 'asc')->orderBy('id', 'asc')->get();
+
+                if ($invoices->isEmpty()) {
+                    continue;
+                }
+
+                $customerPaidSomething = false;
+
+                foreach ($invoices as $inv) {
+                    $invRemaining = max(0, (float)$inv->total_amount - (float)$inv->paid_amount);
+                    if ($invRemaining <= 0) {
+                        continue;
+                    }
+
+                    $payment = InvoicePayment::create([
+                        'invoice_id'       => $inv->id,
+                        'payment_date'     => $validated['payment_date'],
+                        'amount'           => $invRemaining,
+                        'payment_method'   => $validated['payment_method'],
+                        'reference_number' => $validated['reference_number'] ?? null,
+                        'notes'            => 'Pelunasan Masal Tagihan Periode' . (!empty($validated['notes']) ? ': ' . $validated['notes'] : ''),
+                    ]);
+
+                    $inv->recalculatePayments();
+
+                    Transaction::create([
+                        'type'           => 'credit',
+                        'amount'         => $invRemaining,
+                        'category'       => 'pelunasan_faktur',
+                        'reference_type' => InvoicePayment::class,
+                        'reference_id'   => $payment->id,
+                        'description'    => 'Pelunasan Masal Periode Faktur #' . ($inv->faktur_number ?? $inv->invoice_number) . ' - ' . ($customer->name ?? 'Customer') . (!empty($validated['notes']) ? ' (' . $validated['notes'] . ')' : ''),
+                        'date'           => $validated['payment_date'],
+                        'division'       => $inv->division,
+                        'entity'         => $inv->entity ?? $inv->division,
+                    ]);
+
+                    InvoiceLog::create([
+                        'invoice_id'  => $inv->id,
+                        'user_id'     => Auth::id(),
+                        'action'      => 'Bulk Settlement Payment',
+                        'description' => 'Pelunasan masal sebesar Rp ' . number_format($invRemaining, 0, ',', '.') . ' dicatat (' . $validated['payment_method'] . ') pada tanggal ' . Carbon::parse($validated['payment_date'])->format('d/m/Y'),
+                    ]);
+
+                    $totalAllocated += $invRemaining;
+                    $settledInvoicesCount++;
+                    $customerPaidSomething = true;
+                }
+
+                if ($customerPaidSomething) {
+                    $settledCustomersCount++;
+                }
+            }
+        });
+
+        if ($settledInvoicesCount === 0) {
+            return back()->with('error', 'Tidak ada faktur yang belum lunas pada klien dan periode yang dipilih.');
+        }
+
+        return back()->with('success', 'Pelunasan masal periode berhasil diproses untuk ' . $settledCustomersCount . ' klien (' . $settledInvoicesCount . ' faktur) dengan total Rp ' . number_format($totalAllocated, 0, ',', '.') . '.');
+    }
+
     public function print(Request $request, Customer $customer)
     {
         $division = session('division');

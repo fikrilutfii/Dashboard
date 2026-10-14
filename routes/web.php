@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Customer Billing Reports
     Route::get('/reports/billing', [CustomerBillingReportController::class, 'index'])->name('reports.billing');
+    Route::post('/reports/billing/bulk-settle', [CustomerBillingReportController::class, 'bulkSettle'])->name('reports.billing.bulk-settle');
     Route::get('/reports/billing/{customer}', [CustomerBillingReportController::class, 'show'])->name('reports.billing.show');
     Route::post('/reports/billing/{customer}/settle', [CustomerBillingReportController::class, 'batchSettle'])->name('reports.billing.settle');
     Route::get('/reports/billing/{customer}/print', [CustomerBillingReportController::class, 'print'])->name('reports.billing.print');
