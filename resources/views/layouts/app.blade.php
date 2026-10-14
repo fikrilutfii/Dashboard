@@ -15,6 +15,7 @@
         <script src="https://cdn.tailwindcss.com"></script>
         <script>
             tailwind.config = {
+                darkMode: 'class',
                 theme: {
                     extend: {
                         fontFamily: {
@@ -137,6 +138,46 @@
             .scrollbar-hide {
                 -ms-overflow-style: none;
                 scrollbar-width: none;
+            }
+
+            /* Global Glass Theme Pagination */
+            nav[role="navigation"] {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+            }
+            nav[role="navigation"] div:first-child p {
+                font-size: 0.75rem;
+                color: #64748b;
+                font-weight: 600;
+            }
+            nav[role="navigation"] span.relative,
+            nav[role="navigation"] a.relative {
+                border-radius: 12px !important;
+                margin: 0 2px !important;
+                background: rgba(255, 255, 255, 0.85) !important;
+                border: 1px solid rgba(226, 232, 240, 0.85) !important;
+                color: #334155 !important;
+                font-size: 0.75rem !important;
+                font-weight: 700 !important;
+                padding: 6px 12px !important;
+                transition: all 0.2s ease !important;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+            }
+            nav[role="navigation"] span[aria-current="page"] span {
+                background: #0f766e !important;
+                color: #ffffff !important;
+                border-color: #0f766e !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 10px -2px rgba(15, 118, 110, 0.3) !important;
+            }
+            nav[role="navigation"] a.relative:hover {
+                background: #f0fdfa !important;
+                color: #0f766e !important;
+                border-color: #99f6e4 !important;
+                transform: translateY(-1px);
             }
 
             /* Smooth Transitions */
