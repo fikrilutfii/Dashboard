@@ -29,104 +29,104 @@
         </div>
     </x-slot>
 
-    <div class="py-10 bg-gray-50/50 min-h-screen page-enter">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
-            <!-- SECTION A: Ringkasan Saldo -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] border border-white/60 shadow-premium group hover:shadow-premium-hover transition-all duration-500">
-                    <p class="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-3 italic">Total Pemasukan</p>
-                    <h3 class="text-3xl font-black text-emerald-600 tracking-tight">Rp {{ number_format($ringkasan['total_pemasukan'], 0, ',', '.') }}</h3>
-                    <div class="mt-4 flex items-center gap-2 border-t pt-4 border-zinc-100">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Dana Masuk Terkini</span>
-                    </div>
+    <div class="py-6 space-y-8 max-w-7xl mx-auto page-enter">
+        <!-- SECTION A: Ringkasan Saldo -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card glass-card-hover p-8 rounded-[26px]">
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Total Pemasukan</p>
+                <h3 class="text-3xl font-black text-emerald-600 tracking-tight leading-none">Rp {{ number_format($ringkasan['total_pemasukan'], 0, ',', '.') }}</h3>
+                <div class="mt-4 flex items-center gap-2 border-t pt-4 border-slate-100/80">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Dana Masuk Terkini</span>
                 </div>
+            </div>
 
-                <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] border border-white/60 shadow-premium group hover:shadow-premium-hover transition-all duration-500">
-                    <p class="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-3 italic">Total Pengeluaran</p>
-                    <h3 class="text-3xl font-black text-rose-600 tracking-tight">Rp {{ number_format($ringkasan['total_pembayaran'], 0, ',', '.') }}</h3>
-                    <div class="mt-4 flex items-center gap-2 border-t pt-4 border-zinc-100">
-                        <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                        <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Dana Keluar Terkini</span>
-                    </div>
+            <div class="glass-card glass-card-hover p-8 rounded-[26px]">
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Total Pengeluaran</p>
+                <h3 class="text-3xl font-black text-rose-600 tracking-tight leading-none">Rp {{ number_format($ringkasan['total_pembayaran'], 0, ',', '.') }}</h3>
+                <div class="mt-4 flex items-center gap-2 border-t pt-4 border-slate-100/80">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Dana Keluar Terkini</span>
                 </div>
+            </div>
 
-                <div class="premium-gradient p-8 rounded-[2rem] shadow-lg shadow-primary-500/30 group hover:shadow-primary-500/40 transition-all duration-500 text-white">
-                    <p class="text-[11px] font-black text-primary-200 uppercase tracking-[0.2em] mb-3 italic">Arus Kas Bersih</p>
-                    <h3 class="text-3xl font-black tracking-tight">
+            <div class="bg-gradient-to-br from-teal-800 via-teal-900 to-emerald-950 p-8 rounded-[26px] shadow-xl shadow-teal-950/20 text-white relative overflow-hidden flex flex-col justify-between">
+                <div class="absolute -right-6 -bottom-6 w-36 h-36 bg-teal-400/20 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="relative z-10">
+                    <p class="text-[11px] font-black text-teal-200 uppercase tracking-[0.2em] mb-3">Arus Kas Bersih</p>
+                    <h3 class="text-3xl font-black tracking-tight leading-none">
                         Rp {{ number_format($ringkasan['arus_kas_bersih'], 0, ',', '.') }}
                     </h3>
-                    <div class="mt-4 flex items-center gap-2 border-t pt-4 border-white/10">
-                        <span class="w-2 h-2 rounded-full bg-white animate-bounce"></span>
-                        <span class="text-[10px] text-primary-100 font-bold uppercase tracking-wider">Sisa Operasional</span>
-                    </div>
+                </div>
+                <div class="mt-4 flex items-center gap-2 border-t pt-4 border-white/10 relative z-10">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-[10px] text-teal-100 font-bold uppercase tracking-wider">Sisa Saldo Kas Operasional</span>
                 </div>
             </div>
+        </div>
 
-
-            <!-- SECTION B: Statistik & Periode -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <!-- Grafik Utama -->
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                        <div class="flex items-center justify-between mb-6">
-                            <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Tren Arus Kas (30 Hari)</h4>
-                            <div class="flex gap-4 text-[10px] font-bold uppercase tracking-tighter">
-                                <div class="flex items-center gap-1 text-emerald-600">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Pemasukan
-                                </div>
-                                <div class="flex items-center gap-1 text-rose-600">
-                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span> Pengeluaran
-                                </div>
+        <!-- SECTION B: Statistik & Periode -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Grafik Utama -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass-card p-6 rounded-[26px]">
+                    <div class="flex items-center justify-between mb-6">
+                        <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider">Tren Arus Kas (30 Hari)</h4>
+                        <div class="flex gap-4 text-[10px] font-bold uppercase tracking-wider">
+                            <div class="flex items-center gap-1.5 text-emerald-700">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Pemasukan
                             </div>
-                        </div>
-                        <div class="h-[280px]">
-                            <canvas id="trenChart"></canvas>
+                            <div class="flex items-center gap-1.5 text-rose-600">
+                                <span class="w-2 h-2 rounded-full bg-rose-500"></span> Pengeluaran
+                            </div>
                         </div>
                     </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                            <h4 class="text-sm font-bold text-gray-700 mb-6 uppercase tracking-wider">Perbandingan Bulanan</h4>
-                            <canvas id="perbandinganChart" height="250"></canvas>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                            <h4 class="text-sm font-bold text-gray-700 mb-6 uppercase tracking-wider">Distribusi Kategori</h4>
-                            <div class="max-w-[220px] mx-auto">
-                                <canvas id="pieChart"></canvas>
-                            </div>
-                        </div>
+                    <div class="h-[280px]">
+                        <canvas id="trenChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Ringkasan Periodik -->
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
-                    <div class="bg-gray-50/50 px-6 py-4 border-b">
-                        <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Ringkasan Periodik</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-card p-6 rounded-[26px]">
+                        <h4 class="text-xs font-black text-slate-700 mb-6 uppercase tracking-wider">Perbandingan Bulanan</h4>
+                        <canvas id="perbandinganChart" height="250"></canvas>
                     </div>
-                    <div class="p-6 flex-1">
-                        <div class="flex gap-4 mb-8">
-                            <button onclick="switchTab('mingguan')" id="tab-mingguan" class="text-xs font-bold pb-2 border-b-2 border-indigo-600 text-indigo-600 transition-all">Mingguan</button>
-                            <button onclick="switchTab('bulanan')" id="tab-bulanan" class="text-xs font-bold pb-2 border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-all">Bulanan</button>
-                            <button onclick="switchTab('tahunan')" id="tab-tahunan" class="text-xs font-bold pb-2 border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-all">Tahunan</button>
-                        </div>
-
-                        <div id="content-mingguan" class="tab-content">
-                            @include('finance.partials.periodic_table', ['data' => $periodik['mingguan'], 'label' => 'Minggu Ini'])
-                        </div>
-                        <div id="content-bulanan" class="tab-content hidden">
-                            @include('finance.partials.periodic_table', ['data' => $periodik['bulanan'], 'label' => 'Bulan Ini'])
-                        </div>
-                        <div id="content-tahunan" class="tab-content hidden">
-                            @include('finance.partials.periodic_table', ['data' => $periodik['tahunan'], 'label' => 'Tahun Ini'])
+                    <div class="glass-card p-6 rounded-[26px]">
+                        <h4 class="text-xs font-black text-slate-700 mb-6 uppercase tracking-wider">Distribusi Kategori</h4>
+                        <div class="max-w-[220px] mx-auto">
+                            <canvas id="pieChart"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- SECTION C: Saring (Filter Section) -->
-            <div id="filterSection" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-8 scroll-mt-24">
+            <!-- Ringkasan Periodik -->
+            <div class="glass-card rounded-[26px] flex flex-col overflow-hidden">
+                <div class="bg-white/40 px-6 py-4 border-b border-white/60">
+                    <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider">Ringkasan Periodik</h4>
+                </div>
+                <div class="p-6 flex-1">
+                    <div class="flex gap-4 mb-6">
+                        <button onclick="switchTab('mingguan')" id="tab-mingguan" class="text-xs font-extrabold pb-2 border-b-2 border-teal-700 text-teal-800 transition-all">Mingguan</button>
+                        <button onclick="switchTab('bulanan')" id="tab-bulanan" class="text-xs font-extrabold pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-all">Bulanan</button>
+                        <button onclick="switchTab('tahunan')" id="tab-tahunan" class="text-xs font-extrabold pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-all">Tahunan</button>
+                    </div>
+
+                    <div id="content-mingguan" class="tab-content">
+                        @include('finance.partials.periodic_table', ['data' => $periodik['mingguan'], 'label' => 'Minggu Ini'])
+                    </div>
+                    <div id="content-bulanan" class="tab-content hidden">
+                        @include('finance.partials.periodic_table', ['data' => $periodik['bulanan'], 'label' => 'Bulan Ini'])
+                    </div>
+                    <div id="content-tahunan" class="tab-content hidden">
+                        @include('finance.partials.periodic_table', ['data' => $periodik['tahunan'], 'label' => 'Tahun Ini'])
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION C: Saring (Filter Section) -->
+        <div id="filterSection" class="glass-card p-6 rounded-[26px] scroll-mt-24">
                 <form method="GET" action="{{ route('finance.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                     <div class="md:col-span-2">
                         <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase tracking-widest italic">Divisi</label>

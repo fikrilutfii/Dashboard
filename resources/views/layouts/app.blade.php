@@ -60,30 +60,74 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
             
             body {
-                font-family: 'Outfit', sans-serif !important;
+                font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif !important;
+                background: 
+                    radial-gradient(at 0% 0%, rgba(187, 247, 208, 0.5) 0px, transparent 50%),
+                    radial-gradient(at 100% 0%, rgba(216, 180, 254, 0.45) 0px, transparent 50%),
+                    radial-gradient(at 100% 100%, rgba(254, 215, 170, 0.35) 0px, transparent 50%),
+                    radial-gradient(at 0% 100%, rgba(165, 243, 252, 0.45) 0px, transparent 50%),
+                    #f1f6f4;
+                background-attachment: fixed;
+                min-height: 100vh;
             }
 
             [x-cloak] { display: none !important; }
 
-            .glass {
-                background: rgba(255, 255, 255, 0.7);
-                backdrop-filter: blur(12px);
-                -webkit-backdrop-filter: blur(12px);
-                border: 1px solid rgba(255, 255, 255, 0.3);
+            .glass-card {
+                background: rgba(255, 255, 255, 0.78);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.85);
+                box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
             }
 
-            .glass-dark {
-                background: rgba(24, 24, 27, 0.8);
+            .glass-card-hover {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .glass-card-hover:hover {
+                transform: translateY(-3px);
+                background: rgba(255, 255, 255, 0.9);
+                box-shadow: 0 20px 35px -8px rgba(13, 92, 88, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.03);
+            }
+
+            .glass-sidebar {
+                background: rgba(255, 255, 255, 0.58);
+                backdrop-filter: blur(24px);
+                -webkit-backdrop-filter: blur(24px);
+                border-right: 1px solid rgba(255, 255, 255, 0.75);
+                box-shadow: 4px 0 24px 0 rgba(15, 23, 42, 0.02);
+            }
+
+            .glass-header {
+                background: rgba(255, 255, 255, 0.45);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.65);
+            }
+
+            .glass-pill {
+                background: rgba(255, 255, 255, 0.65);
                 backdrop-filter: blur(12px);
                 -webkit-backdrop-filter: blur(12px);
-                border: 1px solid rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.85);
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+            }
+
+            .coach-active {
+                background: linear-gradient(135deg, #0d5c58 0%, #094743 100%) !important;
+                color: #ffffff !important;
+                box-shadow: 0 10px 20px -3px rgba(13, 92, 88, 0.35) !important;
+            }
+
+            .coach-active svg {
+                color: #ffffff !important;
             }
 
             .premium-gradient {
-                background: linear-gradient(135deg, #415bf3 0%, #7084f8 100%);
+                background: linear-gradient(135deg, #0d5c58 0%, #14b8a6 100%);
             }
 
             .scrollbar-hide::-webkit-scrollbar {
@@ -101,18 +145,18 @@
             }
 
             @keyframes slide-up {
-                from { opacity: 0; transform: translateY(10px); }
+                from { opacity: 0; transform: translateY(8px); }
                 to { opacity: 1; transform: translateY(0); }
             }
         </style>
     </head>
-    <body class="font-sans antialiased text-gray-900 bg-gray-100">
+    <body class="font-sans antialiased text-slate-800">
         <div x-data="{ 
                 sidebarOpen: false, 
                 sidebarExpanded: localStorage.getItem('sidebarExpanded') !== 'false' 
             }" 
             x-init="$watch('sidebarExpanded', value => localStorage.setItem('sidebarExpanded', value))"
-            class="min-h-screen bg-gray-100 flex relative text-sm"
+            class="min-h-screen flex relative text-sm"
         >
             
             <!-- Mobile Sidebar Overlay -->
@@ -124,7 +168,7 @@
                  x-transition:leave="transition-opacity ease-linear duration-300" 
                  x-transition:leave-start="opacity-100" 
                  x-transition:leave-end="opacity-0" 
-                 class="fixed inset-0 bg-gray-900/50 z-20 lg:hidden glass"
+                 class="fixed inset-0 bg-slate-900/30 z-20 lg:hidden backdrop-blur-sm"
                  x-cloak
             ></div>
 
@@ -141,7 +185,7 @@
                 </x-topbar>
 
                 <!-- Page Content -->
-                <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+                <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8">
                     {{ $slot }}
                 </main>
             </div>

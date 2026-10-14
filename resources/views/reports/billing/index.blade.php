@@ -22,53 +22,68 @@
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Card 1: Total Outstanding -->
-            <div class="bg-white p-6 rounded-3xl border border-zinc-100 shadow-premium group hover:shadow-premium-hover transition-all duration-300">
-                <p class="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2">Total Tagihan Berjalan</p>
-                <h3 class="text-3xl font-black text-red-600 tracking-tight">
+            <div class="glass-card glass-card-hover p-6 rounded-[26px]">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Tagihan Berjalan</p>
+                    <div class="w-10 h-10 rounded-2xl bg-rose-100/80 text-rose-700 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                </div>
+                <h3 class="text-3xl font-black text-rose-600 tracking-tight leading-none">
                     Rp {{ number_format($totalOutstanding, 0, ',', '.') }}
                 </h3>
-                <div class="mt-4 flex items-center gap-2 border-t pt-4 border-zinc-50">
-                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                    <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Total sisa tagihan semua klien</span>
+                <div class="mt-4 flex items-center gap-2 border-t pt-3.5 border-slate-100/80">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total sisa tagihan semua klien</span>
                 </div>
             </div>
 
             <!-- Card 2: Unpaid Invoices -->
-            <div class="bg-white p-6 rounded-3xl border border-zinc-100 shadow-premium group hover:shadow-premium-hover transition-all duration-300">
-                <p class="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2">Faktur Belum Lunas</p>
-                <h3 class="text-3xl font-black text-amber-600 tracking-tight">
+            <div class="glass-card glass-card-hover p-6 rounded-[26px]">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Faktur Belum Lunas</p>
+                    <div class="w-10 h-10 rounded-2xl bg-amber-100/80 text-amber-700 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                    </div>
+                </div>
+                <h3 class="text-3xl font-black text-amber-700 tracking-tight leading-none">
                     {{ number_format($unpaidInvoicesCount) }}
                 </h3>
-                <div class="mt-4 flex items-center gap-2 border-t pt-4 border-zinc-50">
+                <div class="mt-4 flex items-center gap-2 border-t pt-3.5 border-slate-100/80">
                     <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                    <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Invoice outstanding / sebagian</span>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Invoice outstanding / sebagian</span>
                 </div>
             </div>
 
             <!-- Card 3: Unpaid Customers -->
-            <div class="bg-white p-6 rounded-3xl border border-zinc-100 shadow-premium group hover:shadow-premium-hover transition-all duration-300">
-                <p class="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2">Jumlah Klien Menunggak</p>
-                <h3 class="text-3xl font-black text-indigo-600 tracking-tight">
+            <div class="glass-card glass-card-hover p-6 rounded-[26px]">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Jumlah Klien Menunggak</p>
+                    <div class="w-10 h-10 rounded-2xl bg-teal-100/80 text-teal-800 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+                    </div>
+                </div>
+                <h3 class="text-3xl font-black text-teal-800 tracking-tight leading-none">
                     {{ number_format($unpaidCustomersCount) }}
                 </h3>
-                <div class="mt-4 flex items-center gap-2 border-t pt-4 border-zinc-50">
-                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                    <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Klien dengan saldo tagihan</span>
+                <div class="mt-4 flex items-center gap-2 border-t pt-3.5 border-slate-100/80">
+                    <span class="w-2 h-2 rounded-full bg-teal-600"></span>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Klien dengan saldo tagihan</span>
                 </div>
             </div>
         </div>
 
         <!-- Filter & Table Card -->
-        <div class="bg-white rounded-3xl border border-zinc-100 shadow-premium overflow-hidden">
-            <div class="p-6 border-b border-zinc-100 bg-zinc-50/50 flex flex-col gap-4">
+        <div class="glass-card rounded-[26px] overflow-hidden">
+            <div class="p-6 border-b border-white/60 bg-white/40 flex flex-col gap-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                        <h3 class="text-lg font-extrabold text-zinc-800">Daftar Tagihan per Klien</h3>
-                        <p class="text-xs text-zinc-400 mt-1 font-medium">Gunakan filter untuk menyaring periode atau nama barang, lalu gunakan tombol pelunasan periode untuk melunasi tanpa klik faktur satu per satu.</p>
+                        <h3 class="text-lg font-extrabold text-slate-800 tracking-tight">Daftar Tagihan per Klien</h3>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">Gunakan filter untuk menyaring periode atau nama barang, lalu gunakan tombol pelunasan periode untuk melunasi tanpa klik faktur satu per satu.</p>
                     </div>
                     @if(request('start_date') || request('end_date'))
-                    <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold self-start">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-600"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" /></svg>
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-teal-50 text-teal-900 border border-teal-200/80 rounded-full text-xs font-bold self-start shadow-2xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-teal-700"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" /></svg>
                         Periode: {{ request('start_date') ? \Carbon\Carbon::parse(request('start_date'))->format('d/m/Y') : 'Awal' }} s/d {{ request('end_date') ? \Carbon\Carbon::parse(request('end_date'))->format('d/m/Y') : 'Sekarang' }}
                     </div>
                     @endif
@@ -77,27 +92,27 @@
                 <!-- Search Form -->
                 <form method="GET" action="{{ route('reports.billing') }}" class="flex flex-wrap items-end gap-3 w-full">
                     <div class="flex-1 min-w-[200px]">
-                        <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Nama Klien</label>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama klien..." class="w-full text-sm bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-zinc-700">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Nama Klien</label>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama klien..." class="w-full text-sm bg-white/80 border border-white/80 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all text-slate-700">
                     </div>
                     <div class="flex-1 min-w-[200px]">
-                        <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Kode/Nama Barang</label>
-                        <input type="text" name="item_search" value="{{ request('item_search') }}" placeholder="Cari barang..." class="w-full text-sm bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-zinc-700">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Kode/Nama Barang</label>
+                        <input type="text" name="item_search" value="{{ request('item_search') }}" placeholder="Cari barang..." class="w-full text-sm bg-white/80 border border-white/80 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all text-slate-700">
                     </div>
                     <div class="flex-1 min-w-[130px]">
-                        <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Dari Tgl Faktur</label>
-                        <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full text-sm bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-zinc-700">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Dari Tgl Faktur</label>
+                        <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full text-sm bg-white/80 border border-white/80 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all text-slate-700">
                     </div>
                     <div class="flex-1 min-w-[130px]">
-                        <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Sampai Tgl Faktur</label>
-                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full text-sm bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-zinc-700">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Sampai Tgl Faktur</label>
+                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full text-sm bg-white/80 border border-white/80 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all text-slate-700">
                     </div>
                     <div class="flex items-center gap-2">
-                        <button type="submit" class="h-[42px] px-5 bg-zinc-800 hover:bg-zinc-900 text-white text-sm font-bold rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2">
+                        <button type="submit" class="h-[42px] px-5 bg-gradient-to-r from-teal-800 to-emerald-800 hover:from-teal-900 hover:to-emerald-900 text-white text-sm font-bold rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2">
                             Filter
                         </button>
                         @if(request('search') || request('item_search') || request('start_date') || request('end_date'))
-                            <a href="{{ route('reports.billing') }}" class="h-[42px] px-5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-bold rounded-xl transition-all active:scale-95 flex items-center">
+                            <a href="{{ route('reports.billing') }}" class="h-[42px] px-5 bg-white/70 hover:bg-white text-slate-700 text-sm font-bold rounded-xl transition-all active:scale-95 flex items-center border border-white/80">
                                 Reset
                             </a>
                         @endif
@@ -108,7 +123,7 @@
             <!-- Table -->
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead class="bg-zinc-50 border-b border-zinc-100">
+                    <thead class="bg-white/50 border-b border-white/60">
                         <tr>
                             <th class="w-12 px-4 py-4 text-center">
                                 <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Pilih Semua Klien di Halaman Ini">
