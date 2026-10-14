@@ -276,4 +276,227 @@ class FinanceReportService
 
         return $transactions->reverse(); // Urutan terbaru ke terlama untuk tampilan
     }
+
+    /**
+     * Rincian Mingguan (5 Minggu dalam bulan terpilih)
+     */
+    public function getWeeklyBreakdown($month = null, $year = null, $division = null, $entity = null)
+    {
+        $month = (int) ($month ?: Carbon::now()->month);
+        $year = (int) ($year ?: Carbon::now()->year);
+
+        $startOfMonth = Carbon::createFromDate($year, $month, 1)->startOfDay();
+        $daysInMonth = $startOfMonth->daysInMonth;
+
+        $monthNames = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $weeks = [
+            ['week' => 1, 'start_day' => 1, 'end_day' => 7],
+            ['week' => 2, 'start_day' => 8, 'end_day' => 14],
+            ['week' => 3, 'start_day' => 15, 'end_day' => 21],
+            ['week' => 4, 'start_day' => 22, 'end_day' => 28],
+        ];
+
+        if ($daysInMonth > 28) {
+            $weeks[] = ['week' => 5, 'start_day' => 29, 'end_day' => $daysInMonth];
+        }
+
+        $results = [];
+        $totalPemasukan = 0;
+        $totalPengeluaran = 0;
+
+        foreach ($weeks as $w) {
+            $startDate = Carbon::createFromDate($year, $month, $w['start_day'])->startOfDay();
+            $endDate = Carbon::createFromDate($year, $month, $w['end_day'])->endOfDay();
+
+            $query = Transaction::query()
+                ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+                ->where('category', '!=', 'kasbon');
+
+            if ($division) $query->where('division', $division);
+            if ($entity) $query->where('entity', $entity);
+
+            $pemasukan = (clone $query)->where('type', 'credit')
+                ->where('category', '!=', 'pengembalian_keuangan_terserap')
+                ->sum('amount');
+            $pengeluaran = (clone $query)->where('type', 'debit')
+                ->where('category', '!=', 'keuangan_terserap')
+                ->sum('amount');
+            $terserap = (clone $query)->where('category', 'keuangan_terserap')->sum('amount');
+            $kembali = (clone $query)->where('category', 'pengembalian_keuangan_terserap')->sum('amount');
+
+            $bersih = $pemasukan - $pengeluaran;
+
+            $totalPemasukan += $pemasukan;
+            $totalPengeluaran += $pengeluaran;
+
+            $results[] = [
+                'week_number' => $w['week'],
+                'label' => 'Minggu ' . $w['week'],
+                'date_range' => $startDate->format('d M') . ' - ' . $endDate->format('d M Y'),
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
+                'pemasukan' => $pemasukan,
+                'pengeluaran' => $pengeluaran,
+                'bersih' => $bersih,
+                'terserap' => $terserap,
+                'kembali' => $kembali,
+                'status' => $bersih >= 0 ? 'surplus' : 'defisit',
+            ];
+        }
+
+        return [
+            'month' => $month,
+            'year' => $year,
+            'month_name' => $monthNames[$month] ?? 'Bulan',
+            'weeks' => $results,
+            'total_pemasukan' => $totalPemasukan,
+            'total_pengeluaran' => $totalPengeluaran,
+            'total_bersih' => $totalPemasukan - $totalPengeluaran,
+        ];
+    }
+
+    /**
+     * Rekapitulasi 12 Bulan (Tahunan)
+     */
+    public function getMonthlyBreakdown($year = null, $division = null, $entity = null)
+    {
+        $year = (int) ($year ?: Carbon::now()->year);
+        $monthNames = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $months = [];
+        $totalPemasukan = 0;
+        $totalPengeluaran = 0;
+        $cumulativeBalance = 0;
+
+        for ($m = 1; $m <= 12; $m++) {
+            $startDate = Carbon::createFromDate($year, $m, 1)->startOfMonth();
+            $endDate = Carbon::createFromDate($year, $m, 1)->endOfMonth();
+
+            $query = Transaction::query()
+                ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+                ->where('category', '!=', 'kasbon');
+
+            if ($division) $query->where('division', $division);
+            if ($entity) $query->where('entity', $entity);
+
+            $pemasukan = (clone $query)->where('type', 'credit')
+                ->where('category', '!=', 'pengembalian_keuangan_terserap')
+                ->sum('amount');
+            $pengeluaran = (clone $query)->where('type', 'debit')
+                ->where('category', '!=', 'keuangan_terserap')
+                ->sum('amount');
+            $terserap = (clone $query)->where('category', 'keuangan_terserap')->sum('amount');
+            $kembali = (clone $query)->where('category', 'pengembalian_keuangan_terserap')->sum('amount');
+
+            $bersih = $pemasukan - $pengeluaran;
+            $cumulativeBalance += $bersih;
+
+            $totalPemasukan += $pemasukan;
+            $totalPengeluaran += $pengeluaran;
+
+            $months[] = [
+                'month_number' => $m,
+                'month_name' => $monthNames[$m] ?? "Bulan $m",
+                'pemasukan' => $pemasukan,
+                'pengeluaran' => $pengeluaran,
+                'bersih' => $bersih,
+                'terserap' => $terserap,
+                'kembali' => $kembali,
+                'saldo_kumulatif' => $cumulativeBalance,
+                'status' => $bersih >= 0 ? 'surplus' : 'defisit',
+            ];
+        }
+
+        return [
+            'year' => $year,
+            'months' => $months,
+            'total_pemasukan' => $totalPemasukan,
+            'total_pengeluaran' => $totalPengeluaran,
+            'total_bersih' => $totalPemasukan - $totalPengeluaran,
+        ];
+    }
+
+    /**
+     * Perbandingan Tahunan (Multi-Tahun)
+     */
+    public function getYearlyBreakdown($division = null, $entity = null)
+    {
+        $currentYear = (int) Carbon::now()->year;
+        $years = [];
+
+        for ($y = $currentYear - 2; $y <= $currentYear; $y++) {
+            $startDate = Carbon::createFromDate($y, 1, 1)->startOfYear();
+            $endDate = Carbon::createFromDate($y, 12, 31)->endOfYear();
+
+            $query = Transaction::query()
+                ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+                ->where('category', '!=', 'kasbon');
+
+            if ($division) $query->where('division', $division);
+            if ($entity) $query->where('entity', $entity);
+
+            $pemasukan = (clone $query)->where('type', 'credit')
+                ->where('category', '!=', 'pengembalian_keuangan_terserap')
+                ->sum('amount');
+            $pengeluaran = (clone $query)->where('type', 'debit')
+                ->where('category', '!=', 'keuangan_terserap')
+                ->sum('amount');
+
+            $years[] = [
+                'year' => $y,
+                'pemasukan' => $pemasukan,
+                'pengeluaran' => $pengeluaran,
+                'bersih' => $pemasukan - $pengeluaran,
+            ];
+        }
+
+        return $years;
+    }
+
+    /**
+     * Monitoring Khusus Keuangan Terserap (Fokus Divisi Percetakan)
+     */
+    public function getKeuanganTerserapSummary($division = 'percetakan')
+    {
+        $query = Transaction::query();
+        if ($division) {
+            $query->where('division', $division);
+        }
+
+        $totalTerserap = (clone $query)
+            ->where('type', 'debit')
+            ->where('category', 'keuangan_terserap')
+            ->sum('amount');
+
+        $totalDikembalikan = (clone $query)
+            ->where('type', 'credit')
+            ->where('category', 'pengembalian_keuangan_terserap')
+            ->sum('amount');
+
+        $sisaTerserap = max(0, $totalTerserap - $totalDikembalikan);
+
+        $riwayat = Transaction::query()
+            ->when($division, fn($q) => $q->where('division', $division))
+            ->whereIn('category', ['keuangan_terserap', 'pengembalian_keuangan_terserap'])
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->limit(50)
+            ->get();
+
+        return [
+            'total_terserap' => $totalTerserap,
+            'total_dikembalikan' => $totalDikembalikan,
+            'sisa_terserap' => $sisaTerserap,
+            'riwayat' => $riwayat,
+        ];
+    }
 }

@@ -90,6 +90,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/finance', [App\Http\Controllers\FinanceReportController::class, 'index'])->name('finance.index');
     Route::get('/finance/export/pdf', [App\Http\Controllers\FinanceReportController::class, 'exportPDF'])->name('finance.export.pdf');
     Route::get('/finance/export/excel', [App\Http\Controllers\FinanceReportController::class, 'exportExcel'])->name('finance.export.excel');
+    Route::post('/finance/keuangan-terserap', [App\Http\Controllers\FinanceReportController::class, 'storeKeuanganTerserap'])->name('finance.terserap.store');
+    Route::post('/finance/keuangan-terserap/kembalikan', [App\Http\Controllers\FinanceReportController::class, 'repayKeuanganTerserap'])->name('finance.terserap.repay');
+    Route::delete('/finance/keuangan-terserap/{transaction}', [App\Http\Controllers\FinanceReportController::class, 'destroyKeuanganTerserap'])->name('finance.terserap.destroy');
     Route::get('/finance/transactions', [FinanceController::class, 'transactions'])->name('finance.transactions');
     Route::post('/finance/transactions', [FinanceController::class, 'storeTransaction'])->name('finance.storeTransaction');
     Route::post('/finance/loan', [FinanceController::class, 'storeLoan'])->name('finance.storeLoan');
