@@ -96,7 +96,7 @@
                 <div class="bg-gradient-to-br from-teal-800 via-teal-900 to-emerald-950 p-6 rounded-[24px] shadow-xl shadow-teal-950/20 text-white relative overflow-hidden flex flex-col justify-between">
                     <div class="absolute -right-6 -bottom-6 w-36 h-36 bg-teal-400/20 rounded-full blur-2xl pointer-events-none"></div>
                     <div class="relative z-10">
-                        <p class="text-[11px] font-black text-teal-200 uppercase tracking-[0.2em] mb-2">Arus Kas Bersih</p>
+                        <p class="text-[11px] font-black text-teal-200 uppercase tracking-[0.2em] mb-2">Sisa Kas Bersih</p>
                         <h3 class="text-3xl font-black tracking-tight leading-none font-mono">
                             Rp {{ number_format($ringkasan['arus_kas_bersih'], 0, ',', '.') }}
                         </h3>
@@ -334,7 +334,7 @@
                     <h4 class="text-2xl font-black text-rose-600 font-mono">Rp {{ number_format($weeklyBreakdown['total_pengeluaran'], 0, ',', '.') }}</h4>
                 </div>
                 <div class="glass-card p-5 rounded-[22px]">
-                    <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Arus Kas Bersih Bulan Ini</span>
+                    <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Sisa Kas Bersih Bulan Ini</span>
                     <h4 class="text-2xl font-black {{ $weeklyBreakdown['total_bersih'] >= 0 ? 'text-teal-700' : 'text-rose-600' }} font-mono">
                         Rp {{ number_format($weeklyBreakdown['total_bersih'], 0, ',', '.') }}
                     </h4>
@@ -358,7 +358,7 @@
                                 <th class="px-6 py-3.5 text-right text-rose-600">Pengeluaran Operasional</th>
                                 <th class="px-6 py-3.5 text-right text-amber-600">Dana Terserap Keluar</th>
                                 <th class="px-6 py-3.5 text-right text-blue-600">Pengembalian Masuk</th>
-                                <th class="px-6 py-3.5 text-right text-slate-800">Arus Bersih</th>
+                                <th class="px-6 py-3.5 text-right text-slate-800">Sisa Bersih</th>
                                 <th class="px-6 py-3.5 text-center">Status</th>
                             </tr>
                         </thead>
@@ -384,9 +384,9 @@
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         @if($week['bersih'] >= 0)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200/60 uppercase">Surplus</span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200/60 uppercase">Untung</span>
                                         @else
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200/60 uppercase">Defisit</span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200/60 uppercase">Rugi</span>
                                         @endif
                                     </td>
                                 </tr>
@@ -442,7 +442,7 @@
                     <h4 class="text-2xl font-black text-rose-600 font-mono">Rp {{ number_format($monthlyBreakdown['total_pengeluaran'], 0, ',', '.') }}</h4>
                 </div>
                 <div class="glass-card p-5 rounded-[22px]">
-                    <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Arus Kas Bersih 1 Tahun</span>
+                    <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Sisa Kas Bersih 1 Tahun</span>
                     <h4 class="text-2xl font-black {{ $monthlyBreakdown['total_bersih'] >= 0 ? 'text-teal-700' : 'text-rose-600' }} font-mono">
                         Rp {{ number_format($monthlyBreakdown['total_bersih'], 0, ',', '.') }}
                     </h4>
@@ -465,8 +465,8 @@
                                 <th class="px-6 py-3.5 text-right text-rose-600">Pengeluaran Operasional</th>
                                 <th class="px-6 py-3.5 text-right text-amber-600">Dana Terserap</th>
                                 <th class="px-6 py-3.5 text-right text-blue-600">Pengembalian</th>
-                                <th class="px-6 py-3.5 text-right text-slate-800">Laba / Bersih</th>
-                                <th class="px-6 py-3.5 text-right text-indigo-700">Saldo Akumulatif</th>
+                                <th class="px-6 py-3.5 text-right text-slate-800">Sisa Bersih</th>
+                                <th class="px-6 py-3.5 text-right text-indigo-700">Sisa Saldo</th>
                                 <th class="px-6 py-3.5 text-center">Status</th>
                             </tr>
                         </thead>
@@ -494,9 +494,9 @@
                                     </td>
                                     <td class="px-6 py-3.5 text-center whitespace-nowrap">
                                         @if($m['bersih'] >= 0)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200/60 uppercase">Surplus</span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200/60 uppercase">Untung</span>
                                         @else
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200/60 uppercase">Defisit</span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200/60 uppercase">Rugi</span>
                                         @endif
                                     </td>
                                 </tr>

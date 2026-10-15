@@ -219,14 +219,21 @@
             <!-- Main Content -->
             <div class="flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-hidden">
                 <!-- Topbar -->
-                <x-topbar>
-                    <x-slot name="header">
-                         {{ $header ?? '' }}
-                    </x-slot>
-                </x-topbar>
+                <x-topbar :header="$header ?? null" />
 
                 <!-- Page Content -->
                 <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8">
+                    @php
+                        $headerRaw = isset($header) ? (string)$header : '';
+                        $hasRichHeader = $headerRaw !== '' && (strlen($headerRaw) !== strlen(strip_tags($headerRaw)));
+                    @endphp
+
+                    @if($hasRichHeader)
+                        <div class="max-w-7xl mx-auto mb-2 page-enter">
+                            {{ $header }}
+                        </div>
+                    @endif
+
                     {{ $slot }}
                 </main>
             </div>

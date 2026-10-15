@@ -15,7 +15,7 @@
             <td class="px-6 py-4 text-sm text-right font-mono text-red-600 font-bold">Rp {{ number_format($data['pembayaran'], 0, ',', '.') }}</td>
         </tr>
         <tr class="bg-gray-50">
-            <td class="px-6 py-4 text-sm font-bold text-gray-900">Pengeluaran Bersih</td>
+            <td class="px-6 py-4 text-sm font-bold text-gray-900">Sisa Bersih (Untung/Rugi)</td>
             <td class="px-6 py-4 text-sm text-right font-mono font-bold {{ $data['bersih'] >= 0 ? 'text-gray-900' : 'text-red-700' }}">
                 Rp {{ number_format($data['bersih'], 0, ',', '.') }}
             </td>

@@ -1,4 +1,4 @@
-@props(['title', 'value', 'color' => 'indigo', 'icon' => null, 'trend' => null, 'href' => null])
+@props(['title', 'value', 'color' => 'indigo', 'icon' => null, 'trend' => null, 'href' => null, 'actionClick' => null, 'actionLabel' => null])
 
 @php
     $colorMaps = [
@@ -36,7 +36,9 @@
     $c = $colorMaps[$color] ?? $colorMaps['teal'];
 @endphp
 
-@if($href)
+@if($actionClick)
+<button type="button" @click="{{ $actionClick }}" class="w-full text-left block relative overflow-hidden rounded-[26px] p-6 glass-card glass-card-hover group cursor-pointer focus:outline-none" title="Klik untuk melihat {{ $title }}">
+@elseif($href)
 <a href="{{ $href }}" class="block relative overflow-hidden rounded-[26px] p-6 glass-card glass-card-hover group cursor-pointer" title="Klik untuk melihat {{ $title }}">
 @else
 <div class="relative overflow-hidden rounded-[26px] p-6 glass-card glass-card-hover group">
@@ -66,14 +68,16 @@
             </div>
         </div>
 
-        @if($href)
+        @if($href || $actionClick)
         <div class="mt-5 pt-3 border-t border-slate-100/70 flex items-center justify-between {{ $c['link'] }} text-xs font-bold group-hover:translate-x-0.5 transition-transform duration-300">
-            <span>Buka Rincian</span>
+            <span>{{ $actionLabel ?? 'Buka Rincian' }}</span>
             <svg class="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
         </div>
         @endif
     </div>
-@if($href)
+@if($actionClick)
+</button>
+@elseif($href)
 </a>
 @else
 </div>

@@ -345,7 +345,7 @@ class FinanceReportService
                 'bersih' => $bersih,
                 'terserap' => $terserap,
                 'kembali' => $kembali,
-                'status' => $bersih >= 0 ? 'surplus' : 'defisit',
+                'status' => $bersih >= 0 ? 'untung' : 'rugi',
             ];
         }
 
@@ -412,7 +412,7 @@ class FinanceReportService
                 'terserap' => $terserap,
                 'kembali' => $kembali,
                 'saldo_kumulatif' => $cumulativeBalance,
-                'status' => $bersih >= 0 ? 'surplus' : 'defisit',
+                'status' => $bersih >= 0 ? 'untung' : 'rugi',
             ];
         }
 

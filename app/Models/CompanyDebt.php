@@ -96,4 +96,93 @@ class CompanyDebt extends Model
                     : 0;
             });
     }
+
+    /**
+     * Mengambil daftar rinci seluruh kewajiban pembayaran yang harus dibayar bulan ini,
+     * diurutkan berdasarkan tanggal jatuh tempo / urutan tanggal pembayaran.
+     */
+    public static function monthlyDueItems(?string $division, Carbon $date): \Illuminate\Support\Collection
+    {
+        $endOfMonth = $date->copy()->endOfMonth();
+        $now = Carbon::now();
+
+        return static::query()
+            ->when($division, fn ($query) => $query->where('division', $division))
+            ->where('status', '!=', 'lunas')
+            ->where('remaining_amount', '>', 0)
+            ->with(['purchase.supplier', 'payroll.employee'])
+            ->get()
+            ->filter(function (self $debt) use ($date, $endOfMonth) {
+                $remaining = (float) $debt->remaining_amount;
+                $monthlyAmount = (float) $debt->monthly_amount;
+
+                if ($remaining <= 0) {
+                    return false;
+                }
+
+                // Jika memiliki cicilan bulanan, selalu masuk daftar pembayaran bulan ini
+                if ($monthlyAmount > 0) {
+                    return true;
+                }
+
+                // Jika bukan cicilan bulanan, cek apakah jatuh tempo di bulan ini atau sudah overdue
+                if ($debt->due_date) {
+                    return $debt->due_date->lte($endOfMonth);
+                }
+
+                return true;
+            })
+            ->map(function (self $debt) use ($date, $endOfMonth, $now) {
+                $remaining = (float) $debt->remaining_amount;
+                $monthlyAmount = (float) $debt->monthly_amount;
+                $dueAmount = ($monthlyAmount > 0) ? min($monthlyAmount, $remaining) : $remaining;
+
+                // Tentukan tanggal jatuh tempo / estimasi tanggal bulan ini
+                $scheduleDate = $debt->due_date ? $debt->due_date->copy() : $endOfMonth->copy();
+                
+                // Hitung selisih hari dari hari ini
+                $daysDiff = $now->startOfDay()->diffInDays($scheduleDate->startOfDay(), false);
+                $isOverdue = $daysDiff < 0;
+                $isToday = $daysDiff === 0;
+
+                $creditorName = $debt->name;
+                if (empty($creditorName)) {
+                    if ($debt->purchase && $debt->purchase->supplier) {
+                        $creditorName = $debt->purchase->supplier->name;
+                    } elseif ($debt->payroll && $debt->payroll->employee) {
+                        $creditorName = 'Gaji: ' . $debt->payroll->employee->name;
+                    } else {
+                        $creditorName = 'Kewajiban Pembayaran #' . $debt->id;
+                    }
+                }
+
+                $description = $debt->description;
+                if (empty($description) && $debt->purchase) {
+                    $description = 'Pembelian PO #' . ($debt->purchase->purchase_number ?: $debt->purchase->id);
+                }
+
+                return [
+                    'id'               => $debt->id,
+                    'name'             => $creditorName,
+                    'description'      => $description ?: 'Pembayaran operasional',
+                    'type'             => $debt->type,
+                    'type_label'       => $monthlyAmount > 0 ? 'Angsuran / Cicilan' : 'Pelunasan Penuh',
+                    'schedule_date'    => $scheduleDate,
+                    'date_formatted'   => $scheduleDate->format('d M Y'),
+                    'day_formatted'    => $scheduleDate->format('d'),
+                    'month_formatted'  => $scheduleDate->format('M'),
+                    'due_amount'       => $dueAmount,
+                    'remaining_amount' => $remaining,
+                    'total_amount'     => (float) $debt->amount,
+                    'status'           => $debt->status,
+                    'is_overdue'       => $isOverdue,
+                    'is_today'         => $isToday,
+                    'days_diff'        => $daysDiff,
+                    'entity'           => $debt->entity,
+                    'purchase_id'      => $debt->purchase_id,
+                ];
+            })
+            ->sortBy('schedule_date')
+            ->values();
+    }
 }

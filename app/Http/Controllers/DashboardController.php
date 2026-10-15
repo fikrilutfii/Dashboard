@@ -52,6 +52,7 @@ class DashboardController extends Controller
             // 1. Pembayaran Percetakan (Bulan Ini) memakai rumus yang sama
             // dengan kartu pembayaran pada menu Pembayaran Perusahaan.
             $pembayaranPercetakan = \App\Models\CompanyDebt::monthlyDueTotal('percetakan', $now);
+            $pembayaranPercetakanItems = \App\Models\CompanyDebt::monthlyDueItems('percetakan', $now);
 
             // 2. Total Tagihan Percetakan -> sama dengan kartu "Sisa Tagihan"
             // pada menu Tagihan Perusahaan.
@@ -124,9 +125,12 @@ class DashboardController extends Controller
             $keuntunganKonveksiBulanIni = $pemasukanKonveksiBulanIni - $pengeluaranKonveksiBulanIni;
         }
 
+        $pembayaranPercetakanItems = $pembayaranPercetakanItems ?? collect();
+
         return view('dashboard', compact(
             'division', 
             'pembayaranPercetakan',
+            'pembayaranPercetakanItems',
             'tagihanPercetakan',
             'totalPembayaran',
             'totalTagihan',
